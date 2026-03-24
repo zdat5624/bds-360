@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Nạp Tiền Thành Công</title>
+</head>
+
+<body>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Chúc mừng, bạn đã nạp tiền thành công!</h2>
+        <p>Kính gửi <span th:text="${username}">[Tên người dùng]</span>,</p>
+        <p>Chúng tôi xin thông báo rằng giao dịch nạp tiền của bạn đã được thực hiện thành công với các thông tin sau:
+        </p>
+        <ul>
+            <li><strong>Số tiền:</strong> <span th:text="${amount}">[Số tiền]</span> VNĐ</li>
+            <!-- <li><strong>Mã giao dịch:</strong> <span th:text="${transactionId}">[Mã giao dịch]</span></li> -->
+            <li><strong>Thời gian:</strong> <span th:text="${transactionTime}">[Thời gian]</span></li>
+        </ul>
+        <p>Cảm ơn bạn đã sử dụng dịch vụ của <strong>api</strong>!</p>
+        <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email: <a
+                href="mailto:support@api.com">support@api.com</a>.</p>
+        <p>Trân trọng,<br />Đội ngũ api</p>
+    </div>
+</body>
+
+</html>

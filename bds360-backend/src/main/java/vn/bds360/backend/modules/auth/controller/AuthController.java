@@ -13,6 +13,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import vn.bds360.backend.common.annotation.ApiMessage;
+import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.dto.response.ResCreateUserDTO;
+import vn.bds360.backend.common.exception.InputInvalidException;
+import vn.bds360.backend.modules.auth.dto.request.ChangePasswordRequest;
+import vn.bds360.backend.modules.auth.dto.request.EmailRequest;
+import vn.bds360.backend.modules.auth.dto.request.LoginDTO;
+import vn.bds360.backend.modules.auth.dto.request.RegisterDTO;
+import vn.bds360.backend.modules.auth.dto.request.ResetPasswordRequest;
+import vn.bds360.backend.modules.auth.dto.response.ResLoginDTO;
+import vn.bds360.backend.modules.auth.service.ForgotPasswordService;
+import vn.bds360.backend.modules.user.entity.User;
+import vn.bds360.backend.modules.user.service.UserService;
 import vn.bds360.backend.security.SecurityUtil;
 
 @RestController

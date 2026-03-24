@@ -2,8 +2,6 @@ package vn.bds360.backend.modules.notification.entity;
 
 import java.time.Instant;
 
-import org.springframework.boot.security.autoconfigure.SecurityProperties.User;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
@@ -11,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.NotificationType;
+import vn.bds360.backend.modules.user.entity.User;
 
 @Getter
 @Setter
