@@ -45,7 +45,7 @@ public class SecurityUtil {
             .issuedAt(now)
             .expiresAt(validity)
             .subject(authentication.getName())
-            .claim("authentication_of_user", authentication)
+            // .claim("authentication_of_user", authentication)
             .claim("roles", authentication.getAuthorities().stream()
             	    .map(GrantedAuthority::getAuthority)
             	    .toList())

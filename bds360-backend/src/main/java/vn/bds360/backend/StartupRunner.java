@@ -135,6 +135,8 @@ public class StartupRunner implements CommandLineRunner {
 
         initSampleNotifications();
 
+        System.out.println(">>> END INIT DATABASE");
+
     }
 
     private void initSampleUsers() {
