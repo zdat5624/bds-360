@@ -82,33 +82,24 @@ public class User {
 
     @PrePersist
     public void handleBeforeCreate() {
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent() == true
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
+        String currentUser = SecurityUtil.getCurrentUserLogin().orElse("anonymousUser");
 
-        if (this.createdBy.equals("anonymousUser")) {
+        if ("anonymousUser".equals(currentUser) || currentUser.trim().isEmpty()) {
             this.createdBy = this.email;
+        } else {
+            this.createdBy = currentUser;
         }
 
-        if (this.createdBy.equals(null)) {
-            this.createdBy = this.email;
+        if (this.avatar == null || this.avatar.trim().isEmpty()) {
+            this.avatar = "avatar-default.webp";
         }
-
-        if (this.createdBy.equals("")) {
-            this.createdBy = this.email;
-        }
-
-        this.avatar = "avatar-default.webp";
 
         this.createdAt = Instant.now();
     }
 
     @PreUpdate
     public void handleBeforeUpdate() {
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent() == true
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-
+        this.updatedBy = SecurityUtil.getCurrentUserLogin().orElse(this.email);
         this.updatedAt = Instant.now();
     }
 

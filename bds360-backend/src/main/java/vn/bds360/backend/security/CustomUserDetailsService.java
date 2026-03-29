@@ -9,23 +9,22 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.modules.user.service.UserService;
 
 @Component("userDetailsService")
-public class UserDetailCustom implements UserDetailsService {
+@RequiredArgsConstructor
+public class CustomUserDetailsService implements UserDetailsService {
 
-    final private UserService userService;
-
-    public UserDetailCustom(UserService userService) {
-        this.userService = userService;
-    }
+    private final UserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         vn.bds360.backend.modules.user.entity.User user = this.userService.handleGetUserByUserName(username);
 
         if (user == null) {
-            throw new UsernameNotFoundException("Username/password không hợp lệ");
+            throw new UsernameNotFoundException(ErrorCode.INVALID_CREDENTIALS.getMessage());
         }
 
         return new User(

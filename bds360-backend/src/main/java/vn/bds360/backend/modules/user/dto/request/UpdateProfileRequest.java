@@ -13,7 +13,7 @@ import vn.bds360.backend.modules.user.entity.User;
 
 @Getter
 @Setter
-public class UpdateProfileDTO {
+public class UpdateProfileRequest {
 
     private long id;
     @NotBlank(message = "Tên không được để trống")
@@ -28,10 +28,10 @@ public class UpdateProfileDTO {
     private String phone;
     private String address;
 
-    public UpdateProfileDTO() {
+    public UpdateProfileRequest() {
     }
 
-    public UpdateProfileDTO(User user) {
+    public UpdateProfileRequest(User user) {
         this.id = user.getId();
         this.name = user.getName();
         this.gender = user.getGender();

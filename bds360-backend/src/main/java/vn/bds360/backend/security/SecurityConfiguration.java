@@ -20,19 +20,24 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
 
 @Configuration
-@EnableMethodSecurity(securedEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfiguration {
+
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Value("${api.jwt.base64-secret}")
     private String jwtKey;
+
+    SecurityConfiguration(CustomAccessDeniedHandler customAccessDeniedHandler) {
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -50,40 +55,38 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authz -> authz
 
-                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/posts/my-posts").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/posts/my-posts").authenticated()
                                 .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers(
                                         "/",
                                         "/uploads/**",
-                                        "/api/auth/**",
-                                        "/api/address/**",
+                                        "/api/v1/auth/**",
+                                        "/api/v1/address/**",
 
-                                        "/api/payment/vnpay-payment-return"
+                                        "/api/v1/payment/vnpay-payment-return"
 
                                 ).permitAll()
 
                                 .requestMatchers(HttpMethod.GET,
-                                        "/api/posts",
-                                        "/api/posts/{id}",
-                                        "/api/vips",
-                                        "/api/categories",
-                                        "/api/categories/**",
-                                        "/api/notifications",
-                                        "/api/posts/{postId}/address"
+                                        "/api/v1/posts",
+                                        "/api/v1/posts/{id}",
+                                        "/api/v1/vips",
+                                        "/api/v1/categories",
+                                        "/api/v1/categories/**",
+                                        "/api/v1/notifications",
+                                        "/api/v1/posts/{postId}/address"
 
                                 ).permitAll()
 
                                 .anyRequest().authenticated()
 
                 )
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults())
-                        .authenticationEntryPoint(customAuthenticationEntryPoint))
-                .exceptionHandling(
-                        exceptions -> exceptions
-                                .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint()) // 401
-                                .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) // 403
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler))
 
                 .formLogin(f -> f.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

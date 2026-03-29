@@ -14,7 +14,7 @@ import vn.bds360.backend.modules.user.entity.User;
 
 @Getter
 @Setter
-public class UserUpdateDTO {
+public class UpdateUserRequest {
 
     private long id;
     @NotBlank(message = "Username không được để trống")
@@ -32,10 +32,10 @@ public class UserUpdateDTO {
     private String phone;
     private String address;
 
-    public UserUpdateDTO() {
+    public UpdateUserRequest() {
     }
 
-    public UserUpdateDTO(User user) {
+    public UpdateUserRequest(User user) {
         this.id = user.getId();
         this.name = user.getName();
         this.role = user.getRole();

@@ -1,8 +1,6 @@
 package vn.bds360.backend.modules.user.service;
 
-import java.util.List;
-import java.util.Optional;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,132 +10,160 @@ import org.springframework.stereotype.Service;
 
 import vn.bds360.backend.common.constant.GenderEnum;
 import vn.bds360.backend.common.constant.RoleEnum;
-import vn.bds360.backend.common.exception.InputInvalidException;
-import vn.bds360.backend.common.exception.NotFoundException;
-import vn.bds360.backend.modules.user.dto.request.CreateUserDTO;
-import vn.bds360.backend.modules.user.dto.request.UpdateProfileDTO;
-import vn.bds360.backend.modules.user.dto.request.UserUpdateDTO;
-import vn.bds360.backend.modules.user.dto.response.UserDTO;
+import vn.bds360.backend.common.dto.response.PageResponse;
+import vn.bds360.backend.common.exception.AppException;
+import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.common.util.PageUtils;
+import vn.bds360.backend.modules.user.dto.request.CreateUserRequest;
+import vn.bds360.backend.modules.user.dto.request.UpdateProfileRequest;
+import vn.bds360.backend.modules.user.dto.request.UpdateUserRequest;
+import vn.bds360.backend.modules.user.dto.response.UserResponse;
 import vn.bds360.backend.modules.user.entity.User;
+import vn.bds360.backend.modules.user.mapper.UserMapper;
 import vn.bds360.backend.modules.user.repository.UserRepository;
 import vn.bds360.backend.modules.user.specification.UserSpecification;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    // Đã đổi kiểu trả về thành UserResponse
+    public UserResponse handleCreateUser(CreateUserRequest request) {
+        if (isEmailExist(request.getEmail())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
 
-    public User handleCreateUser(CreateUserDTO createUserDTO) {
         User user = new User();
-        user.setName(createUserDTO.getName());
-        user.setPhone(createUserDTO.getPhone());
-        user.setEmail(createUserDTO.getEmail());
-        user.setPassword(createUserDTO.getPassword());
-        user.setRole(createUserDTO.getRole());
-        user.setGender(createUserDTO.getGender());
-        user.setAddress(createUserDTO.getAddress());
-        return this.userRepository.save(user);
+        user.setName(request.getName());
+        user.setPhone(request.getPhone());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(request.getRole());
+        user.setGender(request.getGender());
+        user.setAddress(request.getAddress());
+
+        user = userRepository.save(user);
+        return userMapper.toUserResponse(user);
     }
 
+    // Hàm nội bộ cho Auth (giữ nguyên trả Entity)
     public User handleCreateUser(User user) {
-
-        return this.userRepository.save(user);
+        return userRepository.save(user);
     }
 
     public void handleDeleteUser(long id) {
-        this.userRepository.deleteById(id);
+        User user = fetchUserById(id);
+        userRepository.delete(user);
     }
 
+    // Hàm nội bộ tìm User theo ID (ném lỗi nếu không thấy)
     public User fetchUserById(long id) {
-        return this.userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng với ID: " + id));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
+    // Hàm nội bộ tìm User theo Email (trả null nếu không thấy)
     public User handleGetUserByUserName(String username) {
-        Optional<User> userOptional = this.userRepository.findByEmail(username);
-        if (userOptional.isPresent()) {
-            return userOptional.get();
-        }
-        return null;
+        return userRepository.findByEmail(username).orElse(null);
     }
 
-    public List<User> fetchAllUser() {
-        return this.userRepository.findAll();
+    // Đã đổi kiểu trả về thành UserResponse
+    public UserResponse fetchUserByIdWithPermission(long targetUserId, String currentUsername) {
+        User currentUser = handleGetUserByUserName(currentUsername);
+        if (currentUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        boolean isAdmin = currentUser.getRole().equals(RoleEnum.ADMIN);
+        boolean isOwner = currentUser.getId() == targetUserId;
+
+        if (!isAdmin && !isOwner) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        User targetUser = fetchUserById(targetUserId);
+        return userMapper.toUserResponse(targetUser); // 👉 Dùng Mapper tại đây
     }
 
-    public User handleUpdateUser(UserUpdateDTO userUpdateDTO) {
-        User currentUser = fetchUserById(userUpdateDTO.getId());
-        if (currentUser != null) {
-            currentUser.setName(userUpdateDTO.getName());
-            currentUser.setRole(userUpdateDTO.getRole());
-            currentUser.setGender(userUpdateDTO.getGender());
-            currentUser.setAvatar(userUpdateDTO.getAvatar());
-            currentUser.setPhone(userUpdateDTO.getPhone());
-            currentUser.setAddress(userUpdateDTO.getAddress());
-            return currentUser = this.userRepository.save(currentUser);
-        }
-        return null;
+    // Đã đổi kiểu trả về thành UserResponse
+    public UserResponse handleUpdateUser(UpdateUserRequest request) {
+        User currentUser = fetchUserById(request.getId());
+
+        currentUser.setName(request.getName());
+        currentUser.setRole(request.getRole());
+        currentUser.setGender(request.getGender());
+        currentUser.setAvatar(request.getAvatar());
+        currentUser.setPhone(request.getPhone());
+        currentUser.setAddress(request.getAddress());
+
+        currentUser = userRepository.save(currentUser);
+        return userMapper.toUserResponse(currentUser);
     }
 
-    public User handleUpdateProfile(UpdateProfileDTO userUpdateDTO) {
-        User currentUser = fetchUserById(userUpdateDTO.getId());
-        if (currentUser != null) {
-            currentUser.setName(userUpdateDTO.getName());
-            currentUser.setGender(userUpdateDTO.getGender());
-            currentUser.setAvatar(userUpdateDTO.getAvatar());
-            currentUser.setPhone(userUpdateDTO.getPhone());
-            currentUser.setAddress(userUpdateDTO.getAddress());
-            return currentUser = this.userRepository.save(currentUser);
+    // Đã đổi kiểu trả về thành UserResponse
+    public UserResponse handleUpdateProfile(UpdateProfileRequest request, String currentUsername) {
+        User currentUser = handleGetUserByUserName(currentUsername);
+        if (currentUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        return null;
+
+        if (currentUser.getId() != request.getId()) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        User targetUser = fetchUserById(request.getId());
+        targetUser.setName(request.getName());
+        targetUser.setGender(request.getGender());
+        targetUser.setAvatar(request.getAvatar());
+        targetUser.setPhone(request.getPhone());
+        targetUser.setAddress(request.getAddress());
+
+        targetUser = userRepository.save(targetUser);
+        return userMapper.toUserResponse(targetUser); // 👉 Dùng Mapper tại đây
     }
 
     public boolean isEmailExist(String email) {
-        return this.userRepository.existsByEmail(email);
+        return userRepository.existsByEmail(email);
     }
 
-    public Page<UserDTO> getUsers(int page, int size, RoleEnum role, GenderEnum gender, String search, String sortBy,
-            String sortDirection) {
+    public PageResponse<UserResponse> getUsers(int page, int size, RoleEnum role, GenderEnum gender, String search,
+            String sortBy, String sortDirection) {
+
+        // 1. Tạo đối tượng Sort và Pageable
         Sort sort = Sort.by(sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<User> userPage = userRepository.findAll(
-                UserSpecification.filterUsers(role, gender, search),
-                pageable);
-        return userPage.map(this::convertToDTO);
+
+        // 2. Query data từ DB trả về Page<User>
+        Page<User> userPage = userRepository.findAll(UserSpecification.filterUsers(role, gender, search), pageable);
+
+        // 3. Dùng Utils Generic để biến Page<User> thành PageResponse<UserResponse>
+        return PageUtils.toPageResponse(userPage, userMapper::toUserResponse);
     }
 
-    public void changePassword(String email, String currentPassword, String newPassword)
-            throws vn.bds360.backend.common.exception.InputInvalidException {
+    public void changePassword(String email, String currentPassword, String newPassword) {
         User user = handleGetUserByUserName(email);
         if (user == null) {
-            throw new InputInvalidException("Người dùng không tồn tại, vui lòng kiểm tra lại đăng nhập!");
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new InputInvalidException("Mật khẩu hiện tại không đúng");
+            throw new AppException(ErrorCode.WRONG_PASSWORD);
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 
-    private UserDTO convertToDTO(User user) {
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setName(user.getName());
-        dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole());
-        dto.setGender(user.getGender());
-        dto.setBalance(user.getBalance());
-        dto.setAvatar(user.getAvatar());
-        dto.setPhone(user.getPhone());
-        dto.setAddress(user.getAddress());
-        dto.setCreatedAt(user.getCreatedAt());
-        dto.setUpdatedAt(user.getUpdatedAt());
-        return dto;
+    public void forceUpdatePassword(String email, String encodedNewPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        user.setPassword(encodedNewPassword);
+        userRepository.save(user);
     }
 }

@@ -4,9 +4,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.databind.ObjectMapper;
-import vn.bds360.backend.common.dto.response.RestResponse;
+import vn.bds360.backend.common.dto.response.ApiResponse;
+import vn.bds360.backend.common.exception.ErrorCode;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -26,29 +26,17 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     }
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-            AuthenticationException authException) throws IOException, ServletException {
-        this.delegate.commence(request, response, authException);
+    public void commence(HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException authException) throws IOException {
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
 
-        RestResponse<Object> res = new RestResponse<Object>();
-        res.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        ApiResponse<Void> apiResponse = ApiResponse.error(
+                ErrorCode.UNAUTHORIZED.getCode(),
+                ErrorCode.UNAUTHORIZED.getMessage());
 
-        // String errorMessage = Optional.ofNullable(authException.getCause()) // NULL
-        // .map(Throwable::getMessage)
-        // .orElse(authException.getMessage());
-        // res.setError(errorMessage);
-
-        String errorMessage;
-        if (authException.getCause() != null) {
-            errorMessage = authException.getCause().getMessage();
-        } else {
-            errorMessage = authException.getMessage();
-        }
-        res.setError(errorMessage);
-
-        res.setMessage("Token không hợp lệ!");
-
-        mapper.writeValue(response.getWriter(), res);
+        mapper.writeValue(response.getWriter(), apiResponse);
     }
 }
