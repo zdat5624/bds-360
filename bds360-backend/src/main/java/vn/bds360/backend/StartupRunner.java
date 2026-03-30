@@ -149,7 +149,7 @@ public class StartupRunner implements CommandLineRunner {
         adminUser.setPassword(this.passwordEncoder.encode("123456"));
         adminUser.setRole(RoleEnum.ADMIN);
         adminUser.setGender(GenderEnum.MALE);
-        adminUser.setBalance(999999999);
+        adminUser.setBalance(999999999L);
         adminUser.setPhone("0123456789");
         adminUser.setAddress("Thành Phố Hồ Chí Minh");
         userList.add(adminUser);
@@ -162,7 +162,7 @@ public class StartupRunner implements CommandLineRunner {
             user.setPassword(this.passwordEncoder.encode("123456"));
             user.setRole(RoleEnum.USER);
             user.setGender(i % 2 == 0 ? GenderEnum.MALE : GenderEnum.FEMALE);
-            user.setBalance(1000000 * i); // Số dư tăng dần
+            user.setBalance(1000000L * i); // Số dư tăng dần
             user.setPhone("01234567" + String.format("%02d", i));
             user.setAddress(i % 2 == 0 ? "Thành Phố Hồ Chí Minh" : "Thành Phố Hà Nội");
             userList.add(user);
@@ -171,7 +171,7 @@ public class StartupRunner implements CommandLineRunner {
         for (User user : userList) {
             boolean isEmailExist = this.userService.isEmailExist(user.getEmail());
             if (!isEmailExist) {
-                this.userService.handleCreateUser(user);
+                this.userService.saveInternalUser(user);
             }
         }
     }
@@ -667,7 +667,7 @@ public class StartupRunner implements CommandLineRunner {
                 post.setPrice((long) (roundedArea * pricePerM2));
             }
 
-            post.setView(random.nextInt(10000));
+            post.setView(random.nextInt(10000) * 1L);
 
             // Kiểm tra vipLevel để gán trạng thái và thời gian hiệu lực
             if (selectedVip.getVipLevel() == 0) {
@@ -728,7 +728,7 @@ public class StartupRunner implements CommandLineRunner {
             }
             post.setImages(images);
 
-            post.setView(random.nextInt(1000) + 100);
+            post.setView((long) (random.nextInt(1000) + 100));
 
             posts.add(post);
         }

@@ -1,7 +1,8 @@
 package vn.bds360.backend.common.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
+
+import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
@@ -17,17 +18,19 @@ public enum ErrorCode {
     API_NOT_FOUND(10006, HttpStatus.NOT_FOUND, "Đường dẫn API không tồn tại trên hệ thống."),
     METHOD_NOT_ALLOWED(10007, HttpStatus.METHOD_NOT_ALLOWED, "Phương thức HTTP không được hỗ trợ."),
     RESOURCE_NOT_FOUND(10008, HttpStatus.NOT_FOUND, "Tài nguyên tĩnh không tồn tại hoặc URL sai."),
+    INVALID_SORT_FIELD(10009, HttpStatus.BAD_REQUEST, "Không thể sắp xếp. Trường dữ liệu '%s' không tồn tại."),
 
     // ==========================================
     // 11. AUTH & USER MODULE
     // ==========================================
     USER_NOT_FOUND(11001, HttpStatus.NOT_FOUND, "Không tìm thấy người dùng trong hệ thống."),
-    USER_EXISTED(11002, HttpStatus.BAD_REQUEST, "Email hoặc số điện thoại đã tồn tại."),
+    USER_EXISTED(11002, HttpStatus.CONFLICT, "Email hoặc số điện thoại đã tồn tại."),
     USER_LOCKED(11003, HttpStatus.FORBIDDEN, "Tài khoản của bạn đã bị khóa."),
     WRONG_PASSWORD(11004, HttpStatus.BAD_REQUEST, "Mật khẩu không chính xác."),
     INVALID_CREDENTIALS(11005, HttpStatus.UNAUTHORIZED, "Tài khoản hoặc mật khẩu không chính xác."),
     TOKEN_EXPIRED(11006, HttpStatus.UNAUTHORIZED, "Token đã hết hạn, vui lòng đăng nhập lại."),
     INVALID_OTP_CODE(11007, HttpStatus.BAD_REQUEST, "Mã xác nhận không chính xác hoặc không tồn tại."),
+    CANNOT_DELETE_ADMIN(11008, HttpStatus.BAD_REQUEST, "Không thể xóa tài khoản ADMIN."),
     // ==========================================
     // 12. POST & CATEGORY MODULE (Bất động sản)
     // ==========================================
@@ -51,8 +54,7 @@ public enum ErrorCode {
     // ==========================================
     // 15. VIP MODULE (Gói thành viên)
     // ==========================================
-    VIP_PACKAGE_NOT_FOUND(15001, HttpStatus.NOT_FOUND, "Không tìm thấy gói VIP này."),
-    ALREADY_VIP(15002, HttpStatus.BAD_REQUEST, "Tài khoản này hiện đã là VIP."),
+    VIP_NOT_FOUND(15001, HttpStatus.NOT_FOUND, "Không tìm thấy gói VIP này."),
 
     // ==========================================
     // 16. MEDIA MODULE (Hình ảnh)

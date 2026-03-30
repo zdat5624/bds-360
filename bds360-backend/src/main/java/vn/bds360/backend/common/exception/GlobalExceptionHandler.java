@@ -2,7 +2,7 @@ package vn.bds360.backend.common.exception;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,7 +18,7 @@ import vn.bds360.backend.common.dto.response.ApiResponse;
 
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler { // Đã đổi tên class cho chuẩn Semantics
+public class GlobalExceptionHandler {
 
         // =========================================================================
         // 1. HỨNG LỖI VALIDATION (@Valid / @Validated)
@@ -74,10 +74,11 @@ public class GlobalExceptionHandler { // Đã đổi tên class cho chuẩn Sema
         public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
                 log.warn("Cảnh báo bảo mật - Truy cập trái phép: {}", ex.getMessage());
 
-                // Bạn có thể thêm mã FORBIDDEN(40300, ...) vào ErrorCode và gọi ra đây
+                // 👉 ĐÃ SỬA: Gọi trực tiếp ErrorCode.FORBIDDEN thay vì hardcode 40300
+                ErrorCode errorCode = ErrorCode.FORBIDDEN;
                 return ResponseEntity
-                                .status(403)
-                                .body(ApiResponse.error(40300, "Bạn không có quyền truy cập vào tài nguyên này."));
+                                .status(errorCode.getStatus())
+                                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
         }
 
         // =========================================================================
@@ -132,12 +133,26 @@ public class GlobalExceptionHandler { // Đã đổi tên class cho chuẩn Sema
         @ExceptionHandler(MaxUploadSizeExceededException.class)
         public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeException(MaxUploadSizeExceededException e) {
 
-                // Gọi thẳng cái mã 16001 mà bạn vừa định nghĩa ra
                 ErrorCode errorCode = ErrorCode.FILE_TOO_LARGE;
 
                 return ResponseEntity
-                                .status(errorCode.getStatus()) // Sẽ trả về 413 CONTENT_TOO_LARGE
+                                .status(errorCode.getStatus())
                                 .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
+        }
+
+        @ExceptionHandler(PropertyReferenceException.class)
+        public ResponseEntity<ApiResponse<Void>> handlePropertyReferenceException(PropertyReferenceException e) {
+                String badProperty = e.getPropertyName();
+                log.warn("Lỗi sắp xếp: Không tìm thấy trường '{}'", badProperty);
+
+                ErrorCode errorCode = ErrorCode.INVALID_SORT_FIELD;
+
+                String dynamicMessage = String.format(errorCode.getMessage(), badProperty);
+
+                // 3. Trả về
+                return ResponseEntity
+                                .status(errorCode.getStatus())
+                                .body(ApiResponse.error(errorCode.getCode(), dynamicMessage));
         }
 
         // =========================================================================

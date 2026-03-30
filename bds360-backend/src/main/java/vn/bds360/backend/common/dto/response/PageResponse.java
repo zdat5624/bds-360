@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 @Getter
 @Setter
 @Builder
@@ -21,4 +23,17 @@ public class PageResponse<T> {
     private long totalElements;
 
     private List<T> content;
+
+    // ==========================================
+    // Hàm Factory nhận vào Spring Page
+    // ==========================================
+    public static <T> PageResponse<T> of(Page<T> page) {
+        return PageResponse.<T>builder()
+                .currentPage(page.getNumber())
+                .pageSize(page.getSize())
+                .totalPages(page.getTotalPages())
+                .totalElements(page.getTotalElements())
+                .content(page.getContent())
+                .build();
+    }
 }

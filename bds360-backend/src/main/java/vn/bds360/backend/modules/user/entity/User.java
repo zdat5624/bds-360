@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.GenderEnum;
 import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.modules.auth.entity.PasswordResetToken;
 import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
@@ -35,7 +36,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @NotBlank(message = "Name không được để trống")
     private String name;
@@ -54,7 +55,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private GenderEnum gender;
 
-    private long balance;
+    private Long balance = 0L;
 
     private String avatar;
 
@@ -79,6 +80,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonIgnore
     private List<Notification> notifications;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonIgnore
+    private List<PasswordResetToken> passwordResetTokens;
 
     @PrePersist
     public void handleBeforeCreate() {

@@ -5,8 +5,25 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.PostStatusEnum;
@@ -27,7 +44,7 @@ public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @NotBlank(message = "Tiêu đề không được để trống")
     @Size(max = 255, message = "Tiêu đề không được quá 255 ký tự")
@@ -37,7 +54,7 @@ public class Post {
     @NotBlank(message = "Mô tả không được để trống")
     private String description;
 
-    private boolean notifyOnView;
+    private Boolean notifyOnView;
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Loại tin đăng không được để trống")
@@ -52,13 +69,13 @@ public class Post {
     private Double area;
 
     @Min(value = 0, message = "Lượt xem phải không âm")
-    private long view = 0;
+    private Long view = 0L;
 
     @Enumerated(EnumType.STRING)
     private PostStatusEnum status;
 
     private Instant expireDate;
-    private boolean deletedByUser;
+    private Boolean deletedByUser;
 
     private Instant createdAt;
     private Instant updatedAt;

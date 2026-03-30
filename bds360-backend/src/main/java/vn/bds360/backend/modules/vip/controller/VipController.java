@@ -2,41 +2,39 @@ package vn.bds360.backend.modules.vip.controller;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-import vn.bds360.backend.common.exception.InputInvalidException;
-import vn.bds360.backend.modules.vip.entity.Vip;
+import vn.bds360.backend.common.dto.response.ApiResponse;
+import vn.bds360.backend.modules.vip.dto.request.UpdateVipPriceRequest;
+import vn.bds360.backend.modules.vip.dto.response.VipResponse;
 import vn.bds360.backend.modules.vip.service.VipService;
+import vn.bds360.backend.security.annotation.IsAdmin;
 
 @RestController
+@RequestMapping("/api/v1") // Đồng bộ version
+@RequiredArgsConstructor
 public class VipController {
+
     private final VipService vipService;
 
-    public VipController(VipService vipService) {
-        this.vipService = vipService;
+    @GetMapping("/vips")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<VipResponse>> getAllVips() {
+        return ApiResponse.success(vipService.getAllVips(), "Lấy danh sách gói VIP thành công");
     }
 
-    @GetMapping("api/vips")
-    public ResponseEntity<List<Vip>> getAllVips() {
-        List<Vip> vips = vipService.getAllVips();
-        return ResponseEntity.ok(vips);
-    }
+    @PutMapping("/admin/vips/{id}/price")
+    @ResponseStatus(HttpStatus.OK)
+    @IsAdmin
+    public ApiResponse<VipResponse> updateVipPrice(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody UpdateVipPriceRequest request) {
 
-    @PutMapping("api/admin/vips/{id}/price")
-    public ResponseEntity<Vip> updateVipPrice(@PathVariable Long id, @RequestParam long newPrice)
-            throws InputInvalidException {
-        Vip updatedVip = vipService.updateVipPrice(id, newPrice);
-        return ResponseEntity.ok(updatedVip);
-    }
-
-    @GetMapping("api/vips/test")
-    public ResponseEntity<List<Vip>> getAllVipss() {
-        List<Vip> vips = vipService.getAllVips();
-        return ResponseEntity.ok(vips);
+        VipResponse updatedVip = vipService.updateVipPrice(id, request);
+        return ApiResponse.success(updatedVip, "Cập nhật giá gói VIP thành công");
     }
 }

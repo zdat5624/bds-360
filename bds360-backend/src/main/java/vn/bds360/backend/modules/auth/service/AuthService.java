@@ -1,12 +1,13 @@
 package vn.bds360.backend.modules.auth.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.RoleEnum;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -51,17 +52,16 @@ public class AuthService {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
-        User newUser = new User();
-        newUser.setName(request.getName());
-        newUser.setPhone(request.getPhone());
-        newUser.setEmail(request.getEmail());
-        newUser.setGender(request.getGender());
+        // 1. MapStruct biến Request thành Entity
+        User newUser = userMapper.toUser(request);
+
+        // 2. Gán các trường đặc thù của nghiệp vụ Đăng ký
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        newUser.setRole(RoleEnum.USER);
+        newUser.setRole(RoleEnum.USER); // Mặc định đăng ký là USER
 
-        User savedUser = userService.handleCreateUser(newUser);
+        // 3. Lưu thông qua hàm nội bộ của UserService
+        User savedUser = userService.saveInternalUser(newUser);
 
-        // 3. 1 dòng nhẹ nhàng
         return userMapper.toUserResponse(savedUser);
     }
 
@@ -70,7 +70,6 @@ public class AuthService {
         if (currentUserDB == null)
             throw new AppException(ErrorCode.USER_NOT_FOUND);
 
-        // 4. 1 dòng nhẹ nhàng
         return userMapper.toUserResponse(currentUserDB);
     }
 }

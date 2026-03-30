@@ -1,22 +1,31 @@
 package vn.bds360.backend.modules.user.controller;
 
+import java.security.Principal;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import vn.bds360.backend.common.constant.GenderEnum;
-import vn.bds360.backend.common.constant.RoleEnum;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.modules.user.dto.request.CreateUserRequest;
 import vn.bds360.backend.modules.user.dto.request.UpdateProfileRequest;
 import vn.bds360.backend.modules.user.dto.request.UpdateUserRequest;
+import vn.bds360.backend.modules.user.dto.request.UserFilterRequest;
 import vn.bds360.backend.modules.user.dto.response.UserResponse;
 import vn.bds360.backend.modules.user.service.UserService;
 import vn.bds360.backend.security.annotation.IsAdmin;
 import vn.bds360.backend.security.annotation.RequireLogin;
-
-import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -54,18 +63,9 @@ public class UserController {
     @GetMapping("/admin/users")
     @ResponseStatus(HttpStatus.OK)
     @IsAdmin
-    public ApiResponse<PageResponse<UserResponse>> getUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) RoleEnum role,
-            @RequestParam(required = false) GenderEnum gender,
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "ASC") String sortDirection) {
+    public ApiResponse<PageResponse<UserResponse>> getUsers(@Valid @ModelAttribute UserFilterRequest filter) {
 
-        PageResponse<UserResponse> pageData = userService.getUsers(page, size, role, gender, search, sortBy,
-                sortDirection);
-        return ApiResponse.success(pageData, "Lấy danh sách người dùng thành công");
+        return ApiResponse.success(userService.getUsers(filter), "Lấy danh sách người dùng thành công");
     }
 
     // ==========================================

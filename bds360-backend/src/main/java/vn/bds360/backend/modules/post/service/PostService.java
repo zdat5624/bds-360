@@ -421,7 +421,7 @@ public class PostService {
 
         // Trường hợp tin đăng bị xóa mềm (deletedByUser = true): chỉ admin được truy
         // cập
-        if (post.isDeletedByUser() && !isAdmin) {
+        if (post.getDeletedByUser() && !isAdmin) {
             throw new ForbiddenException("Bạn không có quyền truy cập tin đăng này");
         }
 
@@ -436,7 +436,7 @@ public class PostService {
         }
 
         // Xử lý thông báo khi notifyOnView = true
-        if (post.isNotifyOnView() && currentUser != null && !isOwner && !isAdmin) {
+        if (post.getNotifyOnView() && currentUser != null && !isOwner && !isAdmin) {
             Notification notification = new Notification();
             String message = "Người dùng '" + currentUser.getName() + " - " + currentUser.getPhone() +
                     "' đã xem tin đăng mã '" + post.getId() + "' của bạn.";

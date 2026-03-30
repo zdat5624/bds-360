@@ -1,6 +1,5 @@
 package vn.bds360.backend.modules.user.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -8,23 +7,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import vn.bds360.backend.common.constant.GenderEnum;
+import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.RoleEnum;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
-import vn.bds360.backend.common.util.PageUtils;
 import vn.bds360.backend.modules.user.dto.request.CreateUserRequest;
 import vn.bds360.backend.modules.user.dto.request.UpdateProfileRequest;
 import vn.bds360.backend.modules.user.dto.request.UpdateUserRequest;
+import vn.bds360.backend.modules.user.dto.request.UserFilterRequest;
 import vn.bds360.backend.modules.user.dto.response.UserResponse;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.mapper.UserMapper;
 import vn.bds360.backend.modules.user.repository.UserRepository;
 import vn.bds360.backend.modules.user.specification.UserSpecification;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,32 +30,31 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    // Đã đổi kiểu trả về thành UserResponse
     public UserResponse handleCreateUser(CreateUserRequest request) {
         if (isEmailExist(request.getEmail())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
-        User user = new User();
-        user.setName(request.getName());
-        user.setPhone(request.getPhone());
-        user.setEmail(request.getEmail());
+        User user = userMapper.toUser(request);
+
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
-        user.setGender(request.getGender());
-        user.setAddress(request.getAddress());
 
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
     }
 
-    // Hàm nội bộ cho Auth (giữ nguyên trả Entity)
-    public User handleCreateUser(User user) {
+    public User saveInternalUser(User user) {
         return userRepository.save(user);
     }
 
     public void handleDeleteUser(long id) {
         User user = fetchUserById(id);
+        if (user == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        if (user.getRole().equals(RoleEnum.ADMIN)) {
+            throw new AppException(ErrorCode.CANNOT_DELETE_ADMIN);
+        }
         userRepository.delete(user);
     }
 
@@ -77,9 +72,6 @@ public class UserService {
     // Đã đổi kiểu trả về thành UserResponse
     public UserResponse fetchUserByIdWithPermission(long targetUserId, String currentUsername) {
         User currentUser = handleGetUserByUserName(currentUsername);
-        if (currentUser == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
 
         boolean isAdmin = currentUser.getRole().equals(RoleEnum.ADMIN);
         boolean isOwner = currentUser.getId() == targetUserId;
@@ -89,62 +81,53 @@ public class UserService {
         }
 
         User targetUser = fetchUserById(targetUserId);
-        return userMapper.toUserResponse(targetUser); // 👉 Dùng Mapper tại đây
+        return userMapper.toUserResponse(targetUser);
     }
 
-    // Đã đổi kiểu trả về thành UserResponse
     public UserResponse handleUpdateUser(UpdateUserRequest request) {
         User currentUser = fetchUserById(request.getId());
 
-        currentUser.setName(request.getName());
-        currentUser.setRole(request.getRole());
-        currentUser.setGender(request.getGender());
-        currentUser.setAvatar(request.getAvatar());
-        currentUser.setPhone(request.getPhone());
-        currentUser.setAddress(request.getAddress());
+        if (currentUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        userMapper.updateUserFromRequest(request, currentUser);
 
         currentUser = userRepository.save(currentUser);
         return userMapper.toUserResponse(currentUser);
     }
 
-    // Đã đổi kiểu trả về thành UserResponse
     public UserResponse handleUpdateProfile(UpdateProfileRequest request, String currentUsername) {
         User currentUser = handleGetUserByUserName(currentUsername);
-        if (currentUser == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
 
         if (currentUser.getId() != request.getId()) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
         User targetUser = fetchUserById(request.getId());
-        targetUser.setName(request.getName());
-        targetUser.setGender(request.getGender());
-        targetUser.setAvatar(request.getAvatar());
-        targetUser.setPhone(request.getPhone());
-        targetUser.setAddress(request.getAddress());
+        if (targetUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        userMapper.updateProfileFromRequest(request, targetUser);
 
         targetUser = userRepository.save(targetUser);
-        return userMapper.toUserResponse(targetUser); // 👉 Dùng Mapper tại đây
+        return userMapper.toUserResponse(targetUser);
     }
 
     public boolean isEmailExist(String email) {
         return userRepository.existsByEmail(email);
     }
 
-    public PageResponse<UserResponse> getUsers(int page, int size, RoleEnum role, GenderEnum gender, String search,
-            String sortBy, String sortDirection) {
+    public PageResponse<UserResponse> getUsers(UserFilterRequest filter) {
 
-        // 1. Tạo đối tượng Sort và Pageable
-        Sort sort = Sort.by(sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Sort sort = Sort.by(filter.getSortDirection(), filter.getSortBy());
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
 
-        // 2. Query data từ DB trả về Page<User>
-        Page<User> userPage = userRepository.findAll(UserSpecification.filterUsers(role, gender, search), pageable);
+        Page<User> userPage = userRepository.findAll(
+                UserSpecification.filterUsers(filter),
+                pageable);
 
-        // 3. Dùng Utils Generic để biến Page<User> thành PageResponse<UserResponse>
-        return PageUtils.toPageResponse(userPage, userMapper::toUserResponse);
+        return PageResponse.of(userPage.map(userMapper::toUserResponse));
     }
 
     public void changePassword(String email, String currentPassword, String newPassword) {

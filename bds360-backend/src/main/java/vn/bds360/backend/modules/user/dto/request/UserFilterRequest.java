@@ -2,16 +2,16 @@ package vn.bds360.backend.modules.user.dto.request;
 
 import java.time.Instant;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import vn.bds360.backend.common.constant.GenderEnum;
 import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.dto.request.BaseFilterRequest;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class UserFilterRequest {
+@Getter
+@Setter
+public class UserFilterRequest extends BaseFilterRequest {
+
     private String name;
     private String email;
     private RoleEnum role;
@@ -22,7 +22,4 @@ public class UserFilterRequest {
     private String address;
     private Instant createdFrom;
     private Instant createdTo;
-    private Integer page = 0;
-    private Integer size = 10;
-
 }
