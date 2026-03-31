@@ -1,4 +1,4 @@
-package vn.bds360.backend.config;
+package vn.bds360.backend.common.config;
 
 import java.util.Arrays;
 import java.util.List;

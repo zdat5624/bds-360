@@ -1,70 +1,73 @@
 package vn.bds360.backend.modules.transaction.service;
 
-import java.time.Instant;
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import vn.bds360.backend.common.constant.TransStatusEnum;
-import vn.bds360.backend.common.constant.TransactionFilterType;
-import vn.bds360.backend.common.exception.NotFoundException;
+import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.dto.response.PageResponse;
+import vn.bds360.backend.common.exception.AppException;
+import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.modules.transaction.dto.request.TransactionFilterRequest;
+import vn.bds360.backend.modules.transaction.dto.response.TransactionResponse;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
+import vn.bds360.backend.modules.transaction.mapper.TransactionMapper;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
+import vn.bds360.backend.modules.transaction.specification.TransactionSpecification;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.repository.UserRepository;
 import vn.bds360.backend.security.SecurityUtil;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionService {
+
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final TransactionMapper transactionMapper;
 
-    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository) {
-        this.transactionRepository = transactionRepository;
-        this.userRepository = userRepository;
+    public TransactionResponse getTransactionById(Long id) {
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        return transactionMapper.toTransactionResponse(transaction);
     }
 
-    public Transaction getTransactionById(Long id) {
-        return transactionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy giao dịch id: " + id));
+    // ==========================================
+    // Dành cho ADMIN
+    // ==========================================
+    public PageResponse<TransactionResponse> getTransactions(TransactionFilterRequest filter) {
+
+        Sort sort = Sort.by(filter.getSortDirection(), filter.getSortBy());
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
+
+        // Truyền null cho targetUserId để lấy toàn bộ giao dịch
+        Page<Transaction> page = transactionRepository.findAll(
+                TransactionSpecification.filterTransactions(filter, null),
+                pageable);
+
+        return PageResponse.of(page.map(transactionMapper::toTransactionResponse));
     }
 
-    public Page<Transaction> getTransactions(
-            Pageable pageable, String email, Long transactionId, String txnId,
-            TransStatusEnum status, TransactionFilterType type, Instant startDate, Instant endDate) {
-        String typeStr = type != null ? type.name() : null;
-        return transactionRepository.findTransactionsWithFilters(
-                email, transactionId, txnId, status, typeStr, startDate, endDate, pageable);
-    }
+    // ==========================================
+    // Dành cho USER (Chỉ lấy giao dịch của chính họ)
+    // ==========================================
+    public PageResponse<TransactionResponse> getCurrentUserTransactions(TransactionFilterRequest filter) {
 
-    public Page<Transaction> getUserTransactions(Long userId, Pageable pageable) {
-        return transactionRepository.findByUserId(userId, pageable);
-    }
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-    public Page<Transaction> getCurrentUserTransactions(Pageable pageable, TransactionFilterType type,
-            TransStatusEnum status) {
-        Optional<String> currentUserLogin = SecurityUtil.getCurrentUserLogin();
-        if (currentUserLogin.isEmpty()) {
-            throw new IllegalStateException("User not authenticated");
-        }
+        Sort sort = Sort.by(filter.getSortDirection(), filter.getSortBy());
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
 
-        Optional<User> user = userRepository.findByEmail(currentUserLogin.get());
-        if (user.isEmpty()) {
-            throw new IllegalStateException("User not found");
-        }
+        // Truyền user.getId() vào để Specification ép buộc lọc theo ID này
+        Page<Transaction> page = transactionRepository.findAll(
+                TransactionSpecification.filterTransactions(filter, user.getId()),
+                pageable);
 
-        switch (type) {
-            case DEPOSIT:
-                return transactionRepository.findByUserIdAndAmountGreaterThanAndStatus(user.get().getId(), 0, status,
-                        pageable);
-            case PAYMENT:
-                return transactionRepository.findByUserIdAndAmountLessThanAndStatus(user.get().getId(), 0, status,
-                        pageable);
-            case ALL:
-            default:
-                return transactionRepository.findByUserIdAndStatus(user.get().getId(), status, pageable);
-        }
+        return PageResponse.of(page.map(transactionMapper::toTransactionResponse));
     }
 }

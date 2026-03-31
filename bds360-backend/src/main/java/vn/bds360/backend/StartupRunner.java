@@ -13,6 +13,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import vn.bds360.backend.common.constant.GenderEnum;
@@ -38,9 +39,10 @@ import vn.bds360.backend.modules.notification.repository.NotificationRepository;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.post.repository.PostRepository;
-import vn.bds360.backend.modules.transaction.config.ConfigVNPAY;
+import vn.bds360.backend.modules.transaction.config.VnPayProperties;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
+import vn.bds360.backend.modules.transaction.util.VnPayUtil;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.repository.UserRepository;
 import vn.bds360.backend.modules.user.service.UserService;
@@ -48,6 +50,7 @@ import vn.bds360.backend.modules.vip.entity.Vip;
 import vn.bds360.backend.modules.vip.repository.VipRepository;
 
 @Component
+@RequiredArgsConstructor
 public class StartupRunner implements CommandLineRunner {
 
     private final NotificationRepository notificationRepository;
@@ -62,25 +65,7 @@ public class StartupRunner implements CommandLineRunner {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final MapboxGeocodeService mapboxGeocodeService;
-
-    public StartupRunner(VipRepository vipRepository, ProvinceRepository provinceRepository,
-            DistrictRepository districtRepository, WardRepository wardRepository, PasswordEncoder passwordEncoder,
-            CategoryRepository categoryRepository, UserService userService, PostRepository postRepository,
-            UserRepository userRepository, TransactionRepository transactionRepository,
-            NotificationRepository notificationRepository, MapboxGeocodeService mapboxGeocodeService) {
-        this.vipRepository = vipRepository;
-        this.provinceRepository = provinceRepository;
-        this.districtRepository = districtRepository;
-        this.wardRepository = wardRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.categoryRepository = categoryRepository;
-        this.userService = userService;
-        this.postRepository = postRepository;
-        this.userRepository = userRepository;
-        this.transactionRepository = transactionRepository;
-        this.notificationRepository = notificationRepository;
-        this.mapboxGeocodeService = mapboxGeocodeService;
-    }
+    private final VnPayProperties vnPayProperties;
 
     @Override
     public void run(String... args) {
@@ -766,7 +751,7 @@ public class StartupRunner implements CommandLineRunner {
             boolean isDeposit = random.nextBoolean();
             long amount;
             String description = "";
-            String txnId = ConfigVNPAY.getRandomNumber(10);
+            String txnId = VnPayUtil.getRandomNumber(10);
 
             if (isDeposit || userPosts.isEmpty()) { // Nếu không có Post hoặc là giao dịch nạp tiền
                 // Giao dịch nạp tiền

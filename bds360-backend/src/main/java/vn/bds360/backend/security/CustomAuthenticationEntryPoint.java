@@ -1,23 +1,19 @@
 package vn.bds360.backend.security;
 
-import jakarta.servlet.ServletException;
+import java.io.IOException;
+
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.databind.ObjectMapper;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.exception.ErrorCode;
 
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
-
-    private final AuthenticationEntryPoint delegate = new BearerTokenAuthenticationEntryPoint();
 
     private final ObjectMapper mapper;
 

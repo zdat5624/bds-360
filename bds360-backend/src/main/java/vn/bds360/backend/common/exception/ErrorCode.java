@@ -49,7 +49,7 @@ public enum ErrorCode {
     // ==========================================
     TRANSACTION_NOT_FOUND(14001, HttpStatus.NOT_FOUND, "Không tìm thấy giao dịch này."),
     PAYMENT_FAILED(14002, HttpStatus.BAD_REQUEST, "Thanh toán thất bại hoặc đã bị hủy."),
-    BALANCE_NOT_ENOUGH(14003, HttpStatus.BAD_REQUEST, "Số dư trong ví không đủ để thực hiện."),
+    BALANCE_NOT_ENOUGH(14003, HttpStatus.BAD_REQUEST, "Số dư trong tài khoản không đủ để thực hiện."),
 
     // ==========================================
     // 15. VIP MODULE (Gói thành viên)
