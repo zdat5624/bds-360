@@ -1,7 +1,5 @@
 package vn.bds360.backend.modules.user.controller;
 
-import java.security.Principal;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +21,9 @@ import vn.bds360.backend.modules.user.dto.request.UpdateProfileRequest;
 import vn.bds360.backend.modules.user.dto.request.UpdateUserRequest;
 import vn.bds360.backend.modules.user.dto.request.UserFilterRequest;
 import vn.bds360.backend.modules.user.dto.response.UserResponse;
+import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.service.UserService;
+import vn.bds360.backend.security.annotation.CurrentUser;
 import vn.bds360.backend.security.annotation.IsAdmin;
 import vn.bds360.backend.security.annotation.RequireLogin;
 
@@ -75,8 +75,8 @@ public class UserController {
     @GetMapping("/users/{id}")
     @ResponseStatus(HttpStatus.OK)
     @RequireLogin
-    public ApiResponse<UserResponse> getUserById(@PathVariable("id") long id, Principal principal) {
-        return ApiResponse.success(userService.fetchUserByIdWithPermission(id, principal.getName()),
+    public ApiResponse<UserResponse> getUserById(@PathVariable("id") long id, @CurrentUser User user) {
+        return ApiResponse.success(userService.fetchUserByIdWithPermission(id, user.getEmail()),
                 "Lấy thông tin người dùng thành công");
     }
 
@@ -84,8 +84,8 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @RequireLogin
     public ApiResponse<UserResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request,
-            Principal principal) {
-        return ApiResponse.success(userService.handleUpdateProfile(request, principal.getName()),
+            @CurrentUser User user) {
+        return ApiResponse.success(userService.handleUpdateProfile(request, user.getEmail()),
                 "Cập nhật hồ sơ thành công");
     }
 }

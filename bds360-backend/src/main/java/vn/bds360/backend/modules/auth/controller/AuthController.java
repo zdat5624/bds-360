@@ -1,20 +1,29 @@
 package vn.bds360.backend.modules.auth.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
 import vn.bds360.backend.common.dto.response.ApiResponse;
-import vn.bds360.backend.common.exception.AppException;
-import vn.bds360.backend.common.exception.ErrorCode;
-import vn.bds360.backend.modules.auth.dto.request.*;
+import vn.bds360.backend.modules.auth.dto.request.ChangePasswordRequest;
+import vn.bds360.backend.modules.auth.dto.request.ForgotPasswordRequest;
+import vn.bds360.backend.modules.auth.dto.request.LoginRequest;
+import vn.bds360.backend.modules.auth.dto.request.RegisterRequest;
+import vn.bds360.backend.modules.auth.dto.request.ResetPasswordRequest;
 import vn.bds360.backend.modules.auth.dto.response.LoginResponse;
 import vn.bds360.backend.modules.auth.service.AuthService;
 import vn.bds360.backend.modules.auth.service.ForgotPasswordService;
 import vn.bds360.backend.modules.user.dto.response.UserResponse;
+import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.service.UserService;
-
-import java.security.Principal;
+import vn.bds360.backend.security.annotation.CurrentUser;
+import vn.bds360.backend.security.annotation.RequireLogin;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -33,10 +42,10 @@ public class AuthController {
 
     @GetMapping("/account")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<UserResponse> getAccount(Principal principal) {
-        if (principal == null)
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        return ApiResponse.success(authService.getAccount(principal.getName()), "Lấy thông tin tài khoản thành công");
+    @RequireLogin
+    public ApiResponse<UserResponse> getAccount(@CurrentUser User user) {
+
+        return ApiResponse.success(authService.getAccount(user.getEmail()), "Lấy thông tin tài khoản thành công");
     }
 
     @PostMapping("/register")
@@ -61,10 +70,10 @@ public class AuthController {
 
     @PostMapping("/change-password")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, Principal principal) {
-        if (principal == null)
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        userService.changePassword(principal.getName(), request.getCurrentPassword(), request.getNewPassword());
+    @RequireLogin
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, @CurrentUser User user) {
+
+        userService.changePassword(user.getEmail(), request.getCurrentPassword(), request.getNewPassword());
         return ApiResponse.success(null, "Đổi mật khẩu thành công.");
     }
 }

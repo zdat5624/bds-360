@@ -1,11 +1,15 @@
 package vn.bds360.backend.modules.statistics.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
-public class AdminStatisticsDTO {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AdminStatisticsResponse {
     private Long totalRevenueYear; // Doanh thu năm
     private Long totalRevenueMonth; // Doanh thu tháng
     private Long totalUsers; // Tổng số người dùng

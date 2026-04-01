@@ -2,37 +2,39 @@ package vn.bds360.backend.modules.statistics.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.constraints.Min;
-import vn.bds360.backend.modules.statistics.dto.response.AdminStatisticsDTO;
-import vn.bds360.backend.modules.statistics.dto.response.MonthlyRevenueDTO;
+import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.dto.response.ApiResponse;
+import vn.bds360.backend.modules.statistics.dto.response.AdminStatisticsResponse;
+import vn.bds360.backend.modules.statistics.dto.response.MonthlyRevenueResponse;
 import vn.bds360.backend.modules.statistics.service.AdminStatisticsService;
+import vn.bds360.backend.security.annotation.IsAdmin;
 
 @RestController
-@RequestMapping("/api/admin/statistics")
-@PreAuthorize("hasRole('ADMIN')")
+@RequestMapping("/api/v1/admin/statistics")
+@RequiredArgsConstructor
+@Validated
 public class AdminStatisticsController {
 
-    @Autowired
-    private AdminStatisticsService adminStatisticsService;
+    private final AdminStatisticsService adminStatisticsService;
 
     @GetMapping
-    public ResponseEntity<AdminStatisticsDTO> getStatistics() {
-        AdminStatisticsDTO statistics = adminStatisticsService.getStatistics();
-        return ResponseEntity.ok(statistics);
+    @IsAdmin
+    public ApiResponse<AdminStatisticsResponse> getStatistics() {
+        return ApiResponse.success(adminStatisticsService.getStatistics(), "Lấy thống kê tổng quan thành công");
     }
 
     @GetMapping("/revenue-by-month")
-    public ResponseEntity<List<MonthlyRevenueDTO>> getMonthlyRevenue(
-            @RequestParam("year") @Min(value = 2000, message = "Year must be greater than or equal to 2000") Integer year) {
-        List<MonthlyRevenueDTO> monthlyRevenues = adminStatisticsService.getMonthlyRevenue(year);
-        return ResponseEntity.ok(monthlyRevenues);
+    @IsAdmin
+    public ApiResponse<List<MonthlyRevenueResponse>> getMonthlyRevenue(
+            @RequestParam("year") @Min(value = 2000, message = "Năm phải lớn hơn hoặc bằng 2000") Integer year) {
+        return ApiResponse.success(adminStatisticsService.getMonthlyRevenue(year),
+                "Lấy doanh thu theo tháng thành công");
     }
 }

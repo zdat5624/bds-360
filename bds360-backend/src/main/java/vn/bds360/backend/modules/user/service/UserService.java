@@ -70,8 +70,8 @@ public class UserService {
     }
 
     // Đã đổi kiểu trả về thành UserResponse
-    public UserResponse fetchUserByIdWithPermission(long targetUserId, String currentUsername) {
-        User currentUser = handleGetUserByUserName(currentUsername);
+    public UserResponse fetchUserByIdWithPermission(long targetUserId, String email) {
+        User currentUser = handleGetUserByUserName(email);
 
         boolean isAdmin = currentUser.getRole().equals(RoleEnum.ADMIN);
         boolean isOwner = currentUser.getId() == targetUserId;
