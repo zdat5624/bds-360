@@ -6,13 +6,18 @@ import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 
@@ -20,9 +25,6 @@ import vn.bds360.backend.common.dto.response.ApiResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-        // =========================================================================
-        // 1. HỨNG LỖI VALIDATION (@Valid / @Validated)
-        // =========================================================================
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
                 List<ApiResponse.FieldErrorDetail> errors = ex.getBindingResult()
@@ -30,87 +32,63 @@ public class GlobalExceptionHandler {
                                 .stream()
                                 .map(err -> new ApiResponse.FieldErrorDetail(err.getField(), err.getDefaultMessage()))
                                 .toList();
-
+                ErrorCode e = ErrorCode.VALIDATION_ERROR;
                 return ResponseEntity
-                                .status(ErrorCode.VALIDATION_ERROR.getStatus())
-                                .body(ApiResponse.error(
-                                                ErrorCode.VALIDATION_ERROR.getCode(),
-                                                ErrorCode.VALIDATION_ERROR.getMessage(),
-                                                errors));
+                                .status(e.getStatus())
+                                .body(ApiResponse.error(e.getCode(),
+                                                e.getMessage(), errors));
         }
 
-        // =========================================================================
-        // 2. HỨNG LỖI NGHIỆP VỤ CHỦ ĐỘNG (AppException)
-        // =========================================================================
         @ExceptionHandler(AppException.class)
-        public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex) {
-                ErrorCode errorCode = ex.getErrorCode();
+        public ResponseEntity<ApiResponse<Void>> handleAppException(AppException exception) {
+                ErrorCode e = exception.getErrorCode();
 
                 return ResponseEntity
-                                .status(errorCode.getStatus())
-                                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
+                                .status(e.getStatus())
+                                .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
 
-        // =========================================================================
-        // 3. HỨNG LỖI SAI ĐỊNH DẠNG JSON (Vd: Gửi chữ vào trường số nguyên)
-        // =========================================================================
         @ExceptionHandler(HttpMessageNotReadableException.class)
         public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(
-                        HttpMessageNotReadableException ex) {
-                log.warn("Lỗi parse JSON từ Client: {}", ex.getMessage());
-
-                // Tái sử dụng HTTP Status 400 của VALIDATION_ERROR nhưng ghi đè lời nhắn
+                        HttpMessageNotReadableException exception) {
+                log.warn("Lỗi parse JSON từ Client: {}", exception.getMessage());
+                ErrorCode e = ErrorCode.INVALID_PARAMETER;
                 return ResponseEntity
-                                .status(ErrorCode.VALIDATION_ERROR.getStatus())
-                                .body(ApiResponse.error(
-                                                ErrorCode.VALIDATION_ERROR.getCode(),
-                                                "Định dạng dữ liệu gửi lên không hợp lệ (Sai cấu trúc JSON hoặc sai kiểu dữ liệu)."));
+                                .status(e.getStatus())
+                                .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
 
-        // =========================================================================
-        // 4. HỨNG LỖI SAI QUYỀN TRUY CẬP (Spring Security @PreAuthorize)
-        // =========================================================================
         @ExceptionHandler(AccessDeniedException.class)
-        public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
-                log.warn("Cảnh báo bảo mật - Truy cập trái phép: {}", ex.getMessage());
+        public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException exception) {
+                log.warn("Cảnh báo bảo mật - Truy cập trái phép: {}", exception.getMessage());
 
-                // 👉 ĐÃ SỬA: Gọi trực tiếp ErrorCode.FORBIDDEN thay vì hardcode 40300
                 ErrorCode errorCode = ErrorCode.FORBIDDEN;
                 return ResponseEntity
                                 .status(errorCode.getStatus())
                                 .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
         }
 
-        // =========================================================================
-        // HỨNG LỖI THAM SỐ TRUYỀN VÀO (URL PARAM, PATH VARIABLE) - Mã 400
-        // Bao gồm: Thiếu param, Sai kiểu dữ liệu (Vd: chữ truyền vào số)
-        // =========================================================================
         @ExceptionHandler({
-                        org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
-                        org.springframework.web.bind.MissingServletRequestParameterException.class,
-                        jakarta.validation.ConstraintViolationException.class // Lỗi khi dùng @Validated trên param
+                        MethodArgumentTypeMismatchException.class,
+                        MissingServletRequestParameterException.class,
+                        ConstraintViolationException.class
         })
-        public ResponseEntity<ApiResponse<Void>> handleParameterException(Exception ex) {
-                log.warn("Lỗi tham số Request: {}", ex.getMessage());
+        public ResponseEntity<ApiResponse<Void>> handleParameterException(Exception exception) {
+                log.warn("Lỗi tham số Request: {}", exception.getMessage());
+                ErrorCode e = ErrorCode.INVALID_PARAMETER;
                 return ResponseEntity
-                                .status(ErrorCode.INVALID_PARAMETER.getStatus())
-                                .body(ApiResponse.error(
-                                                ErrorCode.INVALID_PARAMETER.getCode(),
-                                                ErrorCode.INVALID_PARAMETER.getMessage()));
+                                .status(e.getStatus())
+                                .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
 
-        // =========================================================================
-        // HỨNG LỖI SAI METHOD HTTP (GET, POST, PUT, DELETE) - Mã 405
-        // =========================================================================
-        @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+        @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
         public ResponseEntity<ApiResponse<Void>> handleMethodNotSupportedException(
-                        org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+                        HttpRequestMethodNotSupportedException ex) {
                 log.warn("Sai HTTP Method: {}", ex.getMessage());
+                ErrorCode e = ErrorCode.METHOD_NOT_ALLOWED;
                 return ResponseEntity
-                                .status(ErrorCode.METHOD_NOT_ALLOWED.getStatus())
-                                .body(ApiResponse.error(
-                                                ErrorCode.METHOD_NOT_ALLOWED.getCode(),
-                                                ErrorCode.METHOD_NOT_ALLOWED.getMessage()));
+                                .status(e.getStatus())
+                                .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
 
         @ExceptionHandler(NoHandlerFoundException.class)
@@ -127,9 +105,6 @@ public class GlobalExceptionHandler {
                                 .body(ApiResponse.error(error.getCode(), error.getMessage()));
         }
 
-        // ==========================================
-        // BẮT LỖI UPLOAD FILE QUÁ DUNG LƯỢNG
-        // ==========================================
         @ExceptionHandler(MaxUploadSizeExceededException.class)
         public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeException(MaxUploadSizeExceededException e) {
 
@@ -149,25 +124,26 @@ public class GlobalExceptionHandler {
 
                 String dynamicMessage = String.format(errorCode.getMessage(), badProperty);
 
-                // 3. Trả về
                 return ResponseEntity
                                 .status(errorCode.getStatus())
                                 .body(ApiResponse.error(errorCode.getCode(), dynamicMessage));
         }
 
-        // =========================================================================
-        // 5. HỨNG MỌI LỖI HỆ THỐNG KHÔNG XÁC ĐỊNH (Catch-all)
-        // =========================================================================
+        @ExceptionHandler(MultipartException.class)
+        public ResponseEntity<ApiResponse<Void>> handleMultipartException(MultipartException e) {
+                ErrorCode errorCode = ErrorCode.MISSING_FILE;
+                return ResponseEntity.status(errorCode.getStatus())
+                                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiResponse<Void>> handleUnwantedException(Exception ex) {
-                // BẮT BUỘC: In log lỗi thật (Stack trace) ra console để Dev còn biết đường fix
                 log.error("Lỗi hệ thống (500): ", ex);
-
-                // Trả về Frontend câu thông báo chung chung lấy từ ErrorCode
+                ErrorCode e = ErrorCode.INTERNAL_ERROR;
                 return ResponseEntity
-                                .status(ErrorCode.INTERNAL_ERROR.getStatus())
+                                .status(e.getStatus())
                                 .body(ApiResponse.error(
-                                                ErrorCode.INTERNAL_ERROR.getCode(),
-                                                ErrorCode.INTERNAL_ERROR.getMessage()));
+                                                e.getCode(),
+                                                e.getMessage()));
         }
 }

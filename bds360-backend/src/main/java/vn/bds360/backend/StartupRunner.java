@@ -39,7 +39,6 @@ import vn.bds360.backend.modules.notification.repository.NotificationRepository;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.post.repository.PostRepository;
-import vn.bds360.backend.modules.transaction.config.VnPayProperties;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.transaction.util.VnPayUtil;
@@ -65,7 +64,7 @@ public class StartupRunner implements CommandLineRunner {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final MapboxGeocodeService mapboxGeocodeService;
-    private final VnPayProperties vnPayProperties;
+    // private final VnPayProperties vnPayProperties;
 
     @Override
     public void run(String... args) {

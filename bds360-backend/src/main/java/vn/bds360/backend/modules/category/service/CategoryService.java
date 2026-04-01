@@ -1,63 +1,79 @@
 package vn.bds360.backend.modules.category.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import vn.bds360.backend.common.constant.PostTypeEnum;
+import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.dto.response.PageResponse;
+import vn.bds360.backend.common.exception.AppException;
+import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.modules.category.dto.request.CategoryCreateRequest;
+import vn.bds360.backend.modules.category.dto.request.CategoryFilterRequest;
+import vn.bds360.backend.modules.category.dto.request.CategoryUpdateRequest;
+import vn.bds360.backend.modules.category.dto.response.CategoryResponse;
 import vn.bds360.backend.modules.category.entity.Category;
+import vn.bds360.backend.modules.category.mapper.CategoryMapper;
 import vn.bds360.backend.modules.category.repository.CategoryRepository;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryService {
+
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
-    public CategoryService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    /**
+     * Helper: Chuyển đổi Filter thành Pageable của Spring Data
+     */
+    private Pageable getPageable(CategoryFilterRequest filter) {
+        return PageRequest.of(
+                filter.getPage(),
+                filter.getSize(),
+                Sort.by(filter.getSortDirection(), filter.getSortBy()));
     }
 
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+    public CategoryResponse createCategory(CategoryCreateRequest request) {
+        Category category = categoryMapper.toCategory(request);
+        return categoryMapper.toResponse(categoryRepository.save(category));
     }
 
-    public Category createCategory(Category category) {
-        return categoryRepository.save(category);
-    }
+    @Transactional
+    public CategoryResponse updateCategory(CategoryUpdateRequest request) {
+        Category category = categoryRepository.findById(request.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
-    public Category updateCategory(Category category) {
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-        if (existingCategory.isPresent()) {
-            Category updatedCategory = existingCategory.get();
-            updatedCategory.setName(category.getName());
-            updatedCategory.setType(category.getType());
-            return categoryRepository.save(updatedCategory);
-        }
-        throw new RuntimeException("Không tìm thấy category với id: " + category.getId());
+        categoryMapper.updateEntityFromRequest(request, category);
+        return categoryMapper.toResponse(categoryRepository.save(category));
     }
 
     public void deleteCategory(Long id) {
-        Optional<Category> existingCategory = categoryRepository.findById(id);
-        if (existingCategory.isPresent()) {
-            categoryRepository.deleteById(id);
-            return;
+        if (!categoryRepository.existsById(id)) {
+            throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
         }
-        throw new RuntimeException("Không tìm thấy category với id: " + id);
+        categoryRepository.deleteById(id);
     }
 
-    public Page<Category> getCategories(Pageable pageable) {
-        return categoryRepository.findAll(pageable);
-    }
-
-    public Category getCategoryById(Long id) {
+    public CategoryResponse getCategoryById(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy category với id: " + id));
+                .map(categoryMapper::toResponse)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    public Page<Category> getCategoriesForAdmin(PostTypeEnum type, Pageable pageable) {
-        return categoryRepository.findByNameContainingAndType(type, pageable);
-    }
+    /**
+     * Dùng chung một hàm query linh hoạt cho cả Public và Admin
+     */
+    public PageResponse<CategoryResponse> getCategories(CategoryFilterRequest filter) {
+        Pageable pageable = getPageable(filter);
 
+        // Truyền các tiêu chí lọc từ object filter vào repository
+        var pageData = categoryRepository.findByNameContainingAndType(
+                filter.getType(),
+                pageable)
+                .map(categoryMapper::toResponse);
+
+        return PageResponse.of(pageData);
+    }
 }

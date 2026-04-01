@@ -1,84 +1,53 @@
 package vn.bds360.backend.modules.media.controller;
 
-import java.util.Collections;
 import java.util.List;
-
-import java.util.ArrayList;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.dto.response.ApiResponse;
+import vn.bds360.backend.common.exception.AppException;
+import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.modules.media.service.FileStorageService;
 
 @RestController
+@RequestMapping("/api/v1/media")
+@RequiredArgsConstructor
 public class FileUploadController {
 
     private final FileStorageService fileStorageService;
-    private static final List<String> ALLOWED_TYPES = List.of(
-            "image/jpeg", // JPG, JPEG
-            "image/png", // PNG
-            "image/gif", // GIF
-            "image/webp", // WebP
-            "image/bmp", // BMP
-            "image/tiff", // TIFF
-            "image/heic", // HEIC
-            "image/avif", // AVIF
-            "image/apng");
-    private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
-    public FileUploadController(FileStorageService fileStorageService) {
-        this.fileStorageService = fileStorageService;
+    @PostMapping("/upload/file")
+    public ApiResponse<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
+        validateEmptyFiles(files);
+
+        List<String> fileNames = files.stream()
+                .map(fileStorageService::storeFile)
+                .collect(Collectors.toList());
+
+        return ApiResponse.success(fileNames, "Upload tệp thành công");
     }
 
-    @PostMapping("/api/upload/file")
-    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
-        if (files.isEmpty()) {
-            return ResponseEntity.badRequest().body(Collections.singletonList("No files uploaded!"));
-        }
+    @PostMapping("/upload/image")
+    public ApiResponse<List<String>> uploadImages(@RequestParam("files") List<MultipartFile> files) {
+        validateEmptyFiles(files);
 
-        List<String> fileNames = new ArrayList<>();
-        for (MultipartFile file : files) {
-            String fileName = fileStorageService.storeFile(file);
-            fileNames.add(fileName);
-        }
+        List<String> fileNames = files.stream()
+                .map(fileStorageService::storeImage)
+                .collect(Collectors.toList());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(fileNames);
+        return ApiResponse.success(fileNames, "Upload ảnh thành công");
     }
 
-    @PostMapping("/api/upload/img")
-    public ResponseEntity<?> uploadImages(@RequestParam("files") List<MultipartFile> files) {
-        if (files.isEmpty()) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "No files uploaded!"));
+    // Hàm phụ trợ cho Controller
+    private void validateEmptyFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty() || files.get(0).isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_PARAMETER);
         }
-
-        List<String> fileNames = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-
-        for (MultipartFile file : files) {
-            if (file.getSize() > MAX_FILE_SIZE) {
-                errors.add(file.getOriginalFilename() + " exceeds 50MB limit");
-                continue;
-            }
-
-            if (!ALLOWED_TYPES.contains(file.getContentType())) {
-                errors.add(file.getOriginalFilename() + " is not a valid image file");
-                continue;
-            }
-
-            String fileName = fileStorageService.storeFile(file);
-            fileNames.add(fileName);
-        }
-
-        if (!errors.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("errors", errors));
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Collections.singletonMap("uploaded", fileNames));
     }
-
 }

@@ -17,8 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import vn.bds360.backend.common.constant.NotificationType;
 import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.exception.AppException;
+import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.common.exception.InputInvalidException;
-import vn.bds360.backend.common.exception.NotFoundException;
 import vn.bds360.backend.common.exception.PermissionException;
 import vn.bds360.backend.modules.notification.dto.request.CreateNotificationRequest;
 import vn.bds360.backend.modules.notification.dto.request.ViewPhoneNotificationRequest;
@@ -109,19 +110,20 @@ public class NotificationController {
         // Kiểm tra người dùng đã đăng nhập
         String email = SecurityUtil.getCurrentUserLogin().orElse("");
         if (email.isEmpty()) {
-            throw new PermissionException("Bạn cần đăng nhập để xem số điện thoại.");
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+
         }
 
         // Lấy thông tin người dùng hiện tại
         User currentUser = userService.handleGetUserByUserName(email);
         if (currentUser == null) {
-            throw new NotFoundException("Không tìm thấy người dùng hiện tại.");
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         // Kiểm tra người nhận thông báo
         User recipient = userService.fetchUserById(request.getRecipientId());
         if (recipient == null) {
-            throw new NotFoundException("Không tìm thấy người nhận thông báo với ID: " + request.getRecipientId());
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         // Kiểm tra quyền: Không gửi thông báo nếu người xem là admin

@@ -12,13 +12,14 @@ public enum ErrorCode {
     // ==========================================
     INTERNAL_ERROR(10001, HttpStatus.INTERNAL_SERVER_ERROR, "Sự cố hệ thống máy chủ."),
     VALIDATION_ERROR(10002, HttpStatus.BAD_REQUEST, "Dữ liệu đầu vào không hợp lệ."),
-    INVALID_PARAMETER(10003, HttpStatus.BAD_REQUEST, "Tham số truyền vào không hợp lệ."),
+    INVALID_PARAMETER(10003, HttpStatus.BAD_REQUEST, "Tham số truyền vào thiếu hoặc không hợp lệ."),
     UNAUTHORIZED(10004, HttpStatus.UNAUTHORIZED, "Chưa xác thực hoặc token không hợp lệ."),
     FORBIDDEN(10005, HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập vào tài nguyên này."),
     API_NOT_FOUND(10006, HttpStatus.NOT_FOUND, "Đường dẫn API không tồn tại trên hệ thống."),
     METHOD_NOT_ALLOWED(10007, HttpStatus.METHOD_NOT_ALLOWED, "Phương thức HTTP không được hỗ trợ."),
     RESOURCE_NOT_FOUND(10008, HttpStatus.NOT_FOUND, "Tài nguyên tĩnh không tồn tại hoặc URL sai."),
     INVALID_SORT_FIELD(10009, HttpStatus.BAD_REQUEST, "Không thể sắp xếp. Trường dữ liệu '%s' không tồn tại."),
+    MISSING_FILE(10010, HttpStatus.BAD_REQUEST, "Request không chứa file hoặc sai định dạng multipart/form-data."),
 
     // ==========================================
     // 11. AUTH & USER MODULE
@@ -60,7 +61,8 @@ public enum ErrorCode {
     // 16. MEDIA MODULE (Hình ảnh)
     // ==========================================
     FILE_TOO_LARGE(16001, HttpStatus.CONTENT_TOO_LARGE, "Kích thước file vượt quá mức cho phép."),
-    FILE_FORMAT_INVALID(16002, HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Định dạng file không được hỗ trợ.");
+    FILE_FORMAT_INVALID(16002, HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Định dạng file không được hỗ trợ."),
+    FILE_UPLOAD_FAILED(16003, HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống trong quá trình lưu trữ file.");
 
     // ------------------------------------------
     // FIELDS & CONSTRUCTORS

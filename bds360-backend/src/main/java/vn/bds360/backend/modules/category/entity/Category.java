@@ -44,9 +44,6 @@ public class Category {
     @JsonIgnore
     private List<Post> posts;
 
-    public Category() {
-    }
-
     public Category(String name, PostTypeEnum type) {
         this.name = name;
         this.type = type;

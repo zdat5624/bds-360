@@ -20,9 +20,9 @@ import vn.bds360.backend.common.constant.PostStatusEnum;
 import vn.bds360.backend.common.constant.PostTypeEnum;
 import vn.bds360.backend.common.constant.RoleEnum;
 import vn.bds360.backend.common.constant.TransStatusEnum;
-import vn.bds360.backend.common.exception.ForbiddenException;
+import vn.bds360.backend.common.exception.AppException;
+import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.common.exception.InputInvalidException;
-import vn.bds360.backend.common.exception.NotFoundException;
 import vn.bds360.backend.modules.address.entity.District;
 import vn.bds360.backend.modules.address.entity.Province;
 import vn.bds360.backend.modules.address.entity.Ward;
@@ -408,7 +408,7 @@ public class PostService {
     public Post getPostById(Long id) throws InputInvalidException {
         // Tìm tin đăng
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy tin đăng với ID: " + id));
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
         // Lấy thông tin người dùng hiện tại
         String userEmail = SecurityUtil.getCurrentUserLogin()
@@ -422,7 +422,7 @@ public class PostService {
         // Trường hợp tin đăng bị xóa mềm (deletedByUser = true): chỉ admin được truy
         // cập
         if (post.getDeletedByUser() && !isAdmin) {
-            throw new ForbiddenException("Bạn không có quyền truy cập tin đăng này");
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
 
         // Trường hợp trạng thái EXPIRED, REJECTED, PENDING: chỉ chủ sở hữu hoặc admin
@@ -431,7 +431,7 @@ public class PostService {
                 post.getStatus().equals(PostStatusEnum.REJECTED) ||
                 post.getStatus().equals(PostStatusEnum.PENDING)) {
             if (!isOwner && !isAdmin) {
-                throw new ForbiddenException("Bạn không có quyền truy cập tin đăng này");
+                throw new AppException(ErrorCode.FORBIDDEN);
             }
         }
 
