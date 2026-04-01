@@ -10,5 +10,4 @@ import lombok.NoArgsConstructor;
 public class CoordinateResponse {
     private double latitude;
     private double longitude;
-
 }

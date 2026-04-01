@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.constant.RoleEnum;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -17,57 +18,58 @@ import vn.bds360.backend.modules.transaction.mapper.TransactionMapper;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.transaction.specification.TransactionSpecification;
 import vn.bds360.backend.modules.user.entity.User;
-import vn.bds360.backend.modules.user.repository.UserRepository;
-import vn.bds360.backend.security.SecurityUtil;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
-    private final TransactionRepository transactionRepository;
-    private final UserRepository userRepository;
-    private final TransactionMapper transactionMapper;
+        private final TransactionRepository transactionRepository;
+        private final TransactionMapper transactionMapper;
 
-    public TransactionResponse getTransactionById(Long id) {
-        Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-        return transactionMapper.toTransactionResponse(transaction);
-    }
+        public TransactionResponse getTransactionById(Long id, User currentUser) {
+                Transaction transaction = transactionRepository.findById(id)
+                                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-    // ==========================================
-    // Dành cho ADMIN
-    // ==========================================
-    public PageResponse<TransactionResponse> getTransactions(TransactionFilterRequest filter) {
+                // Kiểm tra: Nếu không phải Admin VÀ không phải chủ sở hữu thì chặn
+                boolean isAdmin = currentUser.getRole().equals(RoleEnum.ADMIN);
+                boolean isOwner = transaction.getUser().getId().equals(currentUser.getId());
 
-        Sort sort = Sort.by(filter.getSortDirection(), filter.getSortBy());
-        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
+                if (!isAdmin && !isOwner) {
+                        throw new AppException(ErrorCode.FORBIDDEN);
+                }
 
-        // Truyền null cho targetUserId để lấy toàn bộ giao dịch
-        Page<Transaction> page = transactionRepository.findAll(
-                TransactionSpecification.filterTransactions(filter, null),
-                pageable);
+                return transactionMapper.toTransactionResponse(transaction);
+        }
 
-        return PageResponse.of(page.map(transactionMapper::toTransactionResponse));
-    }
+        // ==========================================
+        // Dành cho ADMIN
+        // ==========================================
+        public PageResponse<TransactionResponse> getTransactions(TransactionFilterRequest filter) {
 
-    // ==========================================
-    // Dành cho USER (Chỉ lấy giao dịch của chính họ)
-    // ==========================================
-    public PageResponse<TransactionResponse> getCurrentUserTransactions(TransactionFilterRequest filter) {
+                Sort sort = Sort.by(filter.getSortDirection(), filter.getSortBy());
+                Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
 
-        String email = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                // Truyền null cho targetUserId để lấy toàn bộ giao dịch
+                Page<Transaction> page = transactionRepository.findAll(
+                                TransactionSpecification.filterTransactions(filter, null),
+                                pageable);
 
-        Sort sort = Sort.by(filter.getSortDirection(), filter.getSortBy());
-        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
+                return PageResponse.of(page.map(transactionMapper::toTransactionResponse));
+        }
 
-        // Truyền user.getId() vào để Specification ép buộc lọc theo ID này
-        Page<Transaction> page = transactionRepository.findAll(
-                TransactionSpecification.filterTransactions(filter, user.getId()),
-                pageable);
+        // ==========================================
+        // Dành cho USER (Chỉ lấy giao dịch của chính họ)
+        // ==========================================
+        public PageResponse<TransactionResponse> getCurrentUserTransactions(User user,
+                        TransactionFilterRequest filter) {
 
-        return PageResponse.of(page.map(transactionMapper::toTransactionResponse));
-    }
+                Sort sort = Sort.by(filter.getSortDirection(), filter.getSortBy());
+                Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
+
+                Page<Transaction> page = transactionRepository.findAll(
+                                TransactionSpecification.filterTransactions(filter, user.getId()),
+                                pageable);
+
+                return PageResponse.of(page.map(transactionMapper::toTransactionResponse));
+        }
 }

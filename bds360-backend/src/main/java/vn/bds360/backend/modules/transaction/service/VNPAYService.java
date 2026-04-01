@@ -33,7 +33,6 @@ import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.transaction.util.VnPayUtil;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.repository.UserRepository;
-import vn.bds360.backend.security.SecurityUtil;
 
 @Slf4j // Khuyến nghị dùng Log thay vì System.out
 @Service
@@ -49,14 +48,11 @@ public class VNPAYService {
     // ==========================================
     // 1. TẠO LINK THANH TOÁN
     // ==========================================
-    public PaymentLinkResponse createVNPayLink(long inputAmount, String ipAdress) {
+
+    public PaymentLinkResponse createVNPayLink(User user, long inputAmount, String ipAdress) {
         long amount = inputAmount * 100;
 
-        String userEmail = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
+        // Mã giao dịch ngẫu nhiên
         String vnp_TxnRef = VnPayUtil.getRandomNumber(10);
 
         Map<String, String> vnp_Params = new HashMap<>();
@@ -72,6 +68,7 @@ public class VNPAYService {
         vnp_Params.put("vnp_ReturnUrl", vnPayProperties.getReturnUrlBackend());
         vnp_Params.put("vnp_IpAddr", ipAdress);
 
+        // Thời gian tạo và hết hạn
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = formatter.format(cld.getTime());
@@ -81,6 +78,7 @@ public class VNPAYService {
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
+        // Build Hash Data và Query String
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
@@ -90,24 +88,22 @@ public class VNPAYService {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                // Sử dụng StandardCharsets.US_ASCII trực tiếp để tránh
+                // UnsupportedEncodingException
+                hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII)).append('=')
+                        .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
                 if (itr.hasNext()) {
                     query.append('&');
                     hashData.append('&');
                 }
             }
         }
-        String queryUrl = query.toString();
-        String vnp_SecureHash = VnPayUtil.hmacSHA512(vnPayProperties.getSecretKey(), hashData.toString());
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        String paymentUrl = vnPayProperties.getPayUrl() + "?" + queryUrl;
 
-        // Lưu Database
+        String vnp_SecureHash = VnPayUtil.hmacSHA512(vnPayProperties.getSecretKey(), hashData.toString());
+        String paymentUrl = vnPayProperties.getPayUrl() + "?" + query.toString() + "&vnp_SecureHash=" + vnp_SecureHash;
+
+        // Lưu giao dịch vào Database
         Transaction transaction = new Transaction();
         transaction.setAmount(inputAmount);
         transaction.setStatus(TransStatusEnum.PENDING);
@@ -117,9 +113,7 @@ public class VNPAYService {
         transaction.setTxnId(vnp_TxnRef);
         transactionRepository.save(transaction);
 
-        PaymentLinkResponse res = new PaymentLinkResponse();
-        res.setPaymentLink(paymentUrl);
-        return res;
+        return new PaymentLinkResponse(paymentUrl);
     }
 
     // ==========================================

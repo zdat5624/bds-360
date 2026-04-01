@@ -8,18 +8,18 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import vn.bds360.backend.modules.address.config.MapboxConfig;
 
 @Service
+@RequiredArgsConstructor
 public class MapboxGeocodeService {
 
-    @Autowired
-    private MapboxConfig mapboxConfig;
+    private final MapboxConfig mapboxConfig;
 
     public Optional<double[]> getLatLngFromAddress(String fullAddress) {
         try {

@@ -15,6 +15,8 @@ import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.modules.transaction.dto.request.TransactionFilterRequest;
 import vn.bds360.backend.modules.transaction.dto.response.TransactionResponse;
 import vn.bds360.backend.modules.transaction.service.TransactionService;
+import vn.bds360.backend.modules.user.entity.User;
+import vn.bds360.backend.security.annotation.CurrentUser;
 import vn.bds360.backend.security.annotation.IsAdmin;
 import vn.bds360.backend.security.annotation.RequireLogin;
 
@@ -44,9 +46,11 @@ public class TransactionController {
     @ResponseStatus(HttpStatus.OK)
     @RequireLogin
     public ApiResponse<PageResponse<TransactionResponse>> getMyTransactions(
+            @CurrentUser User user,
             @Valid @ModelAttribute TransactionFilterRequest filter) {
 
-        return ApiResponse.success(transactionService.getCurrentUserTransactions(filter),
+        // Truyền thẳng User hoặc UserID xuống Service
+        return ApiResponse.success(transactionService.getCurrentUserTransactions(user, filter),
                 "Lấy lịch sử giao dịch cá nhân thành công");
     }
 
@@ -56,10 +60,11 @@ public class TransactionController {
     @GetMapping("/transactions/{id}")
     @ResponseStatus(HttpStatus.OK)
     @RequireLogin
-    public ApiResponse<TransactionResponse> getTransactionById(@PathVariable Long id) {
+    public ApiResponse<TransactionResponse> getTransactionById(
+            @PathVariable Long id,
+            @CurrentUser User user) {
 
-        // Lưu ý: Cần bổ sung logic phân quyền ở tầng Service để User A không xem được
-        // hóa đơn của User B
-        return ApiResponse.success(transactionService.getTransactionById(id), "Lấy chi tiết giao dịch thành công");
+        return ApiResponse.success(transactionService.getTransactionById(id, user),
+                "Lấy chi tiết giao dịch thành công");
     }
 }
