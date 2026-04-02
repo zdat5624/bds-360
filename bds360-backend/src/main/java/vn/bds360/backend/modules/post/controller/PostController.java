@@ -1,157 +1,107 @@
 package vn.bds360.backend.modules.post.controller;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
-import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.PostTypeEnum;
-import vn.bds360.backend.common.exception.InputInvalidException;
-import vn.bds360.backend.modules.post.dto.request.PostRequestDTO;
+import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.dto.response.ApiResponse;
+import vn.bds360.backend.common.dto.response.PageResponse;
+import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
+import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostDTO;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostStatusDTO;
-import vn.bds360.backend.modules.post.dto.response.MapPostDTO;
-import vn.bds360.backend.modules.post.dto.response.ResAddressDTO;
-import vn.bds360.backend.modules.post.entity.Post;
+import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.service.PostService;
+import vn.bds360.backend.modules.user.entity.User;
+import vn.bds360.backend.security.annotation.CurrentUser;
+import vn.bds360.backend.security.annotation.IsAdmin;
+import vn.bds360.backend.security.annotation.RequireLogin;
 
 @RestController
+@RequestMapping("/api/v1/posts")
+@RequiredArgsConstructor
+@Validated
 public class PostController {
 
     private final PostService postService;
 
-    public PostController(PostService postService) {
-        this.postService = postService;
+    // ==========================================
+    // CÁC ENDPOINT CHO NGƯỜI DÙNG ĐĂNG NHẬP
+    // ==========================================
+
+    @PostMapping
+    @RequireLogin
+    public ApiResponse<PostResponse> createPost(@CurrentUser User user, @Valid @RequestBody PostCreateRequest request) {
+        return ApiResponse.success(postService.createPost(user, request), "Đăng tin thành công");
     }
 
-    @PostMapping("/api/posts")
-    public ResponseEntity<Post> createPost(@Valid @RequestBody PostRequestDTO requestDTO) throws InputInvalidException {
-        Post createdPost = postService.createPost(requestDTO.getPost(), requestDTO.getNumberOfDays());
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdPost);
+    @PutMapping
+    @RequireLogin
+    public ApiResponse<PostResponse> updatePost(@CurrentUser User user, @Valid @RequestBody UpdatePostDTO request) {
+        return ApiResponse.success(postService.updatePost(user, request), "Cập nhật tin đăng thành công");
     }
 
-    @PutMapping("/api/posts")
-    public ResponseEntity<Post> updatePost(@Valid @RequestBody UpdatePostDTO updatePostDTO)
-            throws InputInvalidException {
-        Post post = postService.updatePost(updatePostDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(post);
+    @DeleteMapping("/{id}")
+    @RequireLogin
+    public ApiResponse<Void> deletePost(@CurrentUser User user, @PathVariable Long id) {
+        postService.deletePost(user, id, false);
+        return ApiResponse.success(null, "Xóa tin đăng thành công");
     }
 
-    @DeleteMapping("/api/posts/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) throws InputInvalidException {
-        postService.deletePost(id);
-        return ResponseEntity.status(HttpStatus.OK).body(null);
+    @GetMapping("/my-posts")
+    @RequireLogin
+    public ApiResponse<PageResponse<PostResponse>> getMyPosts(@CurrentUser User user, @Valid PostFilterRequest filter) {
+        filter.setSearch(user.getEmail()); // Ép buộc chỉ tìm tin của chính user này
+        filter.setIsDeleteByUser(false);
+        return ApiResponse.success(postService.getFilteredPosts(filter));
     }
 
-    @PutMapping("/api/admin/posts/status")
-    public ResponseEntity<Post> updatePostStatus(
-            @Valid @RequestBody UpdatePostStatusDTO dto) throws InputInvalidException {
-        Post updatedPost = postService.updatePostStatus(
-                dto.getPostId(),
-                dto.getStatus(),
-                dto.getMessage(),
-                dto.isSendNotification());
-        return ResponseEntity.ok(updatedPost);
+    // ==========================================
+    // CÁC ENDPOINT CÔNG KHAI (PUBLIC)
+    // ==========================================
+
+    @GetMapping
+    public ApiResponse<PageResponse<PostResponse>> getPublicPosts(@Valid PostFilterRequest filter) {
+        filter.setIsApprovedOnly(true); // Public chỉ được xem tin đã duyệt
+        filter.setIsDeleteByUser(false);
+        return ApiResponse.success(postService.getFilteredPosts(filter), "Lấy danh sách tin đăng thành công");
     }
 
-    @DeleteMapping("/api/admin/posts/delete/{id}")
-    public ResponseEntity<Void> deletePostAdmin(@PathVariable Long id) throws InputInvalidException {
-        postService.deletePostAdmin(id);
-        return ResponseEntity.status(HttpStatus.OK).body(null);
+    @GetMapping("/{id}")
+    public ApiResponse<PostResponse> getPostById(@CurrentUser User user, @PathVariable Long id) {
+        // user có thể null nếu public user gọi, Service sẽ tự handle
+        return ApiResponse.success(postService.getPostById(user, id), "Lấy chi tiết tin đăng thành công");
     }
 
-    @GetMapping("/api/posts/{id}")
-    public ResponseEntity<Post> getPostById(@PathVariable Long id) throws InputInvalidException {
-        Post post = postService.getPostById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(post);
+    // ==========================================
+    // ADMIN ENDPOINTS
+    // ==========================================
+
+    @GetMapping("/admin")
+    @IsAdmin
+    public ApiResponse<PageResponse<PostResponse>> getAdminPosts(@Valid PostFilterRequest filter) {
+        return ApiResponse.success(postService.getFilteredPosts(filter));
     }
 
-    @GetMapping("/api/admin/posts")
-    public Page<Post> getPosts(
-            @RequestParam(required = false) Long minPrice,
-            @RequestParam(required = false) Long maxPrice,
-            @RequestParam(required = false) Double minArea,
-            @RequestParam(required = false) Double maxArea,
-            @RequestParam(required = false) PostStatusEnum status,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) PostTypeEnum type,
-            @RequestParam(required = false) Long vipId,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean isDeleteByUser,
-            Pageable pageable) {
-        return postService.getFilteredPosts(minPrice, maxPrice, minArea, maxArea, status,
-                categoryId, type, vipId, search, isDeleteByUser, pageable);
+    @PutMapping("/admin/status")
+    @IsAdmin
+    public ApiResponse<PostResponse> updatePostStatus(@Valid @RequestBody UpdatePostStatusDTO dto) {
+        return ApiResponse.success(postService.updatePostStatus(dto.getPostId(), dto.getStatus(), dto.getMessage(),
+                dto.isSendNotification()));
     }
 
-    @GetMapping("/api/posts")
-    public Page<Post> getReviewOrApprovedPosts(
-            @RequestParam(required = false) Long minPrice,
-            @RequestParam(required = false) Long maxPrice,
-            @RequestParam(required = false) Double minArea,
-            @RequestParam(required = false) Double maxArea,
-            @RequestParam(required = false) Long provinceCode,
-            @RequestParam(required = false) Long districtCode,
-            @RequestParam(required = false) Long wardCode,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = true) PostTypeEnum type,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        return postService.getFilteredReviewOrApprovedPosts(
-                minPrice, maxPrice, minArea, maxArea, provinceCode, districtCode, wardCode, categoryId,
-                type, page, size);
+    @DeleteMapping("/admin/{id}")
+    @IsAdmin
+    public ApiResponse<Void> deletePostAdmin(@CurrentUser User admin, @PathVariable Long id) {
+        postService.deletePost(admin, id, true); // true = Hard Delete
+        return ApiResponse.success(null, "Quản trị viên đã xóa vĩnh viễn tin đăng");
     }
-
-    @GetMapping("/api/posts/my-posts")
-    public ResponseEntity<Page<Post>> getMyPosts(
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-            @RequestParam(required = false) PostStatusEnum status,
-            @RequestParam(required = false) PostTypeEnum type,
-            @RequestParam(required = false) Long provinceCode,
-            @RequestParam(required = false) Long postId) throws InputInvalidException {
-
-        Page<Post> posts = postService.getMyPosts(pageable, status, type, provinceCode, postId);
-        return ResponseEntity.ok(posts);
-    }
-
-    @GetMapping("/api/posts/{postId}/address")
-    public ResponseEntity<ResAddressDTO> getFullAddress(@PathVariable Long postId) {
-        String fullAddress = postService.getFullAddressByPostId(postId);
-        ResAddressDTO addressDTO = new ResAddressDTO();
-        addressDTO.setFullAddress(fullAddress);
-        return ResponseEntity.ok(addressDTO);
-    }
-
-    @GetMapping("/api/posts/map")
-    public ResponseEntity<List<MapPostDTO>> getPostsForMap(
-            @RequestParam(required = false) Long minPrice,
-            @RequestParam(required = false) Long maxPrice,
-            @RequestParam(required = false) Double minArea,
-            @RequestParam(required = false) Double maxArea,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = true) PostTypeEnum type,
-            @RequestParam(required = false) Long provinceCode,
-            @RequestParam(required = false) Long districtCode,
-            @RequestParam(required = false) Long wardCode) {
-
-        List<MapPostDTO> result = postService.getPostsForMap(minPrice, maxPrice, minArea, maxArea,
-                categoryId, type, provinceCode, districtCode, wardCode);
-        System.out.println(">>> Count list MapPostDTO: " + result.size());
-        return ResponseEntity.ok(result);
-    }
-
 }

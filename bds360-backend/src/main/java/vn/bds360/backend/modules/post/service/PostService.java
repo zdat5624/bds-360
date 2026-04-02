@@ -5,39 +5,30 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.NotificationType;
 import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.PostTypeEnum;
 import vn.bds360.backend.common.constant.RoleEnum;
 import vn.bds360.backend.common.constant.TransStatusEnum;
+import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
-import vn.bds360.backend.common.exception.InputInvalidException;
-import vn.bds360.backend.modules.address.entity.District;
-import vn.bds360.backend.modules.address.entity.Province;
-import vn.bds360.backend.modules.address.entity.Ward;
-import vn.bds360.backend.modules.address.repository.DistrictRepository;
-import vn.bds360.backend.modules.address.repository.ProvinceRepository;
-import vn.bds360.backend.modules.address.repository.WardRepository;
 import vn.bds360.backend.modules.address.service.MapboxGeocodeService;
-import vn.bds360.backend.modules.category.entity.Category;
-import vn.bds360.backend.modules.category.repository.CategoryRepository;
-import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.notification.service.NotificationService;
+import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
+import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostDTO;
-import vn.bds360.backend.modules.post.dto.response.MapPostDTO;
+import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.Post;
+import vn.bds360.backend.modules.post.mapper.PostMapper;
 import vn.bds360.backend.modules.post.repository.ImageRepository;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.post.specification.PostSpecification;
@@ -45,489 +36,194 @@ import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.repository.UserRepository;
-import vn.bds360.backend.modules.vip.entity.Vip;
 import vn.bds360.backend.modules.vip.repository.VipRepository;
-import vn.bds360.backend.security.SecurityUtil;
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
     private final VipRepository vipRepository;
     private final ImageRepository imageRepository;
-    private final ProvinceRepository provinceRepository;
-    private final DistrictRepository districtRepository;
-    private final WardRepository wardRepository;
     private final NotificationService notificationService;
     private final TransactionRepository transactionRepository;
     private final MapboxGeocodeService mapboxGeocodeService;
+    private final PostMapper postMapper;
 
-    public PostService(PostRepository postRepository, UserRepository userRepository,
-            CategoryRepository categoryRepository, VipRepository vipRepository, ImageRepository imageRepository,
-            ProvinceRepository provinceRepository, DistrictRepository districtRepository, WardRepository wardRepository,
-            NotificationService notificationService, TransactionRepository transactionRepository,
-            MapboxGeocodeService mapboxGeocodeService) {
-        this.postRepository = postRepository;
-        this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
-        this.vipRepository = vipRepository;
-        this.imageRepository = imageRepository;
-        this.provinceRepository = provinceRepository;
-        this.districtRepository = districtRepository;
-        this.wardRepository = wardRepository;
-        this.notificationService = notificationService;
-        this.transactionRepository = transactionRepository;
-        this.mapboxGeocodeService = mapboxGeocodeService;
-    }
+    @Transactional
+    public PostResponse createPost(User user, PostCreateRequest request) {
+        // 1. Kiểm tra tài chính
+        long costPerDay = 0;
+        boolean isVip = false;
 
-    public Post createPost(Post post, int numberOfDays) throws InputInvalidException {
-        // Lấy user hiện tại từ SecurityUtil (giả định đã đăng nhập)
-        String userEmail = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new InputInvalidException("Chưa đăng nhập"));
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy người dùng"));
-
-        // Tìm category
-        Category category = categoryRepository.findById(post.getCategory().getId())
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy danh mục"));
-
-        if (post.getImages() == null || post.getImages().isEmpty()) {
-            throw new InputInvalidException("Ảnh không được để trống");
+        if (request.getVipId() != null) {
+            var vip = vipRepository.findById(request.getVipId())
+                    .orElseThrow(() -> new AppException(ErrorCode.VIP_NOT_FOUND));
+            costPerDay = vip.getPricePerDay();
+            isVip = vip.getVipLevel() > 0;
         }
 
-        if (post.getType() != category.getType()) {
-            throw new InputInvalidException("Kiểu của tin đăng và kiểu của danh mục không khớp");
-        }
-
-        // Xử lý địa chỉ
-        if (post.getProvince() != null) {
-            Province province = provinceRepository.findById(post.getProvince().getCode())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy tỉnh/thành phố"));
-            post.setProvince(province);
-        }
-
-        if (post.getDistrict() != null) {
-            District district = districtRepository.findById(post.getDistrict().getCode())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy quận/huyện"));
-            if (post.getProvince() != null && !(district.getProvince().getCode() == post.getProvince().getCode())) {
-                throw new InputInvalidException("Quận/huyện không thuộc tỉnh/thành phố đã chọn");
-            }
-            post.setDistrict(district);
-        }
-
-        if (post.getWard() != null) {
-            Ward ward = wardRepository.findById(post.getWard().getCode())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy phường/xã"));
-            if (post.getDistrict() != null && !(ward.getDistrict().getCode() == post.getDistrict().getCode())) {
-                throw new InputInvalidException("Phường/xã không thuộc quận/huyện đã chọn");
-            }
-            post.setWard(ward);
-        }
-
-        if (post.getDetailAddress() != null && !post.getDetailAddress().isEmpty()) {
-            post.setDetailAddress(post.getDetailAddress());
-        }
-
-        // Ghép địa chỉ đầy đủ để gửi tới Mapbox
-        String fullAddress = post.getDetailAddress() + ", "
-                + (post.getWard() != null ? post.getWard().getName() + ", " : "")
-                + (post.getDistrict() != null ? post.getDistrict().getName() + ", " : "")
-                + (post.getProvince() != null ? post.getProvince().getName() : "");
-
-        // Lấy tọa độ từ Mapbox
-        if (post.getLatitude() == null || post.getLatitude() == null) {
-            Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(fullAddress);
-            if (latLng.isPresent()) {
-                double[] coords = latLng.get();
-                post.setLongitude(coords[0]);
-                post.setLatitude(coords[1]);
-            }
-        }
-
-        // Xử lý vip
-        Vip vip = new Vip();
-        if (post.getVip() != null && post.getVip().getId() > 0) {
-            vip = vipRepository.findById(post.getVip().getId())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy VIP"));
-            post.setVip(vip);
-        }
-
-        // Gán thông tin cho tin đăng
-        post.setUser(user);
-        post.setCategory(category);
-        post.setStatus(PostStatusEnum.PENDING);
-        post.setCreatedAt(Instant.now());
-        post.setExpireDate(post.getCreatedAt().plus(numberOfDays, ChronoUnit.DAYS));
-
-        if (vip.getVipLevel() > 0) {
-            post.setStatus(PostStatusEnum.REVIEW_LATER);
-            post.setNotifyOnView(true);
-        } else {
-            post.setNotifyOnView(false);
-        }
-
-        // Tính toán chi phí dựa trên số ngày và trừ số dư
-        long costPerDay = vip.getPricePerDay();
-        long totalCost = numberOfDays * costPerDay;
-
+        long totalCost = request.getNumberOfDays() * costPerDay;
         if (user.getBalance() < totalCost) {
-            throw new InputInvalidException("Số dư không đủ để thực hiện giao dịch");
+            throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
         }
 
-        user.setBalance((long) (user.getBalance() - totalCost));
+        // Trừ tiền
+        user.setBalance(user.getBalance() - totalCost);
         userRepository.save(user);
 
-        // Lưu tin đăng
-        post = postRepository.save(post);
+        // 2. Map DTO -> Entity
+        Post post = postMapper.toEntity(request);
+        post.setUser(user);
+        post.setStatus(isVip ? PostStatusEnum.REVIEW_LATER : PostStatusEnum.PENDING);
+        post.setNotifyOnView(isVip);
+        post.setCreatedAt(Instant.now());
+        post.setExpireDate(post.getCreatedAt().plus(request.getNumberOfDays(), ChronoUnit.DAYS));
+        post.setDeletedByUser(false);
 
-        // Luu transaction
-        Transaction transaction = new Transaction();
-        transaction.setAmount(-totalCost);
-        transaction.setDescription("Thanh toán phí đăng tin mã " + post.getId() + " thành công");
-        transaction.setStatus(TransStatusEnum.SUCCESS);
-        transaction.setUser(user);
-        this.transactionRepository.save(transaction);
+        // 3. Geocoding
+        handleGeocoding(post);
 
-        // Xử lý ảnh
+        // 4. Lưu Post
+        Post savedPost = postRepository.save(post);
+
+        // 5. Lưu Hình ảnh
         List<Image> images = new ArrayList<>();
-        int orderIndex = 0;
-        for (Image image : post.getImages()) {
-            image.setPost(post);
-            image.setOrderIndex(orderIndex++);
-            images.add(image);
+        for (int i = 0; i < request.getImageUrls().size(); i++) {
+            Image img = new Image();
+            img.setUrl(request.getImageUrls().get(i));
+            img.setOrderIndex(i);
+            img.setPost(savedPost);
+            images.add(img);
         }
         imageRepository.saveAll(images);
-        post.setImages(images);
+        savedPost.setImages(images);
 
-        return post;
+        // 6. Lưu Transaction
+        Transaction transaction = new Transaction();
+        transaction.setAmount(-totalCost);
+        transaction.setDescription("Thanh toán phí đăng tin mã " + savedPost.getId());
+        transaction.setStatus(TransStatusEnum.SUCCESS);
+        transaction.setUser(user);
+        transactionRepository.save(transaction);
+
+        return postMapper.toResponse(savedPost);
     }
 
-    public void deletePost(Long postId) throws InputInvalidException {
-        // Lấy user hiện tại
-        String userEmail = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new InputInvalidException("Chưa đăng nhập"));
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy người dùng"));
+    private void handleGeocoding(Post post) {
+        if (post.getDetailAddress() == null || post.getProvince() == null)
+            return;
 
-        // Tìm tin đăng
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy tin đăng"));
+        String fullAddress = String.format("%s, %s, %s, %s",
+                post.getDetailAddress(),
+                post.getWard() != null ? post.getWard().getName() : "",
+                post.getDistrict() != null ? post.getDistrict().getName() : "",
+                post.getProvince().getName());
 
-        // Kiểm tra quyền sở hữu hoặc quyền admin
-        if (!post.getUser().getEmail().equals(userEmail) && !user.getRole().equals(RoleEnum.ADMIN)) {
-            throw new InputInvalidException("Bạn không có quyền xóa tin đăng này");
-        }
-
-        // Xóa mềm (Soft Delete)
-        post.setDeletedByUser(true);
-        postRepository.save(post);
-    }
-
-    public void deletePostAdmin(Long postId) throws InputInvalidException {
-        // Lấy user hiện tại
-        String userEmail = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new InputInvalidException("Chưa đăng nhập"));
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy người dùng"));
-
-        // Tìm tin đăng
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy tin đăng"));
-
-        // Kiểm tra quyền sở hữu hoặc quyền admin
-        if (!post.getUser().getEmail().equals(userEmail) && !user.getRole().equals(RoleEnum.ADMIN)) {
-            throw new InputInvalidException("Bạn không có quyền xóa tin đăng này");
-        }
-        Notification notification = new Notification();
-        notification.setUser(post.getUser());
-        notification.setRead(false);
-        notification.setMessage("Tin đăng mã " + post.getId() + " của bạn đã bị quản trị viên xóa vĩnh viễn");
-        notification.setType(NotificationType.POST);
-        this.notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
-                notification.getType());
-
-        this.postRepository.delete(post);
-    }
-
-    public Post updatePost(UpdatePostDTO updatePostDTO) throws InputInvalidException {
-        if (updatePostDTO.getId() == null || updatePostDTO.getId() == 0) {
-            throw new InputInvalidException("ID của tin đăng không được để trống");
-        }
-
-        Post existingPost = postRepository.findById(updatePostDTO.getId())
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy tin đăng"));
-
-        // Kiểm tra quyền chỉnh sửa
-        String userEmail = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new InputInvalidException("Chưa đăng nhập"));
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy người dùng"));
-        if (!existingPost.getUser().getEmail().equals(userEmail) && !user.getRole().equals(RoleEnum.ADMIN)) {
-            throw new InputInvalidException("Bạn không có quyền chỉnh sửa tin đăng này");
-        }
-
-        // Kiểm tra trạng thái tin đăng và cập nhật trạng thái mới
-        if (existingPost.getStatus() == PostStatusEnum.EXPIRED) {
-            throw new InputInvalidException("Không thể cập nhật tin đăng đã hết hạn");
-        } else if (existingPost.getStatus() == PostStatusEnum.REJECTED) {
-            existingPost.setStatus(PostStatusEnum.PENDING);
-        } else if (existingPost.getStatus() == PostStatusEnum.APPROVED) {
-            if (existingPost.getVip() != null && existingPost.getVip().getVipLevel() > 0) {
-                existingPost.setStatus(PostStatusEnum.REVIEW_LATER);
-            } else {
-                existingPost.setStatus(PostStatusEnum.PENDING);
-            }
-        }
-
-        // Cập nhật các trường được phép
-        if (updatePostDTO.getTitle() != null) {
-            existingPost.setTitle(updatePostDTO.getTitle());
-        }
-        if (updatePostDTO.getDescription() != null) {
-            existingPost.setDescription(updatePostDTO.getDescription());
-        }
-        if (updatePostDTO.getType() != null) {
-            existingPost.setType(updatePostDTO.getType());
-            // Kiểm tra type có khớp với danh mục
-            if (updatePostDTO.getCategory() != null && updatePostDTO.getCategory().getId() > 0) {
-                Category category = categoryRepository.findById(updatePostDTO.getCategory().getId())
-                        .orElseThrow(() -> new InputInvalidException("Không tìm thấy danh mục"));
-                if (updatePostDTO.getType() != category.getType()) {
-                    throw new InputInvalidException("Kiểu của tin đăng và kiểu của danh mục không khớp");
-                }
-            }
-        }
-        if (updatePostDTO.getPrice() != null) {
-            existingPost.setPrice(updatePostDTO.getPrice());
-        }
-        if (updatePostDTO.getArea() != null) {
-            existingPost.setArea(updatePostDTO.getArea());
-        }
-        if (updatePostDTO.getProvince() != null) {
-            Province province = provinceRepository.findById(updatePostDTO.getProvince().getCode())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy tỉnh/thành phố"));
-            existingPost.setProvince(province);
-        }
-        if (updatePostDTO.getDistrict() != null) {
-            District district = districtRepository.findById(updatePostDTO.getDistrict().getCode())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy quận/huyện"));
-            if (updatePostDTO.getProvince() != null &&
-                    !(district.getProvince().getCode() == updatePostDTO.getProvince().getCode())) {
-                throw new InputInvalidException("Quận/huyện không thuộc tỉnh/thành phố đã chọn");
-            }
-            existingPost.setDistrict(district);
-        }
-        if (updatePostDTO.getWard() != null) {
-            Ward ward = wardRepository.findById(updatePostDTO.getWard().getCode())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy phường/xã"));
-            if (updatePostDTO.getDistrict() != null &&
-                    !(ward.getDistrict().getCode() == updatePostDTO.getDistrict().getCode())) {
-                throw new InputInvalidException("Phường/xã không thuộc quận/huyện đã chọn");
-            }
-            existingPost.setWard(ward);
-        }
-        if (updatePostDTO.getDetailAddress() != null) {
-            existingPost.setDetailAddress(updatePostDTO.getDetailAddress());
-        }
-        if (updatePostDTO.getCategory() != null && updatePostDTO.getCategory().getId() > 0) {
-            Category category = categoryRepository.findById(updatePostDTO.getCategory().getId())
-                    .orElseThrow(() -> new InputInvalidException("Không tìm thấy danh mục"));
-            if (existingPost.getType() != category.getType()) {
-                throw new InputInvalidException("Kiểu của tin đăng và kiểu của danh mục không khớp");
-            }
-            existingPost.setCategory(category);
-        }
-        if (updatePostDTO.getImages() != null && !updatePostDTO.getImages().isEmpty()) {
-            existingPost.getImages().clear();
-            List<Image> newImages = new ArrayList<>();
-            int orderIndex = 0;
-            for (Image img : updatePostDTO.getImages()) {
-                img.setPost(existingPost);
-                img.setOrderIndex(orderIndex++);
-                newImages.add(img);
-            }
-            imageRepository.saveAll(newImages);
-            existingPost.getImages().addAll(newImages);
-        }
-        if (updatePostDTO.getLatitude() != null && updatePostDTO.getLongitude() != null) {
-            existingPost.setLatitude(updatePostDTO.getLatitude());
-            existingPost.setLongitude(updatePostDTO.getLongitude());
-        } else if (updatePostDTO.getDetailAddress() != null || updatePostDTO.getWard() != null ||
-                updatePostDTO.getDistrict() != null || updatePostDTO.getProvince() != null) {
-            // Cập nhật tọa độ từ địa chỉ mới nếu không có latitude/longitude
-            String fullAddress = (updatePostDTO.getDetailAddress() != null ? updatePostDTO.getDetailAddress()
-                    : existingPost.getDetailAddress()) + ", "
-                    + (updatePostDTO.getWard() != null ? updatePostDTO.getWard().getName()
-                            : (existingPost.getWard() != null ? existingPost.getWard().getName() : ""))
-                    + ", "
-                    + (updatePostDTO.getDistrict() != null ? updatePostDTO.getDistrict().getName()
-                            : (existingPost.getDistrict() != null ? existingPost.getDistrict().getName() : ""))
-                    + ", "
-                    + (updatePostDTO.getProvince() != null ? updatePostDTO.getProvince().getName()
-                            : (existingPost.getProvince() != null ? existingPost.getProvince().getName() : ""));
-            Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(fullAddress);
-            if (latLng.isPresent()) {
-                double[] coords = latLng.get();
-                existingPost.setLongitude(coords[0]);
-                existingPost.setLatitude(coords[1]);
-            }
-        }
-
-        existingPost.setUpdatedAt(Instant.now());
-        return postRepository.save(existingPost);
-    }
-
-    public Post updatePostStatus(Long postId, PostStatusEnum newStatus, String message, boolean sendNotification)
-            throws InputInvalidException {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy tin đăng"));
-
-        // Cập nhật trạng thái
-        post.setStatus(newStatus);
-        postRepository.save(post);
-
-        // Tạo thông báo cho chủ tin đăng nếu sendNotification là true
-        if (sendNotification) {
-            if (message == null || message.trim().isEmpty()) {
-                throw new InputInvalidException("Tin nhắn không được để trống khi gửi thông báo");
-            }
-            User postOwner = post.getUser();
-            Notification notification = new Notification();
-            notification.setRead(false);
-            notification.setUser(postOwner);
-            notification.setType(NotificationType.SYSTEM_ALERT);
-            notification.setMessage(message);
-            this.notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
-                    notification.getType());
-        }
-
-        return post;
+        Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(fullAddress);
+        latLng.ifPresent(coords -> {
+            post.setLongitude(coords[0]);
+            post.setLatitude(coords[1]);
+        });
     }
 
     @Transactional
-    public Post getPostById(Long id) throws InputInvalidException {
-        // Tìm tin đăng
+    public PostResponse updatePost(User user, UpdatePostDTO request) {
+        Post post = postRepository.findById(request.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(user.getId()) && user.getRole() != RoleEnum.ADMIN) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        if (post.getStatus() == PostStatusEnum.EXPIRED) {
+            throw new AppException(ErrorCode.POST_STATUS_INVALID); // Update ErrorCode message if needed
+        }
+
+        postMapper.updateEntityFromRequest(request, post);
+
+        // Cập nhật lại tọa độ nếu địa chỉ thay đổi (Bạn có thể check condition kỹ hơn ở
+        // đây)
+        if (request.getLatitude() == null) {
+            handleGeocoding(post);
+        }
+
+        return postMapper.toResponse(postRepository.save(post));
+    }
+
+    @Transactional
+    public void deletePost(User user, Long postId, boolean isAdminDelete) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        if (!isAdminDelete && !post.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        if (isAdminDelete) {
+            notificationService.createNotification(post.getUser().getId(),
+                    "Tin đăng mã " + post.getId() + " đã bị quản trị viên xóa.",
+                    NotificationType.POST);
+            postRepository.delete(post); // Hard delete
+        } else {
+            post.setDeletedByUser(true); // Soft delete
+            postRepository.save(post);
+        }
+    }
+
+    @Transactional
+    public PostResponse updatePostStatus(Long postId, PostStatusEnum status, String message, boolean sendNotification) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        post.setStatus(status);
+        postRepository.save(post);
+
+        if (sendNotification && message != null) {
+            notificationService.createNotification(post.getUser().getId(), message, NotificationType.SYSTEM_ALERT);
+        }
+        return postMapper.toResponse(post);
+    }
+
+    public PostResponse getPostById(User currentUser, Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        // Lấy thông tin người dùng hiện tại
-        String userEmail = SecurityUtil.getCurrentUserLogin()
-                .orElse(null); // Có thể null nếu chưa đăng nhập
-        User currentUser = userEmail != null ? userRepository.findByEmail(userEmail).orElse(null) : null;
+        boolean isAdmin = currentUser != null && currentUser.getRole() == RoleEnum.ADMIN;
+        boolean isOwner = currentUser != null && post.getUser().getId().equals(currentUser.getId());
 
-        // Kiểm tra quyền truy cập
-        boolean isAdmin = currentUser != null && currentUser.getRole().equals(RoleEnum.ADMIN);
-        boolean isOwner = currentUser != null && post.getUser().getEmail().equals(userEmail);
-
-        // Trường hợp tin đăng bị xóa mềm (deletedByUser = true): chỉ admin được truy
-        // cập
         if (post.getDeletedByUser() && !isAdmin) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        // Trường hợp trạng thái EXPIRED, REJECTED, PENDING: chỉ chủ sở hữu hoặc admin
-        // được truy cập
-        if (post.getStatus().equals(PostStatusEnum.EXPIRED) ||
-                post.getStatus().equals(PostStatusEnum.REJECTED) ||
-                post.getStatus().equals(PostStatusEnum.PENDING)) {
-            if (!isOwner && !isAdmin) {
-                throw new AppException(ErrorCode.FORBIDDEN);
-            }
+        if ((post.getStatus() == PostStatusEnum.EXPIRED || post.getStatus() == PostStatusEnum.PENDING)
+                && !isOwner && !isAdmin) {
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        // Xử lý thông báo khi notifyOnView = true
-        if (post.getNotifyOnView() && currentUser != null && !isOwner && !isAdmin) {
-            Notification notification = new Notification();
-            String message = "Người dùng '" + currentUser.getName() + " - " + currentUser.getPhone() +
-                    "' đã xem tin đăng mã '" + post.getId() + "' của bạn.";
-            notification.setMessage(message);
-            notification.setUser(post.getUser());
-            notification.setRead(false);
-            notification.setType(NotificationType.POST);
-
-            // Kiểm tra thông báo trùng lặp
-            if (!notificationService.existsByMessage(message)) {
-                notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
-                        notification.getType());
-            }
-        }
-
-        // Tăng số lượt xem
+        // Tăng view
         post.setView(post.getView() + 1);
         postRepository.save(post);
 
-        return post;
-    }
-
-    public Page<Post> getFilteredPosts(Long minPrice, Long maxPrice, Double minArea, Double maxArea,
-            PostStatusEnum status, Long categoryId, PostTypeEnum type, Long vipId,
-            String search, Boolean isDeleteByUser, Pageable pageable) {
-
-        Specification<Post> spec = PostSpecification.filterBy(minPrice, maxPrice, minArea, maxArea, status,
-                categoryId, type, vipId, search, isDeleteByUser);
-
-        return postRepository.findAll(spec, pageable);
-    }
-
-    public Page<Post> getFilteredReviewOrApprovedPosts(
-            Long minPrice, Long maxPrice, Double minArea, Double maxArea,
-            Long provinceCode, Long districtCode, Long wardCode, Long categoryId,
-            PostTypeEnum type, int page, int size) {
-
-        Specification<Post> spec = PostSpecification.filterBy(
-                minPrice, maxPrice, minArea, maxArea, provinceCode, districtCode, wardCode, categoryId,
-                type);
-
-        spec = spec.and((root, query, criteriaBuilder) -> root.get("status").in(PostStatusEnum.REVIEW_LATER,
-                PostStatusEnum.APPROVED));
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(
-                Sort.Order.desc("vip.vipLevel"),
-                Sort.Order.desc("createdAt")));
-        return postRepository.findAll(spec, pageable);
-    }
-
-    public Page<Post> getMyPosts(Pageable pageable, PostStatusEnum status, PostTypeEnum type,
-            Long provinceCode, Long postId) throws InputInvalidException {
-        String userEmail = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new InputInvalidException("Chưa đăng nhập"));
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new InputInvalidException("Không tìm thấy người dùng"));
-
-        return postRepository.findMyPosts(user.getEmail(), status, type, provinceCode, postId, pageable);
-    }
-
-    public String getFullAddressByPostId(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found with ID: " + postId));
-
-        String detail = post.getDetailAddress() != null ? post.getDetailAddress() : "";
-        String ward = post.getWard() != null ? ", " + post.getWard().getName() : "";
-        if (detail.equals("")) {
-            ward = post.getWard() != null ? post.getWard().getName() : "";
+        // Notify
+        if (post.getNotifyOnView() && currentUser != null && !isOwner && !isAdmin) {
+            String msg = String.format("Người dùng '%s - %s' đã xem tin đăng mã '%d' của bạn.",
+                    currentUser.getName(), currentUser.getPhone(), post.getId());
+            if (!notificationService.existsByMessage(msg)) {
+                notificationService.createNotification(post.getUser(), msg, NotificationType.POST);
+            }
         }
-        String district = post.getDistrict() != null ? ", " + post.getDistrict().getName() : "";
-        String province = post.getProvince() != null ? ", " + post.getProvince().getName() : "";
 
-        return detail + ward + district + province;
+        return postMapper.toResponse(post);
     }
 
-    public List<MapPostDTO> getPostsForMap(Long minPrice, Long maxPrice, Double minArea, Double maxArea,
-            Long categoryId, PostTypeEnum type, Long provinceCode, Long districtCode, Long wardCode) {
-        List<Object[]> results = postRepository.findPostsForMap(minPrice, maxPrice, minArea, maxArea,
-                categoryId, type, provinceCode, districtCode, wardCode);
-
-        return results.stream()
-                .map(result -> new MapPostDTO(
-                        (Double) result[0], // latitude
-                        (Double) result[1], // longitude
-                        (Long) result[2], // postId
-                        (Long) result[3], // vipId
-                        (Long) result[4] // price
-                ))
-                .collect(Collectors.toList());
+    // Dùng chung 1 hàm cho việc lấy danh sách bài đăng
+    public PageResponse<PostResponse> getFilteredPosts(PostFilterRequest filter) {
+        var spec = PostSpecification.filterBy(filter);
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(),
+                Sort.by(filter.getSortDirection(), filter.getSortBy()));
+        var page = postRepository.findAll(spec, pageable);
+        return PageResponse.of(page.map(postMapper::toResponse));
     }
-
 }

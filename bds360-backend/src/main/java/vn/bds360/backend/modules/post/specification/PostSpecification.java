@@ -5,148 +5,64 @@ import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.PostTypeEnum;
-import vn.bds360.backend.modules.address.entity.District;
-import vn.bds360.backend.modules.address.entity.Province;
-import vn.bds360.backend.modules.address.entity.Ward;
+import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.user.entity.User;
-import vn.bds360.backend.modules.vip.entity.Vip;
 
 public class PostSpecification {
 
-	public static Specification<Post> filterBy(
-			Long minPrice, Long maxPrice, Double minArea, Double maxArea,
-			PostStatusEnum status, Long categoryId, PostTypeEnum type,
-			Long vipId, String search, Boolean deletedByUser) {
-		return (root, query, criteriaBuilder) -> {
-			Predicate predicate = criteriaBuilder.conjunction();
+	public static Specification<Post> filterBy(PostFilterRequest filter) {
+		return (root, query, cb) -> {
+			Predicate predicate = cb.conjunction();
 
-			// Bộ lọc giá
-			if (minPrice != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
-			}
-			if (maxPrice != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
-			}
+			if (filter.getMinPrice() != null)
+				predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("price"), filter.getMinPrice()));
+			if (filter.getMaxPrice() != null)
+				predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("price"), filter.getMaxPrice()));
+			if (filter.getMinArea() != null)
+				predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("area"), filter.getMinArea()));
+			if (filter.getMaxArea() != null)
+				predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("area"), filter.getMaxArea()));
 
-			// Bộ lọc diện tích
-			if (minArea != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.greaterThanOrEqualTo(root.get("area"), minArea));
-			}
-			if (maxArea != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.lessThanOrEqualTo(root.get("area"), maxArea));
-			}
+			if (filter.getStatus() != null)
+				predicate = cb.and(predicate, cb.equal(root.get("status"), filter.getStatus()));
+			if (filter.getCategoryId() != null)
+				predicate = cb.and(predicate, cb.equal(root.get("category").get("id"), filter.getCategoryId()));
+			if (filter.getType() != null)
+				predicate = cb.and(predicate, cb.equal(root.get("type"), filter.getType()));
+			if (filter.getProvinceCode() != null)
+				predicate = cb.and(predicate, cb.equal(root.get("province").get("code"), filter.getProvinceCode()));
+			if (filter.getDistrictCode() != null)
+				predicate = cb.and(predicate, cb.equal(root.get("district").get("code"), filter.getDistrictCode()));
+			if (filter.getWardCode() != null)
+				predicate = cb.and(predicate, cb.equal(root.get("ward").get("code"), filter.getWardCode()));
 
-			// Bộ lọc trạng thái
-			if (status != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(root.get("status"), status));
-			}
+			if (filter.getVipId() != null)
+				predicate = cb.and(predicate, cb.equal(root.get("vip").get("id"), filter.getVipId()));
 
-			// Bộ lọc danh mục
-			if (categoryId != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(root.get("category").get("id"), categoryId));
+			// Xử lý riêng biệt cho Public User (chỉ xem bài đã duyệt)
+			if (Boolean.TRUE.equals(filter.getIsApprovedOnly())) {
+				predicate = cb.and(predicate,
+						root.get("status").in(PostStatusEnum.APPROVED, PostStatusEnum.REVIEW_LATER));
 			}
 
-			// Bộ lọc loại bài đăng
-			if (type != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(root.get("type"), type));
+			if (filter.getIsDeleteByUser() != null) {
+				predicate = cb.and(predicate, cb.equal(root.get("deletedByUser"), filter.getIsDeleteByUser()));
 			}
 
-			// Bộ lọc VIP
-			if (vipId != null) {
-				Join<Post, Vip> vipJoin = root.join("vip");
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(vipJoin.get("id"), vipId));
-			}
-
-			// Bộ lọc deletedByUser
-			if (deletedByUser != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(root.get("deletedByUser"), deletedByUser));
-			}
-
-			// Bộ lọc search (postId hoặc email)
-			if (search != null && !search.trim().isEmpty()) {
-				Predicate searchPredicate = criteriaBuilder.disjunction(); // OR condition
-
-				// Thử parse search thành postId
+			if (filter.getSearch() != null && !filter.getSearch().trim().isEmpty()) {
+				Predicate searchPredicate;
 				try {
-					Long postId = Long.parseLong(search);
-					searchPredicate = criteriaBuilder.or(searchPredicate,
-							criteriaBuilder.equal(root.get("id"), postId));
+					Long postId = Long.parseLong(filter.getSearch());
+					searchPredicate = cb.equal(root.get("id"), postId);
 				} catch (NumberFormatException e) {
-					// Nếu không parse được thành Long, coi search là email
 					Join<Post, User> userJoin = root.join("user");
-					searchPredicate = criteriaBuilder.or(searchPredicate,
-							criteriaBuilder.equal(userJoin.get("email"), search));
+					searchPredicate = cb.equal(userJoin.get("email"), filter.getSearch());
 				}
-
-				predicate = criteriaBuilder.and(predicate, searchPredicate);
+				predicate = cb.and(predicate, searchPredicate);
 			}
 
 			return predicate;
 		};
 	}
-
-	public static Specification<Post> filterBy(
-			Long minPrice, Long maxPrice, Double minArea, Double maxArea,
-			Long provinceCode, Long districtCode, Long wardCode,
-			Long categoryId, PostTypeEnum type) {
-		return (root, query, criteriaBuilder) -> {
-			Predicate predicate = criteriaBuilder.conjunction();
-
-			if (minPrice != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
-			}
-			if (maxPrice != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
-			}
-			if (minArea != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.greaterThanOrEqualTo(root.get("area"), minArea));
-			}
-			if (maxArea != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.lessThanOrEqualTo(root.get("area"), maxArea));
-			}
-			if (provinceCode != null) {
-				Join<Post, Province> provinceJoin = root.join("province");
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(provinceJoin.get("code"), provinceCode));
-			}
-			if (districtCode != null) {
-				Join<Post, District> districtJoin = root.join("district");
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(districtJoin.get("code"), districtCode));
-			}
-			if (wardCode != null) {
-				Join<Post, Ward> wardJoin = root.join("ward");
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(wardJoin.get("code"), wardCode));
-			}
-			if (categoryId != null) {
-				predicate = criteriaBuilder.and(predicate,
-						criteriaBuilder.equal(root.get("category").get("id"), categoryId));
-			}
-			if (type != null) {
-				predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("type"), type));
-			}
-
-			predicate = criteriaBuilder.and(predicate,
-					criteriaBuilder.equal(root.get("deletedByUser"), false));
-
-			return predicate;
-		};
-	}
-
 }
