@@ -26,8 +26,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.PostTypeEnum;
+import vn.bds360.backend.common.constant.ListingType;
+import vn.bds360.backend.common.constant.PostStatus;
 import vn.bds360.backend.modules.address.entity.District;
 import vn.bds360.backend.modules.address.entity.Province;
 import vn.bds360.backend.modules.address.entity.Ward;
@@ -58,7 +58,7 @@ public class Post {
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Loại tin đăng không được để trống")
-    private PostTypeEnum type;
+    private ListingType type;
 
     @NotNull(message = "Giá không được để trống")
     @Min(value = 0, message = "Giá phải lớn hơn hoặc bằng 0")
@@ -72,7 +72,7 @@ public class Post {
     private Long view = 0L;
 
     @Enumerated(EnumType.STRING)
-    private PostStatusEnum status;
+    private PostStatus status;
 
     private Instant expireDate;
     private Boolean deletedByUser;

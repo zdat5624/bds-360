@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import vn.bds360.backend.common.constant.PostTypeEnum;
+import vn.bds360.backend.common.constant.ListingType;
 
 @Data
 public class CategoryCreateRequest {
@@ -13,5 +13,5 @@ public class CategoryCreateRequest {
     private String name;
 
     @NotNull(message = "CATEGORY_TYPE_REQUIRED")
-    private PostTypeEnum type;
+    private ListingType type;
 }

@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -52,7 +52,7 @@ public class UserService {
         if (user == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        if (user.getRole().equals(RoleEnum.ADMIN)) {
+        if (user.getRole().equals(Role.ADMIN)) {
             throw new AppException(ErrorCode.CANNOT_DELETE_ADMIN);
         }
         userRepository.delete(user);
@@ -73,7 +73,7 @@ public class UserService {
     public UserResponse fetchUserByIdWithPermission(long targetUserId, String email) {
         User currentUser = handleGetUserByUserName(email);
 
-        boolean isAdmin = currentUser.getRole().equals(RoleEnum.ADMIN);
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
         boolean isOwner = currentUser.getId() == targetUserId;
 
         if (!isAdmin && !isOwner) {

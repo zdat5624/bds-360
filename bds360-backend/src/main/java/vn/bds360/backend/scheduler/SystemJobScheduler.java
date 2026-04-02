@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
-import vn.bds360.backend.common.constant.PostStatusEnum;
+import vn.bds360.backend.common.constant.PostStatus;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 
@@ -23,7 +23,7 @@ public class SystemJobScheduler {
     @Scheduled(cron = "0 0 */6 * * *") // Chạy mỗi 6 giờ
     @Transactional
     public void updateExpiredPosts() {
-        int updatedCount = postRepository.updateExpiredPosts(PostStatusEnum.EXPIRED, Instant.now());
+        int updatedCount = postRepository.updateExpiredPosts(PostStatus.EXPIRED, Instant.now());
         System.out.println("Updated " + updatedCount + " expired posts.");
     }
 

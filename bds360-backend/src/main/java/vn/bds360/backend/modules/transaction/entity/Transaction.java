@@ -1,3 +1,4 @@
+
 package vn.bds360.backend.modules.transaction.entity;
 
 import java.time.Instant;
@@ -16,7 +17,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.TransStatusEnum;
+import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.modules.user.entity.User;
 
 @Getter
@@ -32,7 +33,7 @@ public class Transaction {
     private Long amount;
 
     @Enumerated(EnumType.STRING)
-    private TransStatusEnum status;
+    private TransactionStatus status;
 
     @Column(columnDefinition = "TEXT")
     private String paymentLink;

@@ -7,24 +7,26 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.PostTypeEnum;
+import vn.bds360.backend.common.constant.ListingType;
+import vn.bds360.backend.common.constant.PostStatus;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostResponse {
+public class
+
+PostResponse {
 
     // --- THÔNG TIN CƠ BẢN ---
     private Long id;
     private String title;
     private String description;
-    private PostTypeEnum type;
+    private ListingType type;
     private Long price;
     private Double area;
     private Long view;
-    private PostStatusEnum status;
+    private PostStatus status;
     private Instant expireDate;
     private Instant createdAt;
     private Instant updatedAt;

@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import vn.bds360.backend.common.constant.PostTypeEnum;
+import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.modules.category.entity.Category;
 
 @Repository
@@ -16,6 +16,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT c FROM Category c WHERE " + "(:type IS NULL OR c.type = :type)")
     Page<Category> findByNameContainingAndType(
-            @Param("type") PostTypeEnum type,
+            @Param("type") ListingType type,
             Pageable pageable);
 }

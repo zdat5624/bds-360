@@ -20,8 +20,8 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.GenderEnum;
-import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.constant.Gender;
+import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.modules.auth.entity.PasswordResetToken;
 import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.post.entity.Post;
@@ -50,10 +50,10 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private RoleEnum role;
+    private Role role;
 
     @Enumerated(EnumType.STRING)
-    private GenderEnum gender;
+    private Gender gender;
 
     private Long balance = 0L;
 

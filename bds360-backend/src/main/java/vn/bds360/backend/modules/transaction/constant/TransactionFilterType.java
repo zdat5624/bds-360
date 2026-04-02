@@ -1,4 +1,4 @@
-package vn.bds360.backend.common.constant;
+package vn.bds360.backend.modules.transaction.constant;
 
 public enum TransactionFilterType {
     DEPOSIT, // Nạp tiền (amount > 0)

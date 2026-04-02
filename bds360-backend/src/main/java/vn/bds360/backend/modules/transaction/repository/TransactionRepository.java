@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
-import vn.bds360.backend.common.constant.TransStatusEnum;
+import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 
 @Repository
@@ -28,8 +28,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
         // 3. Nhóm hàm Thống kê / Báo cáo (Dashboard)
 
         @Query("SELECT SUM(t.amount) FROM Transaction t WHERE YEAR(t.createdAt) = :year AND t.status = :status AND t.amount > 0")
-        Long sumAmountByYearAndStatus(Integer year, TransStatusEnum status);
+        Long sumAmountByYearAndStatus(Integer year, TransactionStatus status);
 
         @Query("SELECT SUM(t.amount) FROM Transaction t WHERE YEAR(t.createdAt) = :year AND MONTH(t.createdAt) = :month AND t.status = :status AND t.amount > 0")
-        Long sumAmountByYearMonthAndStatus(Integer year, Integer month, TransStatusEnum status);
+        Long sumAmountByYearMonthAndStatus(Integer year, Integer month, TransactionStatus status);
 }

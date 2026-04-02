@@ -48,11 +48,18 @@ public class GlobalExceptionHandler {
                                 .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
 
+        // KHÔNG CẦN import com.fasterxml.jackson... nữa
+
         @ExceptionHandler(HttpMessageNotReadableException.class)
         public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(
                         HttpMessageNotReadableException exception) {
+
+                // In log chi tiết ra console để Backend tự biết lỗi gì
                 log.warn("Lỗi parse JSON từ Client: {}", exception.getMessage());
-                ErrorCode e = ErrorCode.INVALID_PARAMETER;
+
+                // Trả về câu thông báo lịch sự và dễ hiểu cho Frontend
+                ErrorCode e = ErrorCode.JSON_TYPE_MISMATCH;
+
                 return ResponseEntity
                                 .status(e.getStatus())
                                 .body(ApiResponse.error(e.getCode(), e.getMessage()));

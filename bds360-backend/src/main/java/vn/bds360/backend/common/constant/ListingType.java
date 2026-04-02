@@ -1,6 +1,6 @@
 package vn.bds360.backend.common.constant;
 
-public enum PostTypeEnum {
+public enum ListingType {
     RENT, // Cho thuê
     SALE // Bán
 }

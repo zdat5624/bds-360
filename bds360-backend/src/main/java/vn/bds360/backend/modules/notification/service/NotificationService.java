@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.bds360.backend.common.constant.NotificationType;
-import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -105,7 +105,7 @@ public class NotificationService {
     @Transactional
     public void handleViewPhoneNotification(User currentUser, ViewPhoneNotificationRequest request) {
         // Admin xem thì không cần thông báo làm phiền chủ tin
-        if (currentUser.getRole() == RoleEnum.ADMIN)
+        if (currentUser.getRole() == Role.ADMIN)
             return;
 
         User recipient = userService.fetchUserById(request.getRecipientId());

@@ -1,5 +1,5 @@
 package vn.bds360.backend.common.constant;
 
-public enum TransStatusEnum {
+public enum TransactionStatus {
     PENDING, SUCCESS, FAILED
 }

@@ -8,7 +8,7 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.modules.user.entity.User;
@@ -43,10 +43,10 @@ public class PermissionInterceptor implements HandlerInterceptor {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        RoleEnum role = user.getRole();
+        Role role = user.getRole();
 
         // Nếu truy cập "/api/admin/**" mà không phải ADMIN => Cấm truy cập
-        if (path.startsWith("/api/admin") && role != RoleEnum.ADMIN) {
+        if (path.startsWith("/api/admin") && role != Role.ADMIN) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 

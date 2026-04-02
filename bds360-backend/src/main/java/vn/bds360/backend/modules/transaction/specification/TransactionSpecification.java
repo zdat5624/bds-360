@@ -7,7 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
-import vn.bds360.backend.common.constant.TransactionFilterType;
+import vn.bds360.backend.modules.transaction.constant.TransactionFilterType;
 import vn.bds360.backend.modules.transaction.dto.request.TransactionFilterRequest;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.user.entity.User;

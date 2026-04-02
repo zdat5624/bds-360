@@ -2,7 +2,7 @@ package vn.bds360.backend.modules.post.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import vn.bds360.backend.common.constant.PostStatusEnum;
+import vn.bds360.backend.common.constant.PostStatus;
 
 @Data
 public class UpdatePostStatusRequest {
@@ -11,7 +11,7 @@ public class UpdatePostStatusRequest {
     private long postId;
 
     @NotNull(message = "Trạng thái mới không được để trống")
-    private PostStatusEnum status;
+    private PostStatus status;
 
     private String message;
 

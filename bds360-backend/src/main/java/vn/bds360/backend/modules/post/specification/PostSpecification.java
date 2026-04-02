@@ -4,7 +4,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
-import vn.bds360.backend.common.constant.PostStatusEnum;
+import vn.bds360.backend.common.constant.PostStatus;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.user.entity.User;
@@ -43,7 +43,7 @@ public class PostSpecification {
 			// Xử lý riêng biệt cho Public User (chỉ xem bài đã duyệt)
 			if (Boolean.TRUE.equals(filter.getIsApprovedOnly())) {
 				predicate = cb.and(predicate,
-						root.get("status").in(PostStatusEnum.APPROVED, PostStatusEnum.REVIEW_LATER));
+						root.get("status").in(PostStatus.APPROVED, PostStatus.REVIEW_LATER));
 			}
 
 			if (filter.getIsDeleteByUser() != null) {

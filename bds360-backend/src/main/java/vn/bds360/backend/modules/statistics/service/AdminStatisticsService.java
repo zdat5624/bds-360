@@ -8,8 +8,8 @@ import java.util.stream.IntStream;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.TransStatusEnum;
+import vn.bds360.backend.common.constant.PostStatus;
+import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.statistics.dto.response.AdminStatisticsResponse;
 import vn.bds360.backend.modules.statistics.dto.response.MonthlyRevenueResponse;
@@ -29,15 +29,15 @@ public class AdminStatisticsService {
         int targetYear = now.getYear();
         int targetMonth = now.getMonthValue();
 
-        Long totalRevenueYear = transactionRepository.sumAmountByYearAndStatus(targetYear, TransStatusEnum.SUCCESS);
+        Long totalRevenueYear = transactionRepository.sumAmountByYearAndStatus(targetYear, TransactionStatus.SUCCESS);
         Long totalRevenueMonth = transactionRepository.sumAmountByYearMonthAndStatus(targetYear, targetMonth,
-                TransStatusEnum.SUCCESS);
+                TransactionStatus.SUCCESS);
 
         return AdminStatisticsResponse.builder()
                 .totalRevenueYear(totalRevenueYear != null ? totalRevenueYear : 0L)
                 .totalRevenueMonth(totalRevenueMonth != null ? totalRevenueMonth : 0L)
                 .totalUsers(userRepository.count())
-                .pendingPosts(postRepository.countByStatusIn(PostStatusEnum.PENDING, PostStatusEnum.REVIEW_LATER))
+                .pendingPosts(postRepository.countByStatusIn(PostStatus.PENDING, PostStatus.REVIEW_LATER))
                 .build();
     }
 
@@ -46,7 +46,7 @@ public class AdminStatisticsService {
         return IntStream.rangeClosed(1, 12)
                 .mapToObj(month -> {
                     Long revenue = transactionRepository.sumAmountByYearMonthAndStatus(year, month,
-                            TransStatusEnum.SUCCESS);
+                            TransactionStatus.SUCCESS);
                     return new MonthlyRevenueResponse(month, revenue != null ? revenue : 0L);
                 })
                 .collect(Collectors.toList());

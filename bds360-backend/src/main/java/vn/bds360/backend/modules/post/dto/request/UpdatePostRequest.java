@@ -27,7 +27,7 @@ public class UpdatePostRequest {
     @Size(max = 16777215, message = "Mô tả quá dài")
     private String description;
 
-    private vn.bds360.backend.common.constant.PostTypeEnum type;
+    private vn.bds360.backend.common.constant.ListingType type;
 
     @Min(value = 0, message = "Giá phải lớn hơn hoặc bằng 0")
     private Long price;

@@ -16,12 +16,12 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
-import vn.bds360.backend.common.constant.GenderEnum;
+import vn.bds360.backend.common.constant.Gender;
+import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.common.constant.NotificationType;
-import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.PostTypeEnum;
-import vn.bds360.backend.common.constant.RoleEnum;
-import vn.bds360.backend.common.constant.TransStatusEnum;
+import vn.bds360.backend.common.constant.PostStatus;
+import vn.bds360.backend.common.constant.Role;
+import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.modules.address.dto.request.CreateDistrictRequest;
 import vn.bds360.backend.modules.address.dto.request.CreateProvinceRequest;
 import vn.bds360.backend.modules.address.dto.request.CreateWardRequest;
@@ -131,8 +131,8 @@ public class StartupRunner implements CommandLineRunner {
         adminUser.setEmail("admin@gmail.com");
         adminUser.setName("Quản trị viên");
         adminUser.setPassword(this.passwordEncoder.encode("123456"));
-        adminUser.setRole(RoleEnum.ADMIN);
-        adminUser.setGender(GenderEnum.MALE);
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setGender(Gender.MALE);
         adminUser.setBalance(999999999L);
         adminUser.setPhone("0123456789");
         adminUser.setAddress("Thành Phố Hồ Chí Minh");
@@ -144,8 +144,8 @@ public class StartupRunner implements CommandLineRunner {
             user.setEmail("user" + i + "@gmail.com");
             user.setName("TestUser" + i);
             user.setPassword(this.passwordEncoder.encode("123456"));
-            user.setRole(RoleEnum.USER);
-            user.setGender(i % 2 == 0 ? GenderEnum.MALE : GenderEnum.FEMALE);
+            user.setRole(Role.USER);
+            user.setGender(i % 2 == 0 ? Gender.MALE : Gender.FEMALE);
             user.setBalance(1000000L * i); // Số dư tăng dần
             user.setPhone("01234567" + String.format("%02d", i));
             user.setAddress(i % 2 == 0 ? "Thành Phố Hồ Chí Minh" : "Thành Phố Hà Nội");
@@ -167,30 +167,30 @@ public class StartupRunner implements CommandLineRunner {
         }
 
         ArrayList<Category> lst = new ArrayList<Category>();
-        lst.add(new Category("Cho thuê căn hộ chung cư", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê chung cư mini, căn hộ dịch vụ", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê nhà riêng", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê nhà biệt thự, liền kề", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê nhà mặt phố", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê shophouse, nhà phố thương mại", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê nhà trọ, phòng trọ", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê văn phòng", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê, sang nhượng cửa hàng, ki ốt", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê kho, nhà xưởng, đất", PostTypeEnum.RENT));
-        lst.add(new Category("Cho thuê loại bất động sản khác", PostTypeEnum.RENT));
+        lst.add(new Category("Cho thuê căn hộ chung cư", ListingType.RENT));
+        lst.add(new Category("Cho thuê chung cư mini, căn hộ dịch vụ", ListingType.RENT));
+        lst.add(new Category("Cho thuê nhà riêng", ListingType.RENT));
+        lst.add(new Category("Cho thuê nhà biệt thự, liền kề", ListingType.RENT));
+        lst.add(new Category("Cho thuê nhà mặt phố", ListingType.RENT));
+        lst.add(new Category("Cho thuê shophouse, nhà phố thương mại", ListingType.RENT));
+        lst.add(new Category("Cho thuê nhà trọ, phòng trọ", ListingType.RENT));
+        lst.add(new Category("Cho thuê văn phòng", ListingType.RENT));
+        lst.add(new Category("Cho thuê, sang nhượng cửa hàng, ki ốt", ListingType.RENT));
+        lst.add(new Category("Cho thuê kho, nhà xưởng, đất", ListingType.RENT));
+        lst.add(new Category("Cho thuê loại bất động sản khác", ListingType.RENT));
 
-        lst.add(new Category("Bán căn hộ chung cư", PostTypeEnum.SALE));
-        lst.add(new Category("Bán chung cư mini, căn hộ dịch vụ", PostTypeEnum.SALE));
-        lst.add(new Category("Bán nhà riêng", PostTypeEnum.SALE));
-        lst.add(new Category("Bán nhà biệt thự, liền kề", PostTypeEnum.SALE));
-        lst.add(new Category("Bán nhà mặt phố", PostTypeEnum.SALE));
-        lst.add(new Category("Bán shophouse, nhà phố thương mại", PostTypeEnum.SALE));
-        lst.add(new Category("Bán đất nền dự án", PostTypeEnum.SALE));
-        lst.add(new Category("Bán đất", PostTypeEnum.SALE));
-        lst.add(new Category("Bán trang trại, khu nghỉ dưỡng", PostTypeEnum.SALE));
-        lst.add(new Category("Bán condotel", PostTypeEnum.SALE));
-        lst.add(new Category("Bán kho, nhà xưởng", PostTypeEnum.SALE));
-        lst.add(new Category("Bán loại bất động sản khác", PostTypeEnum.SALE));
+        lst.add(new Category("Bán căn hộ chung cư", ListingType.SALE));
+        lst.add(new Category("Bán chung cư mini, căn hộ dịch vụ", ListingType.SALE));
+        lst.add(new Category("Bán nhà riêng", ListingType.SALE));
+        lst.add(new Category("Bán nhà biệt thự, liền kề", ListingType.SALE));
+        lst.add(new Category("Bán nhà mặt phố", ListingType.SALE));
+        lst.add(new Category("Bán shophouse, nhà phố thương mại", ListingType.SALE));
+        lst.add(new Category("Bán đất nền dự án", ListingType.SALE));
+        lst.add(new Category("Bán đất", ListingType.SALE));
+        lst.add(new Category("Bán trang trại, khu nghỉ dưỡng", ListingType.SALE));
+        lst.add(new Category("Bán condotel", ListingType.SALE));
+        lst.add(new Category("Bán kho, nhà xưởng", ListingType.SALE));
+        lst.add(new Category("Bán loại bất động sản khác", ListingType.SALE));
 
         this.categoryRepository.saveAll(lst);
 
@@ -242,11 +242,11 @@ public class StartupRunner implements CommandLineRunner {
         List<Vip> vips = vipRepository.findAll();
 
         // Danh sách các trạng thái cho các level VIP > 0 (loại bỏ PENDING)
-        List<PostStatusEnum> nonPendingStatuses = new ArrayList<>(Arrays.asList(
-                PostStatusEnum.REVIEW_LATER,
-                PostStatusEnum.APPROVED,
-                PostStatusEnum.REJECTED,
-                PostStatusEnum.EXPIRED));
+        List<PostStatus> nonPendingStatuses = new ArrayList<>(Arrays.asList(
+                PostStatus.REVIEW_LATER,
+                PostStatus.APPROVED,
+                PostStatus.REJECTED,
+                PostStatus.EXPIRED));
 
         List<Post> posts = new ArrayList<>();
 
@@ -638,12 +638,12 @@ public class StartupRunner implements CommandLineRunner {
             post.setType(selectedCategory.getType());
 
             // Gán giá dựa trên loại tin đăng (RENT hoặc SALE)
-            if (selectedCategory.getType() == PostTypeEnum.RENT) {
+            if (selectedCategory.getType() == ListingType.RENT) {
                 long minRentPrice = 1_700_000L;
                 long maxRentPrice = 40_000_000L;
                 long rentPriceRange = maxRentPrice - minRentPrice;
                 post.setPrice(minRentPrice + (long) (random.nextDouble() * rentPriceRange));
-            } else if (selectedCategory.getType() == PostTypeEnum.SALE) {
+            } else if (selectedCategory.getType() == ListingType.SALE) {
                 long minPricePerM2 = 100_000L;
                 long maxPricePerM2 = 10_000_000L;
                 long pricePerM2Range = maxPricePerM2 - minPricePerM2;
@@ -655,17 +655,17 @@ public class StartupRunner implements CommandLineRunner {
 
             // Kiểm tra vipLevel để gán trạng thái và thời gian hiệu lực
             if (selectedVip.getVipLevel() == 0) {
-                post.setStatus(PostStatusEnum.PENDING);
+                post.setStatus(PostStatus.PENDING);
                 long secondsIn1Month = 30L * 24 * 60 * 60;
                 long secondsIn3Months = 90L * 24 * 60 * 60;
                 long range = secondsIn3Months - secondsIn1Month;
                 post.setExpireDate(Instant.now().plusSeconds(secondsIn1Month + (long) (random.nextDouble() * range)));
                 post.setNotifyOnView(false);
             } else {
-                PostStatusEnum selectedStatus = nonPendingStatuses.get(random.nextInt(nonPendingStatuses.size()));
+                PostStatus selectedStatus = nonPendingStatuses.get(random.nextInt(nonPendingStatuses.size()));
                 post.setStatus(selectedStatus);
 
-                if (selectedStatus == PostStatusEnum.EXPIRED) {
+                if (selectedStatus == PostStatus.EXPIRED) {
                     long secondsInPast = random.nextInt(30) * 24 * 60 * 60 + 1;
                     post.setExpireDate(Instant.now().minusSeconds(secondsInPast));
                 } else {
@@ -731,8 +731,8 @@ public class StartupRunner implements CommandLineRunner {
         Random random = new Random();
         List<User> users = userRepository.findAll();
         List<Transaction> transactions = new ArrayList<>();
-        List<TransStatusEnum> statuses = Arrays.asList(TransStatusEnum.PENDING, TransStatusEnum.SUCCESS,
-                TransStatusEnum.FAILED);
+        List<TransactionStatus> statuses = Arrays.asList(TransactionStatus.PENDING, TransactionStatus.SUCCESS,
+                TransactionStatus.FAILED);
 
         // Tạo 200 giao dịch mẫu
         for (int i = 1; i <= 1000; i++) {
@@ -758,7 +758,7 @@ public class StartupRunner implements CommandLineRunner {
                 long maxAmount = 10_000_000L;
                 long amountRange = maxAmount - minAmount;
                 amount = minAmount + (long) (random.nextDouble() * amountRange); // Số tiền dương
-                TransStatusEnum selectedStatus = statuses.get(random.nextInt(statuses.size()));
+                TransactionStatus selectedStatus = statuses.get(random.nextInt(statuses.size()));
                 transaction.setStatus(selectedStatus);
 
                 switch (selectedStatus) {
@@ -780,7 +780,7 @@ public class StartupRunner implements CommandLineRunner {
                 long maxCost = 1_000_000L;
                 long costRange = maxCost - minCost;
                 amount = -(minCost + (long) (random.nextDouble() * costRange));
-                transaction.setStatus(TransStatusEnum.SUCCESS);
+                transaction.setStatus(TransactionStatus.SUCCESS);
                 description = "Thanh toán phí đăng tin mã " + selectedPost.getId() + " thành công";
                 transaction.setPaymentLink(null);
                 txnId = null;
@@ -796,7 +796,7 @@ public class StartupRunner implements CommandLineRunner {
             transaction.setCreatedAt(Instant.now().minusSeconds(randomSeconds));
 
             // Thời gian cập nhật (nếu SUCCESS hoặc FAILED thì có updatedAt)
-            if (transaction.getStatus() != TransStatusEnum.PENDING) {
+            if (transaction.getStatus() != TransactionStatus.PENDING) {
                 transaction.setUpdatedAt(transaction.getCreatedAt().plusSeconds(random.nextInt(3600 / 4)));
             }
 
@@ -864,7 +864,7 @@ public class StartupRunner implements CommandLineRunner {
                     if (transactions.isEmpty())
                         continue;
                     Transaction successfulTransaction = transactions.stream()
-                            .filter(t -> t.getStatus() == TransStatusEnum.SUCCESS && t.getAmount() > 0)
+                            .filter(t -> t.getStatus() == TransactionStatus.SUCCESS && t.getAmount() > 0)
                             .findAny()
                             .orElse(null);
                     if (successfulTransaction == null)

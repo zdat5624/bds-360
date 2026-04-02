@@ -4,8 +4,7 @@ import java.time.Instant;
 
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.TransStatusEnum;
-import vn.bds360.backend.modules.user.dto.response.UserResponse;
+import vn.bds360.backend.common.constant.TransactionStatus;
 
 @Getter
 @Setter
@@ -15,7 +14,7 @@ public class TransactionResponse {
 
     private Long amount;
 
-    private TransStatusEnum status;
+    private TransactionStatus status;
 
     private String paymentLink;
 
@@ -27,5 +26,13 @@ public class TransactionResponse {
 
     private Instant updatedAt;
 
-    private UserResponse user;
+    private TransactionUserResponse user;
+
+    @Getter
+    @Setter
+    public static class TransactionUserResponse {
+        private Long id;
+        private String name;
+        private String email;
+    }
 }

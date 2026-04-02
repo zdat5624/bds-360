@@ -14,9 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.NotificationType;
-import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.RoleEnum;
-import vn.bds360.backend.common.constant.TransStatusEnum;
+import vn.bds360.backend.common.constant.PostStatus;
+import vn.bds360.backend.common.constant.Role;
+import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -76,7 +76,7 @@ public class PostService {
         // 2. Map DTO -> Entity
         Post post = postMapper.toEntity(request);
         post.setUser(user);
-        post.setStatus(isVip ? PostStatusEnum.REVIEW_LATER : PostStatusEnum.PENDING);
+        post.setStatus(isVip ? PostStatus.REVIEW_LATER : PostStatus.PENDING);
         post.setNotifyOnView(isVip);
         post.setCreatedAt(Instant.now());
         post.setExpireDate(post.getCreatedAt().plus(request.getNumberOfDays(), ChronoUnit.DAYS));
@@ -104,7 +104,7 @@ public class PostService {
         Transaction transaction = new Transaction();
         transaction.setAmount(-totalCost);
         transaction.setDescription("Thanh toán phí đăng tin mã " + savedPost.getId());
-        transaction.setStatus(TransStatusEnum.SUCCESS);
+        transaction.setStatus(TransactionStatus.SUCCESS);
         transaction.setUser(user);
         transactionRepository.save(transaction);
 
@@ -133,19 +133,30 @@ public class PostService {
         Post post = postRepository.findById(request.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        if (!post.getUser().getId().equals(user.getId()) && user.getRole() != RoleEnum.ADMIN) {
+        if (!post.getUser().getId().equals(user.getId()) && user.getRole() != Role.ADMIN) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        if (post.getStatus() == PostStatusEnum.EXPIRED) {
-            throw new AppException(ErrorCode.POST_STATUS_INVALID); // Update ErrorCode message if needed
+        if (post.getStatus() == PostStatus.EXPIRED) {
+            throw new AppException(ErrorCode.POST_STATUS_INVALID);
         }
 
         postMapper.updateEntityFromRequest(request, post);
 
-        // Cập nhật lại tọa độ nếu địa chỉ thay đổi (Bạn có thể check condition kỹ hơn ở
-        // đây)
-        if (request.getLatitude() == null) {
+        if (request.getCategory() != null) {
+            post.setCategory(request.getCategory());
+        }
+        if (request.getProvince() != null) {
+            post.setProvince(request.getProvince());
+        }
+        if (request.getDistrict() != null) {
+            post.setDistrict(request.getDistrict());
+        }
+        if (request.getWard() != null) {
+            post.setWard(request.getWard());
+        }
+
+        if (request.getLatitude() == null || request.getLongitude() == null) {
             handleGeocoding(post);
         }
 
@@ -157,7 +168,7 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        if (!isAdminDelete && !post.getUser().getId().equals(user.getId())) {
+        if (!user.getRole().equals(Role.ADMIN) && !post.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
@@ -173,7 +184,7 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse updatePostStatus(Long postId, PostStatusEnum status, String message, boolean sendNotification) {
+    public PostResponse updatePostStatus(Long postId, PostStatus status, String message, boolean sendNotification) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
@@ -190,14 +201,14 @@ public class PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        boolean isAdmin = currentUser != null && currentUser.getRole() == RoleEnum.ADMIN;
+        boolean isAdmin = currentUser != null && currentUser.getRole() == Role.ADMIN;
         boolean isOwner = currentUser != null && post.getUser().getId().equals(currentUser.getId());
 
         if (post.getDeletedByUser() && !isAdmin) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        if ((post.getStatus() == PostStatusEnum.EXPIRED || post.getStatus() == PostStatusEnum.PENDING)
+        if ((post.getStatus() == PostStatus.EXPIRED || post.getStatus() == PostStatus.PENDING)
                 && !isOwner && !isAdmin) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }

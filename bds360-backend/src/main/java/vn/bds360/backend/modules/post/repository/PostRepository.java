@@ -12,8 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
-import vn.bds360.backend.common.constant.PostStatusEnum;
-import vn.bds360.backend.common.constant.PostTypeEnum;
+import vn.bds360.backend.common.constant.ListingType;
+import vn.bds360.backend.common.constant.PostStatus;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.user.entity.User;
 
@@ -22,7 +22,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
         @Modifying
         @Transactional
         @Query("UPDATE Post p SET p.status = :newStatus WHERE p.expireDate < :now")
-        int updateExpiredPosts(@Param("newStatus") PostStatusEnum newStatus, @Param("now") Instant now);
+        int updateExpiredPosts(@Param("newStatus") PostStatus newStatus, @Param("now") Instant now);
 
         List<Post> findByUser(User user);
 
@@ -33,8 +33,8 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
                         "AND (:provinceCode IS NULL OR p.province.code = :provinceCode) " +
                         "AND (:postId IS NULL OR p.id = :postId)")
         Page<Post> findMyPosts(@Param("userEmail") String userEmail,
-                        @Param("status") PostStatusEnum status,
-                        @Param("type") PostTypeEnum type,
+                        @Param("status") PostStatus status,
+                        @Param("type") ListingType type,
                         @Param("provinceCode") Long provinceCode,
                         @Param("postId") Long postId,
                         Pageable pageable);
@@ -63,12 +63,12 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
                         @Param("minArea") Double minArea,
                         @Param("maxArea") Double maxArea,
                         @Param("categoryId") Long categoryId,
-                        @Param("type") PostTypeEnum type,
+                        @Param("type") ListingType type,
                         @Param("provinceCode") Long provinceCode,
                         @Param("districtCode") Long districtCode,
                         @Param("wardCode") Long wardCode);
 
         @Query("SELECT COUNT(p) FROM Post p WHERE p.status IN (:status1, :status2)")
-        Long countByStatusIn(PostStatusEnum status1, PostStatusEnum status2);
+        Long countByStatusIn(PostStatus status1, PostStatus status2);
 
 }

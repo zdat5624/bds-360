@@ -20,6 +20,7 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(10008, HttpStatus.NOT_FOUND, "Tài nguyên tĩnh không tồn tại hoặc URL sai."),
     INVALID_SORT_FIELD(10009, HttpStatus.BAD_REQUEST, "Không thể sắp xếp. Trường dữ liệu '%s' không tồn tại."),
     MISSING_FILE(10010, HttpStatus.BAD_REQUEST, "Request không chứa file hoặc sai định dạng multipart/form-data."),
+    JSON_TYPE_MISMATCH(10011, HttpStatus.BAD_REQUEST, "Dữ liệu JSON không hợp lệ hoặc sai kiểu dữ liệu."),
 
     // ==========================================
     // 11. AUTH & USER MODULE

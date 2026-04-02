@@ -21,7 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.PostTypeEnum;
+import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.modules.post.entity.Post;
 
 @Getter
@@ -42,13 +42,13 @@ public class Category {
 
     @NotNull(message = "Loại danh mục không được để trống")
     @Enumerated(EnumType.STRING)
-    private PostTypeEnum type;
+    private ListingType type;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JsonIgnore
     private List<Post> posts;
 
-    public Category(String name, PostTypeEnum type) {
+    public Category(String name, ListingType type) {
         this.name = name;
         this.type = type;
     }

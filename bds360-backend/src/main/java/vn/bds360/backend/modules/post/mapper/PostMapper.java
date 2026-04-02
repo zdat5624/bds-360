@@ -1,3 +1,4 @@
+// --- File: PostMapper.java ---
 package vn.bds360.backend.modules.post.mapper;
 
 import org.mapstruct.Mapper;
@@ -18,7 +19,7 @@ public interface PostMapper {
     @Mapping(target = "district.code", source = "districtCode")
     @Mapping(target = "ward.code", source = "wardCode")
     @Mapping(target = "vip.id", source = "vipId")
-    @Mapping(target = "images", ignore = true) // Sẽ xử lý thủ công trong Service
+    @Mapping(target = "images", ignore = true)
     Post toEntity(PostCreateRequest request);
 
     @Mapping(target = "provinceName", source = "province.name")
@@ -28,6 +29,9 @@ public interface PostMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "images", ignore = true)
-    @Mapping(target = "category.id", source = "category.id")
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "province", ignore = true)
+    @Mapping(target = "district", ignore = true)
+    @Mapping(target = "ward", ignore = true)
     void updateEntityFromRequest(UpdatePostRequest request, @MappingTarget Post post);
 }

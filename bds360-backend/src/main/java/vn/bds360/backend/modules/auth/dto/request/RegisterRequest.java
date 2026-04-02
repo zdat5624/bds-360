@@ -2,10 +2,14 @@ package vn.bds360.backend.modules.auth.dto.request;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.GenderEnum;
+import vn.bds360.backend.common.constant.Gender;;
 
 @Getter
 @Setter
@@ -28,5 +32,5 @@ public class RegisterRequest {
 
     @NotNull(message = "Gender không được để trống")
     @Enumerated(EnumType.STRING)
-    private GenderEnum gender;
+    private Gender gender;
 }

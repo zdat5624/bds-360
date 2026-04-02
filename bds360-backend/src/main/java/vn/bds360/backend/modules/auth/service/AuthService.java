@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.modules.auth.dto.request.LoginRequest;
@@ -57,7 +57,7 @@ public class AuthService {
 
         // 2. Gán các trường đặc thù của nghiệp vụ Đăng ký
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        newUser.setRole(RoleEnum.USER); // Mặc định đăng ký là USER
+        newUser.setRole(Role.USER); // Mặc định đăng ký là USER
 
         // 3. Lưu thông qua hàm nội bộ của UserService
         User savedUser = userService.saveInternalUser(newUser);

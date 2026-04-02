@@ -20,7 +20,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.bds360.backend.common.constant.NotificationType;
-import vn.bds360.backend.common.constant.TransStatusEnum;
+import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.modules.email.service.EmailService;
@@ -106,7 +106,7 @@ public class VNPAYService {
         // Lưu giao dịch vào Database
         Transaction transaction = new Transaction();
         transaction.setAmount(inputAmount);
-        transaction.setStatus(TransStatusEnum.PENDING);
+        transaction.setStatus(TransactionStatus.PENDING);
         transaction.setDescription("Giao dịch nạp tiền đang chờ thanh toán");
         transaction.setUser(user);
         transaction.setPaymentLink(paymentUrl);
@@ -146,7 +146,7 @@ public class VNPAYService {
         boolean isSuccess = "00".equals(transactionStatus);
 
         // Cập nhật Database
-        transaction.setStatus(isSuccess ? TransStatusEnum.SUCCESS : TransStatusEnum.FAILED);
+        transaction.setStatus(isSuccess ? TransactionStatus.SUCCESS : TransactionStatus.FAILED);
         transaction.setDescription(description);
         transactionRepository.save(transaction);
 

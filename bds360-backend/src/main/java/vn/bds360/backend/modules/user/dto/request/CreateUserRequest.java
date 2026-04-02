@@ -2,11 +2,15 @@ package vn.bds360.backend.modules.user.dto.request;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.GenderEnum;
-import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.constant.Gender;
+import vn.bds360.backend.common.constant.Role;;
 
 @Getter
 @Setter
@@ -30,11 +34,11 @@ public class CreateUserRequest {
 
     @NotNull(message = "Role không được để trống")
     @Enumerated(EnumType.STRING)
-    private RoleEnum role;
+    private Role role;
 
     @NotNull(message = "Gender không được để trống")
     @Enumerated(EnumType.STRING)
-    private GenderEnum gender;
+    private Gender gender;
 
     private String address;
 

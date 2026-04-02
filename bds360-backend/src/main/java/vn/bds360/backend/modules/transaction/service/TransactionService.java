@@ -7,7 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import vn.bds360.backend.common.constant.RoleEnum;
+import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -31,7 +31,7 @@ public class TransactionService {
                                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
                 // Kiểm tra: Nếu không phải Admin VÀ không phải chủ sở hữu thì chặn
-                boolean isAdmin = currentUser.getRole().equals(RoleEnum.ADMIN);
+                boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
                 boolean isOwner = transaction.getUser().getId().equals(currentUser.getId());
 
                 if (!isAdmin && !isOwner) {
