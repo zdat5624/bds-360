@@ -245,7 +245,8 @@ public class PostService {
         notification.setRead(false);
         notification.setMessage("Tin đăng mã " + post.getId() + " của bạn đã bị quản trị viên xóa vĩnh viễn");
         notification.setType(NotificationType.POST);
-        this.notificationService.createNotification(notification);
+        this.notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
+                notification.getType());
 
         this.postRepository.delete(post);
     }
@@ -398,7 +399,8 @@ public class PostService {
             notification.setUser(postOwner);
             notification.setType(NotificationType.SYSTEM_ALERT);
             notification.setMessage(message);
-            this.notificationService.createNotification(notification);
+            this.notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
+                    notification.getType());
         }
 
         return post;
@@ -447,7 +449,8 @@ public class PostService {
 
             // Kiểm tra thông báo trùng lặp
             if (!notificationService.existsByMessage(message)) {
-                notificationService.createNotification(notification);
+                notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
+                        notification.getType());
             }
         }
 

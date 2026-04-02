@@ -17,7 +17,9 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.PostTypeEnum;
 import vn.bds360.backend.modules.post.entity.Post;
@@ -26,6 +28,8 @@ import vn.bds360.backend.modules.post.entity.Post;
 @Setter
 @Entity
 @Table(name = "categories")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Category {
 
     @Id

@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "bds360-backend"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive",
+		"java.format.settings.url": "eclipse-formatter.xml",
+		"java.compile.nullAnalysis.mode": "automatic",
+		"java.dependency.packagePresentation": "hierarchical"
+	}
+}

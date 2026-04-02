@@ -175,7 +175,8 @@ public class VNPAYService {
         notification.setRead(false);
         notification.setType(NotificationType.TRANSACTION);
         notification.setMessage(description + ", tài khoản của bạn được cộng " + transaction.getAmount() + " VNĐ");
-        notificationService.createNotification(notification);
+        notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
+                notification.getType());
 
         // Gửi Email
         String transactionTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
@@ -194,7 +195,8 @@ public class VNPAYService {
             notification.setMessage("Giao dịch nạp tiền qua VNPAY (" + transaction.getTxnId() + ") không thể hoàn tất: "
                     + description + ". Vui lòng thử lại.");
         }
-        notificationService.createNotification(notification);
+        notificationService.createNotification(notification.getUser().getId(), notification.getMessage(),
+                notification.getType());
     }
 
     private String getTransactionDescription(String statusCode, String txnId) {
