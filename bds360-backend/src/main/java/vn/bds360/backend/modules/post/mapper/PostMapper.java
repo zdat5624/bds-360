@@ -1,4 +1,3 @@
-// --- File: PostMapper.java ---
 package vn.bds360.backend.modules.post.mapper;
 
 import org.mapstruct.Mapper;
@@ -33,5 +32,6 @@ public interface PostMapper {
     @Mapping(target = "province", ignore = true)
     @Mapping(target = "district", ignore = true)
     @Mapping(target = "ward", ignore = true)
+    @Mapping(target = "listingDetail", ignore = true)
     void updateEntityFromRequest(UpdatePostRequest request, @MappingTarget Post post);
 }

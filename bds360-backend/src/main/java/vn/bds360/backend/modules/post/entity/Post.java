@@ -10,12 +10,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -27,11 +29,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.ListingType;
-import vn.bds360.backend.common.constant.PostStatus;
 import vn.bds360.backend.modules.address.entity.District;
 import vn.bds360.backend.modules.address.entity.Province;
 import vn.bds360.backend.modules.address.entity.Ward;
 import vn.bds360.backend.modules.category.entity.Category;
+import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.vip.entity.Vip;
 import vn.bds360.backend.security.SecurityUtil;
@@ -100,6 +102,12 @@ public class Post {
     @NotNull
     private String detailAddress;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -117,11 +125,8 @@ public class Post {
     @JsonManagedReference
     private List<Image> images;
 
-    @Column(name = "latitude")
-    private Double latitude;
-
-    @Column(name = "longitude")
-    private Double longitude;
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private ListingDetail listingDetail;
 
     @PrePersist
     public void handleBeforeCreate() {

@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
-import vn.bds360.backend.common.constant.PostStatus;
+import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 

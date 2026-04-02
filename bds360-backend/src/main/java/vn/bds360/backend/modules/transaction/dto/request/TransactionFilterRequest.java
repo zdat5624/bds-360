@@ -6,9 +6,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.common.dto.request.BaseFilterRequest;
 import vn.bds360.backend.modules.transaction.constant.TransactionFilterType;
+import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 
 @Getter
 @Setter

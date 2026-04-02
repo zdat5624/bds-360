@@ -20,12 +20,12 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.Gender;
 import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.modules.auth.entity.PasswordResetToken;
 import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
+import vn.bds360.backend.modules.user.constant.Gender;
 import vn.bds360.backend.security.SecurityUtil;
 
 @Getter

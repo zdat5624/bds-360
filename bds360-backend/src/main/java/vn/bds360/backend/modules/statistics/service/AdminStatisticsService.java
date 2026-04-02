@@ -8,11 +8,11 @@ import java.util.stream.IntStream;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import vn.bds360.backend.common.constant.PostStatus;
-import vn.bds360.backend.common.constant.TransactionStatus;
+import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.statistics.dto.response.AdminStatisticsResponse;
 import vn.bds360.backend.modules.statistics.dto.response.MonthlyRevenueResponse;
+import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.user.repository.UserRepository;
 

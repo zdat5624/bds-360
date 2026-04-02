@@ -14,24 +14,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.NotificationType;
-import vn.bds360.backend.common.constant.PostStatus;
 import vn.bds360.backend.common.constant.Role;
-import vn.bds360.backend.common.constant.TransactionStatus;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.modules.address.service.MapboxGeocodeService;
 import vn.bds360.backend.modules.notification.service.NotificationService;
+import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.entity.Image;
+import vn.bds360.backend.modules.post.entity.ListingDetail;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.post.mapper.PostMapper;
 import vn.bds360.backend.modules.post.repository.ImageRepository;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.post.specification.PostSpecification;
+import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.user.entity.User;
@@ -81,6 +82,11 @@ public class PostService {
         post.setCreatedAt(Instant.now());
         post.setExpireDate(post.getCreatedAt().plus(request.getNumberOfDays(), ChronoUnit.DAYS));
         post.setDeletedByUser(false);
+
+        // Ràng buộc quan hệ 1-1 cho ListingDetail
+        if (post.getListingDetail() != null) {
+            post.getListingDetail().setPost(post);
+        }
 
         // 3. Geocoding
         handleGeocoding(post);
@@ -141,8 +147,25 @@ public class PostService {
             throw new AppException(ErrorCode.POST_STATUS_INVALID);
         }
 
+        // 1. Map các trường cơ bản (Đã ignore listingDetail ở Mapper)
         postMapper.updateEntityFromRequest(request, post);
 
+        // 2. Xử lý an toàn cho ListingDetail (Cập nhật ghi đè giá trị, không tạo Object
+        // mới)
+        if (request.getListingDetail() != null) {
+            if (post.getListingDetail() == null) {
+                // Nếu trước đây chưa có thì tạo mới
+                ListingDetail newDetail = new ListingDetail();
+                newDetail.setPost(post);
+                post.setListingDetail(newDetail);
+            }
+            post.getListingDetail().setBedrooms(request.getListingDetail().getBedrooms());
+            post.getListingDetail().setBathrooms(request.getListingDetail().getBathrooms());
+            post.getListingDetail().setDirection(request.getListingDetail().getDirection());
+            post.getListingDetail().setBalconyDirection(request.getListingDetail().getBalconyDirection());
+            post.getListingDetail().setLegalStatus(request.getListingDetail().getLegalStatus());
+            post.getListingDetail().setFurnishing(request.getListingDetail().getFurnishing());
+        }
         if (request.getCategory() != null) {
             post.setCategory(request.getCategory());
         }

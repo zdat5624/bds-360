@@ -2,7 +2,7 @@ package vn.bds360.backend.modules.post.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import vn.bds360.backend.common.constant.PostStatus;
+import vn.bds360.backend.modules.post.constant.PostStatus;
 
 @Data
 public class UpdatePostStatusRequest {

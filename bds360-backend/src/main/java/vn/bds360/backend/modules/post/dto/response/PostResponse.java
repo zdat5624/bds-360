@@ -8,7 +8,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.bds360.backend.common.constant.ListingType;
-import vn.bds360.backend.common.constant.PostStatus;
+import vn.bds360.backend.modules.post.constant.Furnishing;
+import vn.bds360.backend.modules.post.constant.LegalStatus;
+import vn.bds360.backend.modules.post.constant.PostStatus;
+import vn.bds360.backend.modules.post.constant.PropertyDirection;
 
 @Data
 @Builder
@@ -48,6 +51,8 @@ PostResponse {
     private VipResponse vip;
     private List<ImageResponse> images;
 
+    private ListingDetailResponse listingDetail;
+
     // =================================================================
     // SUB-DTOs (Inner Classes giúp code gọn gàng, không đẻ thêm file)
     // =================================================================
@@ -79,5 +84,15 @@ PostResponse {
         private Long id;
         private String url;
         private Integer orderIndex;
+    }
+
+    @Data
+    public static class ListingDetailResponse {
+        private Integer bedrooms;
+        private Integer bathrooms;
+        private PropertyDirection direction;
+        private PropertyDirection balconyDirection;
+        private LegalStatus legalStatus;
+        private Furnishing furnishing;
     }
 }

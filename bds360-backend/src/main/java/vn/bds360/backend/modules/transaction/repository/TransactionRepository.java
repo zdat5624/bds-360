@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
-import vn.bds360.backend.common.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 
 @Repository

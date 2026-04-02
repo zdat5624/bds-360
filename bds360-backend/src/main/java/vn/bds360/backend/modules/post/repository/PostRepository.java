@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import vn.bds360.backend.common.constant.ListingType;
-import vn.bds360.backend.common.constant.PostStatus;
+import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.user.entity.User;
 

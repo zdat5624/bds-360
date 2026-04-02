@@ -51,4 +51,6 @@ public class UpdatePostRequest {
     private Double latitude;
 
     private Double longitude;
+
+    private ListingDetailRequest listingDetail;
 }

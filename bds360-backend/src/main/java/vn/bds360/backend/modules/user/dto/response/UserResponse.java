@@ -4,8 +4,8 @@ import java.time.Instant;
 
 import lombok.Getter;
 import lombok.Setter;
-import vn.bds360.backend.common.constant.Gender;
-import vn.bds360.backend.common.constant.Role;;
+import vn.bds360.backend.common.constant.Role;
+import vn.bds360.backend.modules.user.constant.Gender;;
 
 @Getter
 @Setter

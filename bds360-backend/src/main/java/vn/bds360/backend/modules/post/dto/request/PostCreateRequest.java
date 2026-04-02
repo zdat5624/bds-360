@@ -38,6 +38,8 @@ public class PostCreateRequest {
     @NotNull(message = "Phải có ít nhất 1 ảnh")
     private List<String> imageUrls;
 
+    private ListingDetailRequest listingDetail;
+
     @Min(value = 1, message = "Số ngày đăng tối thiểu là 1")
     private int numberOfDays;
 }
