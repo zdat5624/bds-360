@@ -5,7 +5,7 @@ import lombok.Data;
 import vn.bds360.backend.common.constant.PostStatusEnum;
 
 @Data
-public class UpdatePostStatusDTO {
+public class UpdatePostStatusRequest {
 
     @NotNull(message = "ID tin đăng không được để trống")
     private long postId;

@@ -1,6 +1,11 @@
 package vn.bds360.backend.modules.post.dto.request;
 
-import jakarta.validation.constraints.*;
+import java.util.List;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.modules.address.entity.District;
@@ -9,11 +14,9 @@ import vn.bds360.backend.modules.address.entity.Ward;
 import vn.bds360.backend.modules.category.entity.Category;
 import vn.bds360.backend.modules.post.entity.Image;
 
-import java.util.List;
-
 @Getter
 @Setter
-public class UpdatePostDTO {
+public class UpdatePostRequest {
 
     @NotNull(message = "ID tin đăng không được để trống")
     private Long id;

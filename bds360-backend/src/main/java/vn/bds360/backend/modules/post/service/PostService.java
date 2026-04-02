@@ -24,7 +24,7 @@ import vn.bds360.backend.modules.address.service.MapboxGeocodeService;
 import vn.bds360.backend.modules.notification.service.NotificationService;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
-import vn.bds360.backend.modules.post.dto.request.UpdatePostDTO;
+import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.Post;
@@ -129,7 +129,7 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse updatePost(User user, UpdatePostDTO request) {
+    public PostResponse updatePost(User user, UpdatePostRequest request) {
         Post post = postRepository.findById(request.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 

@@ -16,8 +16,8 @@ import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
-import vn.bds360.backend.modules.post.dto.request.UpdatePostDTO;
-import vn.bds360.backend.modules.post.dto.request.UpdatePostStatusDTO;
+import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
+import vn.bds360.backend.modules.post.dto.request.UpdatePostStatusRequest;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.service.PostService;
 import vn.bds360.backend.modules.user.entity.User;
@@ -45,7 +45,7 @@ public class PostController {
 
     @PutMapping
     @RequireLogin
-    public ApiResponse<PostResponse> updatePost(@CurrentUser User user, @Valid @RequestBody UpdatePostDTO request) {
+    public ApiResponse<PostResponse> updatePost(@CurrentUser User user, @Valid @RequestBody UpdatePostRequest request) {
         return ApiResponse.success(postService.updatePost(user, request), "Cập nhật tin đăng thành công");
     }
 
@@ -93,7 +93,7 @@ public class PostController {
 
     @PutMapping("/admin/status")
     @IsAdmin
-    public ApiResponse<PostResponse> updatePostStatus(@Valid @RequestBody UpdatePostStatusDTO dto) {
+    public ApiResponse<PostResponse> updatePostStatus(@Valid @RequestBody UpdatePostStatusRequest dto) {
         return ApiResponse.success(postService.updatePostStatus(dto.getPostId(), dto.getStatus(), dto.getMessage(),
                 dto.isSendNotification()));
     }

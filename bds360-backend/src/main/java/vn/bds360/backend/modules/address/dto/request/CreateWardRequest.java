@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class WardDTO {
+public class CreateWardRequest {
     private long code;
     private String name;
     private String codename;

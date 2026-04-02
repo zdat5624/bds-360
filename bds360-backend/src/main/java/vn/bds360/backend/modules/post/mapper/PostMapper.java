@@ -6,7 +6,7 @@ import org.mapstruct.MappingTarget;
 
 import vn.bds360.backend.common.mapper.MapperConfiguration;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
-import vn.bds360.backend.modules.post.dto.request.UpdatePostDTO;
+import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.entity.Post;
 
@@ -29,5 +29,5 @@ public interface PostMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "category.id", source = "category.id")
-    void updateEntityFromRequest(UpdatePostDTO request, @MappingTarget Post post);
+    void updateEntityFromRequest(UpdatePostRequest request, @MappingTarget Post post);
 }

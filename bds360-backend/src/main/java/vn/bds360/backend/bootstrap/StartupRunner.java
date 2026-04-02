@@ -1,4 +1,4 @@
-package vn.bds360.backend;
+package vn.bds360.backend.bootstrap;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -22,9 +22,9 @@ import vn.bds360.backend.common.constant.PostStatusEnum;
 import vn.bds360.backend.common.constant.PostTypeEnum;
 import vn.bds360.backend.common.constant.RoleEnum;
 import vn.bds360.backend.common.constant.TransStatusEnum;
-import vn.bds360.backend.modules.address.dto.request.DistrictDTO;
-import vn.bds360.backend.modules.address.dto.request.ProvinceDTO;
-import vn.bds360.backend.modules.address.dto.request.WardDTO;
+import vn.bds360.backend.modules.address.dto.request.CreateDistrictRequest;
+import vn.bds360.backend.modules.address.dto.request.CreateProvinceRequest;
+import vn.bds360.backend.modules.address.dto.request.CreateWardRequest;
 import vn.bds360.backend.modules.address.entity.District;
 import vn.bds360.backend.modules.address.entity.Province;
 import vn.bds360.backend.modules.address.entity.Ward;
@@ -91,11 +91,11 @@ public class StartupRunner implements CommandLineRunner {
                 ObjectMapper objectMapper = new ObjectMapper();
 
                 try (InputStream inputStream = new ClassPathResource("/data/address.json").getInputStream()) {
-                    List<ProvinceDTO> provinceDTOs = objectMapper.readValue(inputStream,
-                            new TypeReference<List<ProvinceDTO>>() {
+                    List<CreateProvinceRequest> provinceDTOs = objectMapper.readValue(inputStream,
+                            new TypeReference<List<CreateProvinceRequest>>() {
                             });
 
-                    for (ProvinceDTO provinceDTO : provinceDTOs) {
+                    for (CreateProvinceRequest provinceDTO : provinceDTOs) {
                         Province province = convertToEntity(provinceDTO);
                         provinceRepository.save(province);
                     }
@@ -894,7 +894,7 @@ public class StartupRunner implements CommandLineRunner {
         System.out.println(">>> INIT DATA TABLE 'notifications': SUCCESS");
     }
 
-    public Province convertToEntity(ProvinceDTO provinceDTO) {
+    public Province convertToEntity(CreateProvinceRequest provinceDTO) {
         Province province = new Province();
         province.setCode(provinceDTO.getCode());
         province.setName(provinceDTO.getName());
@@ -904,7 +904,7 @@ public class StartupRunner implements CommandLineRunner {
 
         if (provinceDTO.getDistricts() != null) {
             List<District> districtEntities = new ArrayList<>();
-            for (DistrictDTO districtDTO : provinceDTO.getDistricts()) {
+            for (CreateDistrictRequest districtDTO : provinceDTO.getDistricts()) {
                 District district = new District();
                 district.setCode(districtDTO.getCode());
                 district.setName(districtDTO.getName());
@@ -915,7 +915,7 @@ public class StartupRunner implements CommandLineRunner {
 
                 if (districtDTO.getWards() != null) {
                     List<Ward> wardEntities = new ArrayList<>();
-                    for (WardDTO wardDTO : districtDTO.getWards()) {
+                    for (CreateWardRequest wardDTO : districtDTO.getWards()) {
                         Ward ward = new Ward();
                         ward.setCode(wardDTO.getCode());
                         ward.setName(wardDTO.getName());

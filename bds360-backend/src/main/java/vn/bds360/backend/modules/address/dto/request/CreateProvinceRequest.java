@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class ProvinceDTO {
+public class CreateProvinceRequest {
 
     private long code;
     private String name;
@@ -17,6 +17,6 @@ public class ProvinceDTO {
     @JsonProperty("phone_code")
     private int phoneCode;
 
-    private List<DistrictDTO> districts;
+    private List<CreateDistrictRequest> districts;
 
 }

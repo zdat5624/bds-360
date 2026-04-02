@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class DistrictDTO {
+public class CreateDistrictRequest {
     private long code;
     private String name;
     private String codename;
@@ -15,6 +15,6 @@ public class DistrictDTO {
     private String divisionType;
     @JsonProperty("short_codename")
     private String shortCodename;
-    private List<WardDTO> wards;
+    private List<CreateWardRequest> wards;
 
 }
