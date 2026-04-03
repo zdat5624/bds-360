@@ -13,9 +13,8 @@ import jakarta.annotation.PostConstruct;
 import vn.bds360.backend.security.annotation.CurrentUser;
 
 @Configuration
-@OpenAPIDefinition(info = @Info(title = "BDS 360 API Documentation", version = "1.0", description = "Tài liệu API cho hệ thống Bất Động Sản 360. Cung cấp các endpoint cho Frontend và Mobile App.", contact = @Contact(name = "Dev Team", email = "dev@bds360.vn")),
-        // Áp dụng bảo mật JWT cho TẤT CẢ các API mặc định
-        security = @SecurityRequirement(name = "bearerAuth"))
+@OpenAPIDefinition(info = @Info(title = "api", // <--- ĐỔI TÊN Ở ĐÂY (Nên để chữ thường, ngắn gọn)
+        version = "1.0", description = "Tài liệu API cho hệ thống Bất Động Sản 360", contact = @Contact(name = "Dev Team", email = "dev@bds360.vn")), security = @SecurityRequirement(name = "bearerAuth"))
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT", description = "Nhập mã JWT Token của bạn vào đây (Không cần gõ chữ 'Bearer ')")
 public class OpenApiConfig {
 
