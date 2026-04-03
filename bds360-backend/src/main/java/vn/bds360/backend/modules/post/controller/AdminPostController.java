@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
@@ -29,6 +31,8 @@ import vn.bds360.backend.security.annotation.IsAdmin;
 @RequiredArgsConstructor
 @Validated
 @IsAdmin
+@ApiGlobalResponse
+@Tag(name = "posts", description = "Quản lý bài đăng")
 public class AdminPostController {
 
     private final PostService postService;

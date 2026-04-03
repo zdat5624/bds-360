@@ -61,7 +61,11 @@ public class SecurityConfiguration {
                                         "/api/v1/auth/**",
                                         "/api/v1/address/**",
 
-                                        "/api/v1/payment/vnpay-payment-return"
+                                        "/api/v1/payment/vnpay-payment-return",
+
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html"
 
                                 ).permitAll()
 

@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.modules.statistics.dto.response.AdminStatisticsResponse;
 import vn.bds360.backend.modules.statistics.dto.response.MonthlyRevenueResponse;
@@ -20,6 +22,8 @@ import vn.bds360.backend.security.annotation.IsAdmin;
 @RequestMapping("/api/v1/admin/statistics")
 @RequiredArgsConstructor
 @Validated
+@ApiGlobalResponse
+@Tag(name = "admin-statistics", description = "Admin - Thống kê và báo cáo")
 public class AdminStatisticsController {
 
     private final AdminStatisticsService adminStatisticsService;

@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.modules.auth.dto.request.ChangePasswordRequest;
 import vn.bds360.backend.modules.auth.dto.request.ForgotPasswordRequest;
@@ -28,6 +30,8 @@ import vn.bds360.backend.security.annotation.RequireLogin;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@ApiGlobalResponse
+@Tag(name = "auth", description = "Xác thực, đăng ký và khôi phục mật khẩu")
 public class AuthController {
 
     private final AuthService authService;

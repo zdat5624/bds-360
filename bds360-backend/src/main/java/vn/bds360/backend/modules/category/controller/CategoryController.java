@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.modules.category.dto.request.CategoryCreateRequest;
@@ -25,6 +27,8 @@ import vn.bds360.backend.security.annotation.IsAdmin;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Validated
+@ApiGlobalResponse
+@Tag(name = "categories", description = "Quản lý danh mục bất động sản")
 public class CategoryController {
 
     private final CategoryService categoryService;

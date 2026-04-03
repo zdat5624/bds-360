@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.constant.NotificationType;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
@@ -26,6 +28,8 @@ import vn.bds360.backend.security.annotation.RequireLogin;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
+@ApiGlobalResponse
+@Tag(name = "notifications", description = "Quản lý thông báo của người dùng")
 public class NotificationController {
 
     private final NotificationService notificationService;

@@ -11,7 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 // Thêm thư viện này của Spring
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -20,6 +22,8 @@ import vn.bds360.backend.modules.media.service.FileStorageService;
 @RestController
 @RequestMapping("/api/v1/media")
 @RequiredArgsConstructor
+@ApiGlobalResponse
+@Tag(name = "media", description = "Quản lý upload hình ảnh và tệp tin")
 public class FileUploadController {
 
     private final FileStorageService fileStorageService;

@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BÍ KÍP CHỐNG XUNG ĐỘT TAILWIND VÀ ANTD */
+@layer base {
+  /* Ngăn Tailwind vô hiệu hóa màu nền của Button AntD */
+  button,
+  [type='button'],
+  [type='reset'],
+  [type='submit'] {
+    @apply bg-transparent;
+  }
+  
+  /* Khôi phục màu cho class ant-btn */
+  .ant-btn {
+    @apply bg-transparent;
+  }
+  .ant-btn-primary {
+    @apply bg-blue-600 !important; /* Dùng màu xanh chuẩn của dự án hoặc Tailwind */
+  }
+}

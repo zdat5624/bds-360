@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.modules.address.dto.response.CoordinateResponse;
 import vn.bds360.backend.modules.address.dto.response.DistrictResponse;
@@ -19,6 +21,8 @@ import vn.bds360.backend.modules.address.service.AddressService;
 @RestController
 @RequestMapping("/api/v1/address")
 @RequiredArgsConstructor
+@ApiGlobalResponse
+@Tag(name = "addresses", description = "Quản lý dữ liệu Tỉnh/Thành, Quận/Huyện, Phường/Xã")
 public class AddressController {
 
     private final AddressService addressService;

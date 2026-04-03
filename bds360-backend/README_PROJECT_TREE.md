@@ -21,6 +21,7 @@ bds360-backend
 │  │  │           ├─ common
 │  │  │           │  ├─ annotation
 │  │  │           │  ├─ config
+│  │  │           │  │  ├─ AppProperties.java
 │  │  │           │  │  ├─ CorsConfig.java
 │  │  │           │  │  ├─ InterceptorConfig.java
 │  │  │           │  │  └─ WebArgumentResolverConfig.java
@@ -114,6 +115,7 @@ bds360-backend
 │  │  │           │  │     └─ EmailService.java
 │  │  │           │  ├─ media
 │  │  │           │  │  ├─ config
+│  │  │           │  │  │  ├─ FileStorageProperties.java
 │  │  │           │  │  │  └─ MediaWebConfig.java
 │  │  │           │  │  ├─ controller
 │  │  │           │  │  │  └─ FileUploadController.java
@@ -255,6 +257,8 @@ bds360-backend
 │  │  │           │  │  ├─ CurrentUser.java
 │  │  │           │  │  ├─ IsAdmin.java
 │  │  │           │  │  └─ RequireLogin.java
+│  │  │           │  ├─ config
+│  │  │           │  │  └─ JwtProperties.java
 │  │  │           │  ├─ CustomAccessDeniedHandler.java
 │  │  │           │  ├─ CustomAuthenticationEntryPoint.java
 │  │  │           │  ├─ CustomUserDetailsService.java
@@ -279,5 +283,5 @@ bds360-backend
 │           └─ bds360
 │              └─ backend
 │                 └─ Bds360BackendApplicationTests.java
-└
+
 ```
