@@ -33,8 +33,12 @@ import vn.bds360.backend.modules.category.entity.Category;
 import vn.bds360.backend.modules.category.repository.CategoryRepository;
 import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.notification.repository.NotificationRepository;
+import vn.bds360.backend.modules.post.constant.CompassDirection;
+import vn.bds360.backend.modules.post.constant.Furnishing;
+import vn.bds360.backend.modules.post.constant.LegalStatus;
 import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.entity.Image;
+import vn.bds360.backend.modules.post.entity.ListingDetail;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
@@ -247,6 +251,10 @@ public class StartupRunner implements CommandLineRunner {
                 PostStatus.APPROVED,
                 PostStatus.REJECTED,
                 PostStatus.EXPIRED));
+        // Chuẩn bị dữ liệu Enum ngẫu nhiên
+        CompassDirection[] orientations = CompassDirection.values();
+        LegalStatus[] legalStatuses = LegalStatus.values();
+        Furnishing[] furnishings = Furnishing.values();
 
         List<Post> posts = new ArrayList<>();
 
@@ -317,7 +325,28 @@ public class StartupRunner implements CommandLineRunner {
             fullAddress = detailAddress + ", " + (selectedWard != null ? selectedWard.getName() : "") +
                     (selectedDistrict != null ? ", " + selectedDistrict.getName() : "") +
                     ", " + selectedProvince.getName();
+            // --- LOGIC TẠO LISTING DETAIL ---
+            ListingDetail detail = new ListingDetail();
 
+            // Logic đổ dữ liệu thông minh dựa trên Category
+            String catName = selectedCategory.getName();
+            boolean isLand = catName.contains("Bán đất") || catName.contains("kho, nhà xưởng");
+
+            if (!isLand) {
+                // Nếu là nhà/căn hộ thì mới có phòng ngủ, phòng tắm, nội thất
+                detail.setBedrooms(random.nextInt(5) + 1); // 1-5 phòng
+                detail.setBathrooms(random.nextInt(3) + 1); // 1-3 phòng
+                detail.setFurnishing(furnishings[random.nextInt(furnishings.length)]);
+            }
+
+            // Hướng và pháp lý thì loại nào cũng có thể có
+            detail.setHouseDirection(orientations[random.nextInt(orientations.length)]);
+            detail.setBalconyDirection(orientations[random.nextInt(orientations.length)]);
+            detail.setLegalStatus(legalStatuses[random.nextInt(legalStatuses.length)]);
+
+            // QUAN TRỌNG: Thiết lập quan hệ 2 chiều
+            detail.setPost(post);
+            post.setListingDetail(detail);
             String title = "";
             String description = "";
             List<String> sampleImageUrls = new ArrayList<>();
@@ -686,7 +715,7 @@ public class StartupRunner implements CommandLineRunner {
             post.setCreatedBy(user.getEmail());
             post.setCategory(selectedCategory);
             post.setVip(selectedVip);
-            post.setDetailAddress(detailAddress);
+            post.setStreetAddress(fullAddress);
 
             // Tạo danh sách ảnh mẫu (ít nhất 4 ảnh)
             List<Image> images = new ArrayList<>();

@@ -21,7 +21,7 @@ import vn.bds360.backend.modules.post.entity.Post;
 public class Ward {
 
     @Id
-    private long code;
+    private Long code;
 
     private String name;
 

@@ -4,10 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.common.dto.request.BaseFilterRequest;
+import vn.bds360.backend.modules.post.constant.CompassDirection;
 import vn.bds360.backend.modules.post.constant.Furnishing;
 import vn.bds360.backend.modules.post.constant.LegalStatus;
 import vn.bds360.backend.modules.post.constant.PostStatus;
-import vn.bds360.backend.modules.post.constant.PropertyDirection;
 
 @Getter
 @Setter
@@ -29,8 +29,8 @@ public class PostFilterRequest extends BaseFilterRequest {
 
     private Integer bedrooms; // Truyền 1, 2, 3, 4, 5
     private Integer bathrooms; // Truyền 1, 2, 3, 4, 5
-    private PropertyDirection direction;
-    private PropertyDirection balconyDirection;
+    private CompassDirection direction;
+    private CompassDirection balconyDirection;
     private LegalStatus legalStatus;
     private Furnishing furnishing;
 }

@@ -45,7 +45,11 @@ public enum ErrorCode {
     // ==========================================
     ADDRESS_NOT_FOUND(13001, HttpStatus.NOT_FOUND, "Không tìm thấy thông tin địa chỉ."),
     GEOCODE_FAILED(13002, HttpStatus.BAD_REQUEST, "Không thể lấy tọa độ từ hệ thống bản đồ."),
-
+    PROVINCE_NOT_FOUND(13003, HttpStatus.NOT_FOUND, "Không tìm thấy tỉnh/thành phố."),
+    DISTRICT_NOT_FOUND(13004, HttpStatus.NOT_FOUND, "Không tìm thấy quận/huyện."),
+    WARD_NOT_FOUND(13005, HttpStatus.NOT_FOUND, "Không tìm thấy phường/xã."),
+    INVALID_ADDRESS_HIERARCHY(13006, HttpStatus.BAD_REQUEST,
+            "Địa chỉ không hợp lệ (Xã/Phường không thuộc Quận/Huyện, hoặc Quận/Huyện không thuộc Tỉnh/Thành phố)."),
     // ==========================================
     // 14. TRANSACTION MODULE (Thanh toán VNPAY)
     // ==========================================

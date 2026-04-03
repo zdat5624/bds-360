@@ -1,6 +1,6 @@
 package vn.bds360.backend.modules.post.constant;
 
-public enum PropertyDirection {
+public enum CompassDirection {
     NORTH, // Bắc
     NORTHEAST, // Đông Bắc
     EAST, // Đông

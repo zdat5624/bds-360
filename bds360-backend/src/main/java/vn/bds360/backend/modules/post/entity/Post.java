@@ -100,7 +100,7 @@ public class Post {
 
     @Size(max = 255, message = "Địa chỉ chi tiết không được quá 255 ký tự")
     @NotNull
-    private String detailAddress;
+    private String streetAddress;
 
     @Column(name = "latitude")
     private Double latitude;

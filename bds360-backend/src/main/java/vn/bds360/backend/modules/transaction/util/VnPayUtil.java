@@ -72,11 +72,15 @@ public class VnPayUtil {
         String ipAdress;
         try {
             ipAdress = request.getHeader("X-FORWARDED-FOR");
-            if (ipAdress == null) {
+            if (ipAdress == null || ipAdress.isEmpty()) {
                 ipAdress = request.getRemoteAddr();
             }
+            // FIX: Chuyển IPv6 của localhost thành IPv4 để VNPay không báo lỗi định dạng
+            if ("0:0:0:0:0:0:0:1".equals(ipAdress)) {
+                ipAdress = "127.0.0.1";
+            }
         } catch (Exception e) {
-            ipAdress = "Invalid IP:" + e.getMessage();
+            ipAdress = "127.0.0.1";
         }
         return ipAdress;
     }

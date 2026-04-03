@@ -18,6 +18,12 @@ import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.modules.address.entity.District;
+import vn.bds360.backend.modules.address.entity.Province;
+import vn.bds360.backend.modules.address.entity.Ward;
+import vn.bds360.backend.modules.address.repository.DistrictRepository;
+import vn.bds360.backend.modules.address.repository.ProvinceRepository;
+import vn.bds360.backend.modules.address.repository.WardRepository;
 import vn.bds360.backend.modules.address.service.MapboxGeocodeService;
 import vn.bds360.backend.modules.notification.service.NotificationService;
 import vn.bds360.backend.modules.post.constant.PostStatus;
@@ -51,6 +57,9 @@ public class PostService {
     private final TransactionRepository transactionRepository;
     private final MapboxGeocodeService mapboxGeocodeService;
     private final PostMapper postMapper;
+    private final ProvinceRepository provinceRepository;
+    private final DistrictRepository districtRepository;
+    private final WardRepository wardRepository;
 
     @Transactional
     public PostResponse createPost(User user, PostCreateRequest request) {
@@ -88,13 +97,16 @@ public class PostService {
             post.getListingDetail().setPost(post);
         }
 
-        // 3. Geocoding
+        // 3. Validate và gán lại Entity Địa chỉ
+        validateAndSetAddress(post);
+
+        // 4. Geocoding
         handleGeocoding(post);
 
-        // 4. Lưu Post
+        // 5. Lưu Post
         Post savedPost = postRepository.save(post);
 
-        // 5. Lưu Hình ảnh
+        // 6. Lưu Hình ảnh
         List<Image> images = new ArrayList<>();
         for (int i = 0; i < request.getImageUrls().size(); i++) {
             Image img = new Image();
@@ -106,7 +118,7 @@ public class PostService {
         imageRepository.saveAll(images);
         savedPost.setImages(images);
 
-        // 6. Lưu Transaction
+        // 7. Lưu Transaction
         Transaction transaction = new Transaction();
         transaction.setAmount(-totalCost);
         transaction.setDescription("Thanh toán phí đăng tin mã " + savedPost.getId());
@@ -115,23 +127,6 @@ public class PostService {
         transactionRepository.save(transaction);
 
         return postMapper.toResponse(savedPost);
-    }
-
-    private void handleGeocoding(Post post) {
-        if (post.getDetailAddress() == null || post.getProvince() == null)
-            return;
-
-        String fullAddress = String.format("%s, %s, %s, %s",
-                post.getDetailAddress(),
-                post.getWard() != null ? post.getWard().getName() : "",
-                post.getDistrict() != null ? post.getDistrict().getName() : "",
-                post.getProvince().getName());
-
-        Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(fullAddress);
-        latLng.ifPresent(coords -> {
-            post.setLongitude(coords[0]);
-            post.setLatitude(coords[1]);
-        });
     }
 
     @Transactional
@@ -147,43 +142,95 @@ public class PostService {
             throw new AppException(ErrorCode.POST_STATUS_INVALID);
         }
 
-        // 1. Map các trường cơ bản (Đã ignore listingDetail ở Mapper)
+        // 1. Map các trường cơ bản
         postMapper.updateEntityFromRequest(request, post);
 
-        // 2. Xử lý an toàn cho ListingDetail (Cập nhật ghi đè giá trị, không tạo Object
-        // mới)
+        // 2. Xử lý an toàn cho ListingDetail
         if (request.getListingDetail() != null) {
             if (post.getListingDetail() == null) {
-                // Nếu trước đây chưa có thì tạo mới
                 ListingDetail newDetail = new ListingDetail();
                 newDetail.setPost(post);
                 post.setListingDetail(newDetail);
             }
             post.getListingDetail().setBedrooms(request.getListingDetail().getBedrooms());
             post.getListingDetail().setBathrooms(request.getListingDetail().getBathrooms());
-            post.getListingDetail().setDirection(request.getListingDetail().getDirection());
+            post.getListingDetail().setHouseDirection(request.getListingDetail().getHouseDirection());
             post.getListingDetail().setBalconyDirection(request.getListingDetail().getBalconyDirection());
             post.getListingDetail().setLegalStatus(request.getListingDetail().getLegalStatus());
             post.getListingDetail().setFurnishing(request.getListingDetail().getFurnishing());
         }
+
         if (request.getCategory() != null) {
             post.setCategory(request.getCategory());
         }
-        if (request.getProvince() != null) {
+
+        // Gán mã địa chỉ tạm từ request nếu có, sau đó gọi hàm validate chung
+        if (request.getProvince() != null)
             post.setProvince(request.getProvince());
-        }
-        if (request.getDistrict() != null) {
+        if (request.getDistrict() != null)
             post.setDistrict(request.getDistrict());
-        }
-        if (request.getWard() != null) {
+        if (request.getWard() != null)
             post.setWard(request.getWard());
-        }
+
+        // 3. Validate và gán lại Entity Địa chỉ
+        validateAndSetAddress(post);
 
         if (request.getLatitude() == null || request.getLongitude() == null) {
             handleGeocoding(post);
         }
 
         return postMapper.toResponse(postRepository.save(post));
+    }
+
+    // ==========================================
+    // PRIVATE HELPER METHODS
+    // ==========================================
+
+    private void validateAndSetAddress(Post post) {
+        if (post.getProvince() != null && post.getProvince().getCode() != null) {
+            Province province = provinceRepository.findById(post.getProvince().getCode())
+                    .orElseThrow(() -> new AppException(ErrorCode.PROVINCE_NOT_FOUND));
+            post.setProvince(province);
+        }
+
+        if (post.getDistrict() != null && post.getDistrict().getCode() != null) {
+            District district = districtRepository.findById(post.getDistrict().getCode())
+                    .orElseThrow(() -> new AppException(ErrorCode.DISTRICT_NOT_FOUND));
+
+            // Dùng .equals() thay vì == cho an toàn
+            if (post.getProvince() != null && !district.getProvince().getCode().equals(post.getProvince().getCode())) {
+                throw new AppException(ErrorCode.INVALID_ADDRESS_HIERARCHY);
+            }
+            post.setDistrict(district);
+        }
+
+        if (post.getWard() != null && post.getWard().getCode() != null) {
+            Ward ward = wardRepository.findById(post.getWard().getCode())
+                    .orElseThrow(() -> new AppException(ErrorCode.WARD_NOT_FOUND));
+
+            // Dùng .equals() thay vì == cho an toàn
+            if (post.getDistrict() != null && !ward.getDistrict().getCode().equals(post.getDistrict().getCode())) {
+                throw new AppException(ErrorCode.INVALID_ADDRESS_HIERARCHY);
+            }
+            post.setWard(ward);
+        }
+    }
+
+    private void handleGeocoding(Post post) {
+        if (post.getStreetAddress() == null || post.getProvince() == null)
+            return;
+
+        String fullAddress = String.format("%s, %s, %s, %s",
+                post.getStreetAddress(),
+                post.getWard() != null ? post.getWard().getName() : "",
+                post.getDistrict() != null ? post.getDistrict().getName() : "",
+                post.getProvince().getName());
+
+        Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(fullAddress);
+        latLng.ifPresent(coords -> {
+            post.setLongitude(coords[0]);
+            post.setLatitude(coords[1]);
+        });
     }
 
     @Transactional

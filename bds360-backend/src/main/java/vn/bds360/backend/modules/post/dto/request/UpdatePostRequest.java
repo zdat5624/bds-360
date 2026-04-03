@@ -42,7 +42,7 @@ public class UpdatePostRequest {
     private Ward ward;
 
     @Size(max = 255, message = "Địa chỉ chi tiết không được quá 255 ký tự")
-    private String detailAddress;
+    private String streetAddress;
 
     private Category category;
 

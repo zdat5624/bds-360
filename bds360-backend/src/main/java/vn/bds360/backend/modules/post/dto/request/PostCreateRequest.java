@@ -31,7 +31,7 @@ public class PostCreateRequest {
     private Long provinceCode;
     private Long districtCode;
     private Long wardCode;
-    private String detailAddress;
+    private String streetAddress;
 
     private Long vipId;
 

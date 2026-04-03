@@ -8,10 +8,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.bds360.backend.common.constant.ListingType;
+import vn.bds360.backend.modules.post.constant.CompassDirection;
 import vn.bds360.backend.modules.post.constant.Furnishing;
 import vn.bds360.backend.modules.post.constant.LegalStatus;
 import vn.bds360.backend.modules.post.constant.PostStatus;
-import vn.bds360.backend.modules.post.constant.PropertyDirection;
 
 @Data
 @Builder
@@ -35,7 +35,7 @@ PostResponse {
     private Instant updatedAt;
 
     // --- THÔNG TIN ĐỊA CHỈ (Đã được làm phẳng) ---
-    private String detailAddress;
+    private String streetAddress;
     private Double latitude;
     private Double longitude;
     private Long provinceCode;
@@ -90,8 +90,8 @@ PostResponse {
     public static class ListingDetailResponse {
         private Integer bedrooms;
         private Integer bathrooms;
-        private PropertyDirection direction;
-        private PropertyDirection balconyDirection;
+        private CompassDirection houseDirection;
+        private CompassDirection balconyDirection;
         private LegalStatus legalStatus;
         private Furnishing furnishing;
     }

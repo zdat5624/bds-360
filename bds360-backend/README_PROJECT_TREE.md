@@ -25,12 +25,9 @@ bds360-backend
 │  │  │           │  │  ├─ InterceptorConfig.java
 │  │  │           │  │  └─ WebArgumentResolverConfig.java
 │  │  │           │  ├─ constant
-│  │  │           │  │  ├─ Gender.java
 │  │  │           │  │  ├─ ListingType.java
 │  │  │           │  │  ├─ NotificationType.java
-│  │  │           │  │  ├─ PostStatus.java
-│  │  │           │  │  ├─ Role.java
-│  │  │           │  │  └─ TransactionStatus.java
+│  │  │           │  │  └─ Role.java
 │  │  │           │  ├─ dto
 │  │  │           │  │  ├─ request
 │  │  │           │  │  │  └─ BaseFilterRequest.java
@@ -142,9 +139,10 @@ bds360-backend
 │  │  │           │  │     └─ NotificationService.java
 │  │  │           │  ├─ post
 │  │  │           │  │  ├─ constant
+│  │  │           │  │  │  ├─ CompassDirection.java
 │  │  │           │  │  │  ├─ Furnishing.java
 │  │  │           │  │  │  ├─ LegalStatus.java
-│  │  │           │  │  │  └─ PropertyDirection.java
+│  │  │           │  │  │  └─ PostStatus.java
 │  │  │           │  │  ├─ controller
 │  │  │           │  │  │  ├─ AdminPostController.java
 │  │  │           │  │  │  └─ PostController.java
@@ -186,7 +184,8 @@ bds360-backend
 │  │  │           │  │  ├─ config
 │  │  │           │  │  │  └─ VnPayProperties.java
 │  │  │           │  │  ├─ constant
-│  │  │           │  │  │  └─ TransactionFilterType.java
+│  │  │           │  │  │  ├─ TransactionFilterType.java
+│  │  │           │  │  │  └─ TransactionStatus.java
 │  │  │           │  │  ├─ controller
 │  │  │           │  │  │  ├─ PaymentController.java
 │  │  │           │  │  │  └─ TransactionController.java
@@ -211,6 +210,8 @@ bds360-backend
 │  │  │           │  │  └─ util
 │  │  │           │  │     └─ VnPayUtil.java
 │  │  │           │  ├─ user
+│  │  │           │  │  ├─ constant
+│  │  │           │  │  │  └─ Gender.java
 │  │  │           │  │  ├─ controller
 │  │  │           │  │  │  └─ UserController.java
 │  │  │           │  │  ├─ dto
@@ -278,5 +279,6 @@ bds360-backend
 │           └─ bds360
 │              └─ backend
 │                 └─ Bds360BackendApplicationTests.java
-└─
+└
+
 ```

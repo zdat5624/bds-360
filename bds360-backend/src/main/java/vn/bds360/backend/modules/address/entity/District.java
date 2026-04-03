@@ -23,7 +23,7 @@ import vn.bds360.backend.modules.post.entity.Post;
 public class District {
 
     @Id
-    private long code;
+    private Long code;
 
     private String name;
 

@@ -21,8 +21,11 @@ public interface PostMapper {
     @Mapping(target = "images", ignore = true)
     Post toEntity(PostCreateRequest request);
 
+    @Mapping(target = "provinceCode", source = "province.code")
     @Mapping(target = "provinceName", source = "province.name")
+    @Mapping(target = "districtCode", source = "district.code")
     @Mapping(target = "districtName", source = "district.name")
+    @Mapping(target = "wardCode", source = "ward.code")
     @Mapping(target = "wardName", source = "ward.name")
     PostResponse toResponse(Post post);
 

@@ -12,9 +12,9 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import vn.bds360.backend.modules.post.constant.CompassDirection;
 import vn.bds360.backend.modules.post.constant.Furnishing;
 import vn.bds360.backend.modules.post.constant.LegalStatus;
-import vn.bds360.backend.modules.post.constant.PropertyDirection;
 
 @Getter
 @Setter
@@ -30,10 +30,10 @@ public class ListingDetail {
     private Integer bathrooms;
 
     @Enumerated(EnumType.STRING)
-    private PropertyDirection direction;
+    private CompassDirection houseDirection;
 
     @Enumerated(EnumType.STRING)
-    private PropertyDirection balconyDirection;
+    private CompassDirection balconyDirection;
 
     @Enumerated(EnumType.STRING)
     private LegalStatus legalStatus;

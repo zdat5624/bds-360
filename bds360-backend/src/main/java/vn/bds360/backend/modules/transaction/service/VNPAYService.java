@@ -62,7 +62,7 @@ public class VNPAYService {
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan giao dich nap tien ID: " + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh_toan_giao_dich_nap_tien_ID: " + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", vnPayProperties.getReturnUrlBackend());

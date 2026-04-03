@@ -3,9 +3,9 @@ package vn.bds360.backend.modules.post.dto.request;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
+import vn.bds360.backend.modules.post.constant.CompassDirection;
 import vn.bds360.backend.modules.post.constant.Furnishing;
 import vn.bds360.backend.modules.post.constant.LegalStatus;
-import vn.bds360.backend.modules.post.constant.PropertyDirection;
 
 @Data
 public class ListingDetailRequest {
@@ -18,9 +18,9 @@ public class ListingDetailRequest {
     @Max(value = 100, message = "Số phòng tắm không hợp lệ")
     private Integer bathrooms;
 
-    private PropertyDirection direction;
+    private CompassDirection houseDirection;
 
-    private PropertyDirection balconyDirection;
+    private CompassDirection balconyDirection;
 
     private LegalStatus legalStatus;
 
