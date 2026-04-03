@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+// Thêm thư viện này của Spring
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.dto.response.ApiResponse;
@@ -26,25 +28,45 @@ public class FileUploadController {
     public ApiResponse<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
         validateEmptyFiles(files);
 
-        List<String> fileNames = files.stream()
-                .map(fileStorageService::storeFile)
+        List<String> fileUrls = files.stream()
+                .map(file -> {
+                    String fileName = fileStorageService.storeFile(file);
+                    return buildFullUrl(fileName); // Biến tên file thành Full URL
+                })
                 .collect(Collectors.toList());
 
-        return ApiResponse.success(fileNames, "Upload tệp thành công");
+        return ApiResponse.success(fileUrls, "Upload tệp thành công");
     }
 
     @PostMapping("/upload/image")
     public ApiResponse<List<String>> uploadImages(@RequestParam("files") List<MultipartFile> files) {
         validateEmptyFiles(files);
 
-        List<String> fileNames = files.stream()
-                .map(fileStorageService::storeImage)
+        List<String> fileUrls = files.stream()
+                .map(file -> {
+                    String fileName = fileStorageService.storeImage(file);
+                    return buildFullUrl(fileName); // Biến tên file thành Full URL
+                })
                 .collect(Collectors.toList());
 
-        return ApiResponse.success(fileNames, "Upload ảnh thành công");
+        return ApiResponse.success(fileUrls, "Upload ảnh thành công");
     }
 
-    // Hàm phụ trợ cho Controller
+    // ==========================================
+    // CÁC HÀM HELPER NỘI BỘ CHO CONTROLLER
+    // ==========================================
+
+    /**
+     * Hàm tự động lấy Domain hiện tại (vd: http://localhost:8080)
+     * ghép với đường dẫn /uploads/ và tên file.
+     */
+    private String buildFullUrl(String fileName) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/uploads/")
+                .path(fileName)
+                .toUriString();
+    }
+
     private void validateEmptyFiles(List<MultipartFile> files) {
         if (files == null || files.isEmpty() || files.get(0).isEmpty()) {
             throw new AppException(ErrorCode.INVALID_PARAMETER);

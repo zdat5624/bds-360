@@ -27,7 +27,7 @@ public class MapboxGeocodeService {
             String url = String.format(
                     "https://api.mapbox.com/geocoding/v5/mapbox.places/%s.json?access_token=%s&language=vi&country=VN",
                     encodedAddress,
-                    mapboxConfig.getMapboxApiKey());
+                    mapboxConfig.getKey());
 
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();

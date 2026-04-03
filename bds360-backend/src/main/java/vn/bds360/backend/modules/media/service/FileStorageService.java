@@ -8,22 +8,23 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.modules.media.config.FileStorageProperties;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FileStorageService {
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    private final FileStorageProperties fileStorageProperties;
 
     // Mang hằng số quy định nghiệp vụ xuống Service
     private static final List<String> ALLOWED_IMAGE_TYPES = List.of(
@@ -34,13 +35,14 @@ public class FileStorageService {
     @PostConstruct
     public void init() {
         try {
-            Path path = Paths.get(uploadDir);
+            Path path = Paths.get(fileStorageProperties.getUploadDir());
             if (!Files.exists(path)) {
                 Files.createDirectories(path);
-                log.info(">>> Tạo thư mục lưu trữ thành công: {}", uploadDir);
+                log.info(">>> Tạo thư mục lưu trữ thành công: {}", fileStorageProperties.getUploadDir());
             }
         } catch (Exception e) {
-            log.error(">>> Không thể tạo thư mục lưu trữ: {}. Lỗi: {}", uploadDir, e.getMessage());
+            log.error(">>> Không thể tạo thư mục lưu trữ: {}. Lỗi: {}", fileStorageProperties.getUploadDir(),
+                    e.getMessage());
         }
     }
 
@@ -82,7 +84,7 @@ public class FileStorageService {
             String finalExtension = (extension != null && !extension.isEmpty()) ? "." + extension : "";
 
             String fileName = uniqueId + finalExtension;
-            Path filePath = Paths.get(uploadDir).resolve(fileName);
+            Path filePath = Paths.get(fileStorageProperties.getUploadDir()).resolve(fileName);
 
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             return fileName;
