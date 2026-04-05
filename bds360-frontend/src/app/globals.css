@@ -11,7 +11,7 @@
   [type='submit'] {
     @apply bg-transparent;
   }
-  
+
   /* Khôi phục màu cho class ant-btn */
   .ant-btn {
     @apply bg-transparent;

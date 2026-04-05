@@ -1,3 +1,4 @@
+import { envConfig } from '@/config/env';
 import { message } from 'antd';
 import Axios, {
     AxiosRequestConfig,
@@ -10,7 +11,7 @@ import Axios, {
 type ExtractData<T> = T extends { data?: infer U } ? U : T;
 
 export const AXIOS_INSTANCE = Axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+    baseURL: envConfig.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
     timeout: 10000,
 });
 

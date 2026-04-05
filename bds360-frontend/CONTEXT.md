@@ -6,6 +6,8 @@
 > - Data Fetching: TanStack React Query v5 + Axios
 > - API Code Generation: Orval (Tags-split mode)
 > - lib/custom-fetch: Axios instance with Response Unwrapping logic.
+> - Validation: Zod
+> - Styling: Tailwind CSS + Antd design
 > 
 > **2. Architectural Philosophy:**
 > - **Feature-Based Architecture:** Logic chia theo Domain.
@@ -32,26 +34,17 @@
 >   - Luôn sử dụng Absolute Imports với alias `@/`. Không dùng path tương đối `../`.
 > - **Barrel Files:** Chỉ dùng `index.ts` ở gốc của mỗi Feature để export Public API. Không dùng `index.ts` bên trong các thư mục con (api, components).
 
+> - **Component & Styling Rules (CRITICAL):** Ưu tiên Ant Design: Luôn sử dụng các component của Antd (Table, Button, Form, Select, v.v.) để đảm bảo đồng bộ Theme. Hạn chế Custom UI: Tránh việc tự định nghĩa component bằng HTML/CSS/Tailwind nếu Antd đã cung cấp giải pháp tương đương. Chỉ dùng Tailwind cho việc căn chỉnh Layout (padding, margin, flex) hoặc khi Antd không đáp ứng được yêu cầu đặc thù.
+
+Dưới đây là bản đã được gom lại cho gọn gàng, ít xuống dòng nhưng vẫn giữ nguyên đầy đủ ý nghĩa để bạn dán vào tài liệu:
+
+> **6. Naming & Folder Conventions (CRITICAL):**
+> - **File & Folder Casing:** Bắt buộc sử dụng `kebab-case` cho tên file/thư mục (e.g., `user-profile.tsx`), tuyệt đối không dùng `camelCase` hay `PascalCase` để tránh lỗi môi trường hệ điều hành.
+> - **File Suffixes:** Tên file phải có hậu tố chức năng rõ ràng: Components (`.tsx`), Schemas (`.schema.ts`), Constants (`.constant.ts`), Utilities (`.util.ts`), Types (`.types.ts`), API Hooks đặt theo hành động (`[action].ts` như `get-posts.ts`).
+> - **Code-Level Naming:** Sử dụng `PascalCase` cho React Components & Types, `camelCase` cho Functions & Variables, và `UPPER_SNAKE_CASE` cho Constants.
+> - **Barrel Files (`index.ts`):** Chỉ đặt ở cấp cao nhất của thư mục Feature (e.g., `features/auth/index.ts`) hoặc Shared Component; KHÔNG tạo trong thư mục con để tối ưu Tree-shaking và tránh import vòng (circular dependency).
+
 ---
-
-### 📋 MẪU PROMPT NGỮ CẢNH DỰ ÁN (Copy toàn bộ phần bên dưới)
-
-> **[SYSTEM CONTEXT] PROJECT ARCHITECTURE GUIDELINES**
-> 
-> **1. Core Tech Stack:**
-> - Framework: Next.js (App Router)
-> - Language: TypeScript
-> - Data Fetching: TanStack React Query v5 + Axios
-> - API Code Generation: Orval (Tags-split mode)
-> - Validation: Zod
-> - Styling: Tailwind CSS + shadcn/ui
-> 
-> **2. Architectural Philosophy:**
-> - **Feature-Based Architecture:** Logic được chia nhỏ theo từng nghiệp vụ (Domain-driven).
-> - **Adapter Pattern (Anti-Corruption Layer):** Code gọi API tự động sinh ra (Generated API) phải được bọc lại (Wrap) bởi thư mục Feature trước khi đưa lên UI Component.
-> - **Unidirectional Flow:** Tầng App gọi Feature -> Feature gọi Shared. TUYỆT ĐỐI KHÔNG import chéo giữa các Feature (ví dụ: `features/auth` không được import code từ `features/posts`).
-> 
-> 
 > ```text
 > src/
 > │
@@ -72,30 +65,41 @@
 > │   │                           # Mỗi thư mục là một ứng dụng thu nhỏ, độc lập hoàn toàn.
 > │   ├── auth/                   # ---> FEATURE: XÁC THỰC NGƯỜI DÙNG
 > │   │   ├── api/                # [TẦNG ADAPTER]: Bọc hook từ `api/generated/auth`
+> │   |   │   ├── types.ts        # chứa các type
 > │   │   │   └── login.ts        # Chứa custom hook (useAuthLogin) xử lý lưu token, Toast, Navigate
 > │   │   ├── components/         # UI Components chỉ dùng riêng cho Auth
 > │   │   │   └── login.form.tsx  
 > │   │   ├── utils/              # Các hàm hỗ trợ riêng cho Auth
+> │   │   ├── auth.schema.ts      # Cung cấp luật lệ
+> │   │   ├── auth.constant.ts    # Cung cấp hằng số
+> │   │   ├── auth.util.ts        # Cung cấp hàm tiện ích
 > │   │   └── index.ts            # PUBLIC API: Chỉ export những gì cho phép `app/` và nơi khác gọi
 > │   │
 > │   └── posts/                  # ---> FEATURE: QUẢN LÝ BÀI ĐĂNG
-> │       ├── api/                # Adapter gọi API bài đăng
+> │       ├── api/                # Adapter gọi API bài đăng (hook, types)
 > │       │   ├── get-posts.ts    # Sử dụng useGetPostsQuery từ thư mục generated
+> │       │   ├── types.ts        # chứa các type
 > │       │   └── create-post.ts  # Sử dụng useCreatePostMutation và kèm logic Invalidate Cache
 > │       ├── components/         # post-list.tsx, create-post-modal.tsx...
 > │       └── index.ts            # PUBLIC API
 > │
 > ├── components/                 # 4. TẦNG SHARED UI (Dùng chung toàn ứng dụng)
-> │   ├── ui/                     # Dumb Components (Nút bấm, Modal, Input... từ shadcn/ui)
+> │   ├── base/                   # Dumb Components (Nút bấm, Modal, Input...)
+> │   ├── composite/              # UI kết hợp
 > │   └── layouts/                # Header, Footer, Sidebar
 > │
 > ├── lib/                        # 5. TẦNG SHARED CONFIG (Cấu hình lõi)
 > │   ├── custom-fetch.ts         # Custom Axios Instance (Xử lý bóc vỏ ApiResponse và ném lỗi 400/500)
-> │   ├── react-query.ts          # Default options cho React Query (staleTime, retry...)
-> │   └── utils.ts                # Tailwind merge (cn), formatCurrency, formatDate...
+> │   └── utils.ts                # Tailwind merge (cn), ...
 > │
-> ├── config/                     # Biến môi trường (env.ts), hằng số hệ thống
+> ├── config/                     # Chứa các config biến môi trường (env.ts), routes, theme.ts, ...
+> ├── constants/                  # Chứa các constant dùng chung
 > ├── hooks/                      # Custom hooks dùng chung (useWindowSize, useDebounce...)
-> ├── stores/                     # Global state toàn ứng dụng (Theme store, Language store)
-> └── types/                      # TypeScript definitions dùng chung (AppConfig...)
+> ├── stores/                     # Global state Zustand toàn ứng dụng (Theme store, auth, ...)
+> └── types/                      # TypeScript definitions dùng chung (...)
+>     ├── api.types.ts            # Các type chung cho toàn bộ Network/API
+>     ├── common.types.ts         # Các type chung cho UI/Logic (Pagination, Option...)
+>     └── index.ts                # Barrel file để export mọi thứ
+> └── utils/                      # Chứa các hàm util dùng chung
+
 > ```

@@ -1,0 +1,13 @@
+{
+    "folders": [
+        {
+            "path": "bds360-frontend"
+        }
+    ],
+    "settings": {
+        "js/ts.tsdk.path": "node_modules\\typescript\\lib",
+        "files.associations": {
+            "*.css": "tailwindcss"
+        }
+    }
+}

@@ -1,15 +1,16 @@
+// --- src/app/layout.tsx ---
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { ConfigProvider } from 'antd'; // Thêm ConfigProvider để đổi Theme toàn cục
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "./provider";
+import { ConfigProvider } from 'antd';
+import type { Metadata } from 'next';
 
-const inter = Inter({ subsets: ["latin"] });
+
+import '@/app/globals.css';
+import { antdTheme, inter } from '@/config';
+import { Providers } from './provider';
 
 export const metadata: Metadata = {
-  title: "BDS 360",
-  description: "Nền tảng giao dịch bất động sản",
+  title: 'BDS 360',
+  description: 'Nền tảng đăng tin bất động sản',
 };
 
 export default function RootLayout({
@@ -22,7 +23,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <AntdRegistry>
-            <ConfigProvider theme={{ token: { colorPrimary: '#2563eb' } }}>
+            <ConfigProvider theme={antdTheme}>
               {children}
             </ConfigProvider>
           </AntdRegistry>

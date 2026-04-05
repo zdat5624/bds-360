@@ -2,13 +2,14 @@
 ```
 bds360-frontend
 ├─ .eslintrc.json
+├─ CONTEXT.md
 ├─ next.config.mjs
 ├─ orval.config.ts
 ├─ package-lock.json
 ├─ package.json
 ├─ postcss.config.mjs
 ├─ README.md
-├─ README_PROJECT_STRUCTURE.md
+├─ README_PROJECT_TREE.md
 ├─ src
 │  ├─ api
 │  │  └─ generated
@@ -16,13 +17,11 @@ bds360-frontend
 │  │     │  └─ addresses.ts
 │  │     ├─ admin-statistics
 │  │     │  └─ admin-statistics.ts
+│  │     ├─ api.schemas.ts
 │  │     ├─ auth
 │  │     │  └─ auth.ts
-│  │     ├─ bDS360APIDocumentation.schemas.ts
 │  │     ├─ categories
 │  │     │  └─ categories.ts
-│  │     ├─ custom-error-controller
-│  │     │  └─ custom-error-controller.ts
 │  │     ├─ media
 │  │     │  └─ media.ts
 │  │     ├─ notifications
@@ -44,8 +43,38 @@ bds360-frontend
 │  │  ├─ layout.tsx
 │  │  ├─ page.tsx
 │  │  └─ provider.tsx
-│  └─ lib
-│     └─ custom-fetch.ts
+│  ├─ components
+│  │  ├─ base
+│  │  ├─ composite
+│  │  ├─ index.ts
+│  │  └─ layouts
+│  ├─ config
+│  │  ├─ env.ts
+│  │  ├─ index.ts
+│  │  ├─ routes.ts
+│  │  └─ theme.ts
+│  ├─ constants
+│  │  ├─ index.ts
+│  │  └─ pagination.ts
+│  ├─ features
+│  │  ├─ auth
+│  │  │  ├─ api
+│  │  │  ├─ components
+│  │  │  └─ index.ts
+│  │  ├─ posts
+│  │  │  ├─ api
+│  │  │  ├─ components
+│  │  │  └─ index.ts
+│  │  └─ users
+│  │     ├─ api
+│  │     └─ components
+│  ├─ lib
+│  │  ├─ custom-fetch.ts
+│  │  ├─ index.ts
+│  │  └─ utils.ts
+│  ├─ stores
+│  └─ utils
+│     └─ index.ts
 ├─ tailwind.config.ts
 └─ tsconfig.json
 
