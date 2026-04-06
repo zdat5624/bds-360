@@ -1,6 +1,6 @@
 // @/features/users/api/types.ts
 
-import { BaseFilterRequest } from '@/types';
+import { BaseFilterParams } from '@/types';
 
 import { Gender, Role } from '@/constants';
 
@@ -49,7 +49,7 @@ export interface UpdateProfilePayload {
     address?: string;
 }
 
-export interface UserFilterRequest extends BaseFilterRequest {
+export interface UserFilterParams extends BaseFilterParams {
     name?: string;
     email?: string;
     role?: Role;

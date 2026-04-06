@@ -1,6 +1,6 @@
 // @/features/notifications/api/types.ts
 
-import { BaseFilterRequest } from '@/types';
+import { BaseFilterParams } from '@/types';
 import { NotificationType } from '../notifications.constant';
 
 export interface Notification {
@@ -16,7 +16,7 @@ export interface NotificationCount {
     count: number;
 }
 
-export interface NotificationFilterRequest extends BaseFilterRequest {
+export interface NotificationFilterParams extends BaseFilterParams {
     isRead?: boolean;
     type?: NotificationType;
 }

@@ -1,6 +1,5 @@
 // @/features/auth/api/types.ts
 
-// Import tái sử dụng Type từ module users (thông qua Public API của feature users)
 import { Gender } from '@/constants';
 import { User } from '@/features/users';
 

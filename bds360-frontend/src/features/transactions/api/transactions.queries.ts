@@ -3,21 +3,21 @@
 import customFetch from '@/lib/custom-fetch';
 import { PageResponse } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { Transaction, TransactionFilterRequest } from './types';
+import { Transaction, TransactionFilterParams } from './types';
 
 export const TRANSACTIONS_QUERY_KEYS = {
     all: ['transactions'] as const,
     lists: () => [...TRANSACTIONS_QUERY_KEYS.all, 'list'] as const,
-    list: (filters: TransactionFilterRequest) => [...TRANSACTIONS_QUERY_KEYS.lists(), filters] as const,
+    list: (filters: TransactionFilterParams) => [...TRANSACTIONS_QUERY_KEYS.lists(), filters] as const,
     details: () => [...TRANSACTIONS_QUERY_KEYS.all, 'detail'] as const,
     detail: (id: number) => [...TRANSACTIONS_QUERY_KEYS.details(), id] as const,
 };
 
-const getAdminTransactions = async (filters: TransactionFilterRequest): Promise<PageResponse<Transaction>> => {
+const getAdminTransactions = async (filters: TransactionFilterParams): Promise<PageResponse<Transaction>> => {
     return customFetch.get('/admin/transactions', { params: filters });
 };
 
-const getMyTransactions = async (filters: TransactionFilterRequest): Promise<PageResponse<Transaction>> => {
+const getMyTransactions = async (filters: TransactionFilterParams): Promise<PageResponse<Transaction>> => {
     return customFetch.get('/transactions/my-transactions', { params: filters });
 };
 
@@ -26,7 +26,7 @@ const getTransactionById = async (id: number): Promise<Transaction> => {
 };
 
 // Hook lấy danh sách: Tích hợp cờ isAdmin để tự động rẽ nhánh gọi API tương ứng
-export const useGetTransactions = (filters: TransactionFilterRequest, isAdmin: boolean = false) => {
+export const useGetTransactions = (filters: TransactionFilterParams, isAdmin: boolean = false) => {
     return useQuery({
         queryKey: [...TRANSACTIONS_QUERY_KEYS.list(filters), { isAdmin }],
         queryFn: () => isAdmin ? getAdminTransactions(filters) : getMyTransactions(filters),

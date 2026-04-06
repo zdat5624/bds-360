@@ -23,8 +23,8 @@ export interface PageResponse<T> {
     content: T[];
 }
 
-// Tương ứng với class BaseFilterRequest
-export interface BaseFilterRequest {
+// Tương ứng với class BaseFilterRequest BE
+export interface BaseFilterParams {
     page?: number;
     size?: number;
     sortBy?: string;

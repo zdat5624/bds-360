@@ -1,7 +1,7 @@
 // @/features/categories/api/types.ts
 
 import { ListingType } from '@/constants';
-import { BaseFilterRequest } from '@/types';
+import { BaseFilterParams } from '@/types';
 
 export interface Category {
     id: number;
@@ -20,7 +20,7 @@ export interface CategoryUpdatePayload {
     type: ListingType;
 }
 
-export interface CategoryFilterRequest extends BaseFilterRequest {
+export interface CategoryFilterParams extends BaseFilterParams {
     name?: string;
     type?: ListingType;
 }

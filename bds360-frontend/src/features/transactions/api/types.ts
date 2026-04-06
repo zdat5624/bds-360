@@ -1,6 +1,6 @@
 // @/features/transactions/api/types.ts
 
-import { BaseFilterRequest } from '@/types';
+import { BaseFilterParams } from '@/types';
 import { TransactionFilterType, TransactionStatus } from '../transactions.constant';
 
 export interface TransactionUser {
@@ -29,7 +29,7 @@ export interface CreatePaymentPayload {
     amount: number;
 }
 
-export interface TransactionFilterRequest extends BaseFilterRequest {
+export interface TransactionFilterParams extends BaseFilterParams {
     email?: string;
     transactionId?: number;
     txnId?: string;

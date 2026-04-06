@@ -1,7 +1,7 @@
 // @/features/posts/api/types.ts
 
 import { ListingType } from '@/constants';
-import { BaseFilterRequest } from '@/types';
+import { BaseFilterParams } from '@/types';
 import { CompassDirection, Furnishing, LegalStatus, PostStatus } from '../posts.constant';
 
 // --- RESPONSE TYPES ---
@@ -122,7 +122,7 @@ export interface UpdatePostStatusPayload {
     sendNotification: boolean;
 }
 
-export interface PostFilterRequest extends BaseFilterRequest {
+export interface PostFilterParams extends BaseFilterParams {
     minPrice?: number;
     maxPrice?: number;
     minArea?: number;
