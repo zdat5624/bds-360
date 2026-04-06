@@ -1,12 +1,14 @@
 package vn.bds360.backend.common.dto.response;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.List;
 
 @Getter
 @Builder
@@ -17,9 +19,16 @@ public class ApiResponse<T> {
     public record FieldErrorDetail(String field, String message) {
     }
 
+    @Schema(description = "Mã trạng thái API", requiredMode = Schema.RequiredMode.REQUIRED)
     private int code;
+
+    @Schema(description = "Thông báo", requiredMode = Schema.RequiredMode.REQUIRED)
     private String message;
+
+    @Schema(description = "Dữ liệu trả về")
     private T data;
+
+    @Schema(description = "Chi tiết lỗi (nếu có)")
     private List<FieldErrorDetail> validationErrors;
 
     // ==========================================

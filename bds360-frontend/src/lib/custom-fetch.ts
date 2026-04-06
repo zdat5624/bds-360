@@ -1,67 +1,61 @@
-import { envConfig } from '@/config/env';
+// @/lib/custom-fetch.ts
+
+import { envConfig } from '@/config';
+import { ApiResponse } from '@/types';
 import { message } from 'antd';
-import Axios, {
-    AxiosRequestConfig,
-    AxiosResponse,
-    InternalAxiosRequestConfig
-} from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 
-// 0. Utility Type để tự động "móc" dữ liệu từ các Interface phẳng mà Orval gen
-// Nếu T có trường data, lấy kiểu của data. Nếu không, lấy chính T.
-type ExtractData<T> = T extends { data?: infer U } ? U : T;
+// Hằng số mapping từ Backend
+const SUCCESS_CODE = 10000;
 
-export const AXIOS_INSTANCE = Axios.create({
-    baseURL: envConfig.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-    timeout: 10000,
+const customFetch = axios.create({
+    baseURL: envConfig.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
+    timeout: 15000,
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
-// 1. REQUEST INTERCEPTOR
-AXIOS_INSTANCE.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('accessToken');
-        if (token && config.headers) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+// Interceptor: Xử lý Request (Thêm token nếu cần)
+customFetch.interceptors.request.use(
+    (config) => {
+        // Ví dụ lấy token từ zustand store hoặc localStorage:
+        // const token = useAuthStore.getState().token;
+        // if (token) {
+        //   config.headers.Authorization = `Bearer ${token}`;
+        // }
         return config;
     },
     (error) => Promise.reject(error)
 );
 
-// 2. RESPONSE INTERCEPTOR
-AXIOS_INSTANCE.interceptors.response.use(
-    (response: AxiosResponse) => {
-        const backendData = response.data;
+// Interceptor: Xử lý Response (The Envelope & Error Handling)
+customFetch.interceptors.response.use(
+    (response: AxiosResponse<ApiResponse>) => {
+        const { code, message: msg, data } = response.data;
 
-        // Kiểm tra Business Code từ Backend (ví dụ 10000 là thành công)
-        if (backendData.code !== undefined && backendData.code !== 10000) {
-            message.error(backendData.message || 'Có lỗi nghiệp vụ xảy ra');
-            return Promise.reject(backendData);
+        // 1. Luồng Thành Công: Bóc vỏ và chỉ trả về Data (ExtractData<T>)
+        if (code === SUCCESS_CODE) {
+            return data; // Axios sẽ hiểu response bây giờ chính là phần 'data'
         }
 
-        return response;
+        // 2. Luồng Lỗi Business (code !== 10000): Xử lý tập trung
+        message.error(msg || 'Có lỗi nghiệp vụ xảy ra từ hệ thống!');
+
+        // Ném lỗi ra để React Query (Mutation) bắt được (nếu cần xử lý thêm ở Component)
+        return Promise.reject(response.data);
     },
-    (error) => {
-        const status = error.response?.status;
+    (error: AxiosError<ApiResponse>) => {
+        // 3. Luồng Lỗi Hệ Thống (HTTP 400, 401, 403, 500)
+        const errorData = error.response?.data;
+        const errorMessage = errorData?.message || 'Không thể kết nối đến máy chủ!';
 
-        if (status === 401) {
-            localStorage.removeItem('accessToken');
-            message.error('Phiên đăng nhập hết hạn');
-            if (typeof window !== 'undefined') window.location.href = '/login';
-        } else if (status === 403) {
-            message.error('Bạn không có quyền thực hiện hành động này');
-        } else if (!status) {
-            message.error('Không thể kết nối đến máy chủ!');
-        }
+        // Xử lý tập trung hiển thị lỗi cho người dùng
+        message.error(errorMessage);
 
-        return Promise.reject(error.response?.data || error);
+        // Trả về errorData để form validation (Zod/RHF) có thể map các `validationErrors`
+        return Promise.reject(errorData || error);
     }
 );
 
-// 3. HÀM CUSTOM FETCH (Đã fix để bóc vỏ dữ liệu)
-export const customFetch = async <T>(config: AxiosRequestConfig): Promise<ExtractData<T>> => {
-    const response = await AXIOS_INSTANCE(config);
-
-    // TRẢ VỀ PHẦN RUỘT: .data.data
-    // TypeScript nhờ ExtractData<T> sẽ tự hiểu đây là UserResponse hoặc PostResponse...
-    return response.data.data;
-};
+export default customFetch;
