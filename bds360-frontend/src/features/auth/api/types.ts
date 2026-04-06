@@ -1,7 +1,8 @@
 // @/features/auth/api/types.ts
 
 // Import tái sử dụng Type từ module users (thông qua Public API của feature users)
-import { Gender, UserResponse } from '@/features/users';
+import { Gender } from '@/constants';
+import { User } from '@/features/users';
 
 export interface LoginPayload {
     username: string; // Trong Spring Boot đang dùng field name là username
@@ -10,7 +11,7 @@ export interface LoginPayload {
 
 export interface LoginResponse {
     accessToken: string;
-    user: UserResponse;
+    user: User;
 }
 
 export interface RegisterPayload {

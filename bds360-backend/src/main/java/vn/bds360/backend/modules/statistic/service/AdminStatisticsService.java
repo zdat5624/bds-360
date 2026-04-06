@@ -1,4 +1,4 @@
-package vn.bds360.backend.modules.statistics.service;
+package vn.bds360.backend.modules.statistic.service;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.repository.PostRepository;
-import vn.bds360.backend.modules.statistics.dto.response.AdminStatisticsResponse;
-import vn.bds360.backend.modules.statistics.dto.response.MonthlyRevenueResponse;
+import vn.bds360.backend.modules.statistic.dto.response.AdminStatisticsResponse;
+import vn.bds360.backend.modules.statistic.dto.response.MonthlyRevenueResponse;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.user.repository.UserRepository;

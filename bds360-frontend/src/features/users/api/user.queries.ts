@@ -3,7 +3,7 @@
 import customFetch from '@/lib/custom-fetch';
 import { PageResponse } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { UserFilterRequest, UserResponse } from './types';
+import { User, UserFilterRequest } from './types';
 
 export const USERS_QUERY_KEYS = {
     all: ['users'] as const,
@@ -13,11 +13,11 @@ export const USERS_QUERY_KEYS = {
     detail: (id: number) => [...USERS_QUERY_KEYS.details(), id] as const,
 };
 
-const getUsers = async (filters: UserFilterRequest): Promise<PageResponse<UserResponse>> => {
+const getUsers = async (filters: UserFilterRequest): Promise<PageResponse<User>> => {
     return customFetch.get('/admin/users', { params: filters });
 };
 
-const getUserById = async (id: number): Promise<UserResponse> => {
+const getUserById = async (id: number): Promise<User> => {
     return customFetch.get(`/users/${id}`);
 };
 

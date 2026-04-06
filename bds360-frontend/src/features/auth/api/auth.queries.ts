@@ -1,6 +1,6 @@
 // @/features/auth/api/auth.queries.ts
 
-import { UserResponse } from '@/features/users';
+import { User } from '@/features/users';
 import customFetch from '@/lib/custom-fetch';
 import { useQuery } from '@tanstack/react-query';
 
@@ -9,7 +9,7 @@ export const AUTH_QUERY_KEYS = {
     account: () => [...AUTH_QUERY_KEYS.all, 'account'] as const,
 };
 
-const getAccount = async (): Promise<UserResponse> => {
+const getAccount = async (): Promise<User> => {
     return customFetch.get('/auth/account');
 };
 

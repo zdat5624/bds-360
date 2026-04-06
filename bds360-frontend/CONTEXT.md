@@ -5,7 +5,7 @@
 > - Language: TypeScript
 > - Data Fetching: TanStack React Query v5 + Axios
 > - lib/custom-fetch: Axios instance with Response Unwrapping logic.
-> - Validation: Zod
+> - Validation: Zod v4
 > - Styling: Tailwind CSS + Antd design
 > 
 > **2. Architectural Philosophy:**
@@ -57,7 +57,7 @@ Dưới đây là bản đã được gom lại cho gọn gàng, ít xuống dò
 > │   │   ├── components/         # UI Components chỉ dùng riêng cho Auth
 > │   │   │   └── login.form.tsx  
 > │   │   ├── utils/              # Các hàm hỗ trợ riêng cho Auth
-> │   │   ├── auth.schema.ts      # Cung cấp luật lệ ZOD
+> │   │   ├── auth.schema.ts      # Cung cấp luật lệ ZOD v4
 > │   │   ├── auth.constant.ts    # Cung cấp hằng số
 > │   │   ├── auth.util.ts        # Cung cấp hàm tiện ích
 > │   │   └── index.ts            # PUBLIC API: Chỉ export những gì cho phép `app/` và nơi khác gọi

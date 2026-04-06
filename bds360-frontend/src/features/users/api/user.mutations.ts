@@ -2,14 +2,14 @@
 
 import customFetch from '@/lib/custom-fetch';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CreateUserPayload, UpdateProfilePayload, UpdateUserPayload, UserResponse } from './types';
+import { CreateUserPayload, UpdateProfilePayload, UpdateUserPayload, User } from './types';
 import { USERS_QUERY_KEYS } from './user.queries';
 
-const createUser = async (payload: CreateUserPayload): Promise<UserResponse> => {
+const createUser = async (payload: CreateUserPayload): Promise<User> => {
     return customFetch.post('/admin/users', payload);
 };
 
-const updateUser = async (payload: UpdateUserPayload): Promise<UserResponse> => {
+const updateUser = async (payload: UpdateUserPayload): Promise<User> => {
     return customFetch.put('/admin/users', payload);
 };
 
@@ -17,7 +17,7 @@ const deleteUser = async (id: number): Promise<void> => {
     return customFetch.delete(`/admin/users/${id}`);
 };
 
-const updateProfile = async (payload: UpdateProfilePayload): Promise<UserResponse> => {
+const updateProfile = async (payload: UpdateProfilePayload): Promise<User> => {
     return customFetch.put('/users/update-profile', payload);
 };
 

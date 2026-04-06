@@ -1,4 +1,4 @@
-package vn.bds360.backend.modules.statistics.dto.response;
+package vn.bds360.backend.modules.statistic.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

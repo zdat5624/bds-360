@@ -2,10 +2,9 @@
 
 import { BaseFilterRequest } from '@/types';
 
-//  import { Gender, Role } from '../users.constant';
-import { Gender, Role } from '@/features/users';
+import { Gender, Role } from '@/constants';
 
-export interface UserResponse {
+export interface User {
     id: number;
     name: string;
     email: string;

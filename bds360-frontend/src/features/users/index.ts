@@ -1,6 +1,5 @@
 // 1. Types & Constants
 export * from '@/features/users/api/types';
-export * from '@/features/users/users.constant';
 
 // 2. API Adapters (Queries)
 export * from '@/features/users/api/user.mutations';

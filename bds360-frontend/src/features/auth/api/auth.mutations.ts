@@ -1,6 +1,6 @@
 // @/features/auth/api/auth.mutations.ts
 
-import { UserResponse } from '@/features/users';
+import { User } from '@/features/users';
 import customFetch from '@/lib/custom-fetch';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AUTH_QUERY_KEYS } from './auth.queries';
@@ -17,7 +17,7 @@ const login = async (payload: LoginPayload): Promise<LoginResponse> => {
     return customFetch.post('/auth/login', payload);
 };
 
-const register = async (payload: RegisterPayload): Promise<UserResponse> => {
+const register = async (payload: RegisterPayload): Promise<User> => {
     return customFetch.post('/auth/register', payload);
 };
 

@@ -1,4 +1,4 @@
-package vn.bds360.backend.modules.statistics.controller;
+package vn.bds360.backend.modules.statistic.controller;
 
 import java.util.List;
 
@@ -13,9 +13,9 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
-import vn.bds360.backend.modules.statistics.dto.response.AdminStatisticsResponse;
-import vn.bds360.backend.modules.statistics.dto.response.MonthlyRevenueResponse;
-import vn.bds360.backend.modules.statistics.service.AdminStatisticsService;
+import vn.bds360.backend.modules.statistic.dto.response.AdminStatisticsResponse;
+import vn.bds360.backend.modules.statistic.dto.response.MonthlyRevenueResponse;
+import vn.bds360.backend.modules.statistic.service.AdminStatisticsService;
 import vn.bds360.backend.security.annotation.IsAdmin;
 
 @RestController
