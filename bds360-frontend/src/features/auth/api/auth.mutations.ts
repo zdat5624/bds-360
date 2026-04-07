@@ -1,7 +1,7 @@
 // @/features/auth/api/auth.mutations.ts
 
-import { User } from '@/features/users';
 import customFetch from '@/lib/custom-fetch';
+import { User } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AUTH_QUERY_KEYS } from './auth.queries';
 import {

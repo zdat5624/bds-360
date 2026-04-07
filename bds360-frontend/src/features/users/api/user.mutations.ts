@@ -1,8 +1,9 @@
 // @/features/users/api/users.mutations.ts
 
 import customFetch from '@/lib/custom-fetch';
+import { User } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CreateUserPayload, UpdateProfilePayload, UpdateUserPayload, User } from './types';
+import { CreateUserPayload, UpdateProfilePayload, UpdateUserPayload } from './types';
 import { USERS_QUERY_KEYS } from './user.queries';
 
 const createUser = async (payload: CreateUserPayload): Promise<User> => {

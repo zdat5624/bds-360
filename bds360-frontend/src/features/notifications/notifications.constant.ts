@@ -1,9 +1,9 @@
 // @/features/notifications/notifications.constant.ts
 
-export const NOTIFICATION_TYPE_OPTIONS = {
-    POST: 'POST',
-    TRANSACTION: 'TRANSACTION',
-    SYSTEM_ALERT: 'SYSTEM_ALERT',
-} as const;
+export const NOTIFICATION_TYPE_VALUES = ['POST', 'TRANSACTION', 'SYSTEM_ALERT'] as const;
 
-export type NotificationType = keyof typeof NOTIFICATION_TYPE_OPTIONS;
+export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
+
+export const NOTIFICATION_TYPE_OPTIONS = Object.fromEntries(
+    NOTIFICATION_TYPE_VALUES.map((item) => [item, item])
+) as Record<NotificationType, NotificationType>;

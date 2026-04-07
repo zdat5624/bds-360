@@ -88,5 +88,7 @@ Dưới đây là bản đã được gom lại cho gọn gàng, ít xuống dò
 >     ├── common.types.ts         # Các type chung cho UI/Logic (Pagination, Option...)
 >     └── index.ts                # Barrel file để export mọi thứ
 > └── utils/                      # Chứa các hàm util dùng chung
+>     ├── date.util.ts            # setup dayjs và các hàm format day
+
 
 > ```

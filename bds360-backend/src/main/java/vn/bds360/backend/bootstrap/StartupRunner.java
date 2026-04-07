@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import vn.bds360.backend.common.config.AppProperties;
 import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.common.constant.NotificationType;
 import vn.bds360.backend.common.constant.Role;
@@ -69,6 +70,7 @@ public class StartupRunner implements CommandLineRunner {
     private final TransactionRepository transactionRepository;
     private final MapboxGeocodeService mapboxGeocodeService;
     // private final VnPayProperties vnPayProperties;
+    private final AppProperties appProperties;
 
     @Override
     public void run(String... args) {
@@ -717,24 +719,44 @@ public class StartupRunner implements CommandLineRunner {
             post.setVip(selectedVip);
             post.setStreetAddress(fullAddress);
 
+            // 1. Lấy Backend URL từ file cấu hình (application.yml)
+            String backendUrl = appProperties.getUrl().getBackend();
+            // Đề phòng trường hợp quên config, set giá trị mặc định an toàn
+            if (backendUrl == null || backendUrl.isEmpty()) {
+                backendUrl = "http://localhost:8080";
+            }
+
+            // 2. Định nghĩa thư mục chứa ảnh (Thay đổi "/images/" theo đường dẫn thực tế
+            // của bạn)
+            String baseImageUrl = backendUrl + "/uploads/";
+
             // Tạo danh sách ảnh mẫu (ít nhất 4 ảnh)
             List<Image> images = new ArrayList<>();
-            // Chọn số lượng ảnh ngẫu nhiên từ 4 đến tối đa 8 (hoặc sampleImageUrls.size()
-            // nếu nhỏ hơn)
             int maxImages = Math.min(sampleImageUrls.size(), 12);
             int numberOfImages = random.nextInt(maxImages - 3) + 4; // Từ 4 đến maxImages
-            // Tạo danh sách URL đã chọn để tránh trùng lặp
             List<String> availableImageUrls = new ArrayList<>(sampleImageUrls);
+
             for (int j = 0; j < numberOfImages; j++) {
                 Image image = new Image();
-                // Chọn URL ngẫu nhiên và xóa khỏi danh sách để tránh trùng
+                String selectedImageName = "";
+
+                // Chọn tên ảnh ngẫu nhiên
                 if (!availableImageUrls.isEmpty()) {
                     int randomIndex = random.nextInt(availableImageUrls.size());
-                    image.setUrl(availableImageUrls.remove(randomIndex));
+                    selectedImageName = availableImageUrls.remove(randomIndex);
                 } else {
-                    // Nếu hết URL, quay lại dùng danh sách gốc (cho phép trùng nếu danh sách nhỏ)
-                    image.setUrl(sampleImageUrls.get(random.nextInt(sampleImageUrls.size())));
+                    selectedImageName = sampleImageUrls.get(random.nextInt(sampleImageUrls.size()));
                 }
+
+                // 3. LOGIC GẮN FULL URL
+                // Nếu tên ảnh đã là http (ví dụ case default của bạn) thì giữ nguyên.
+                // Nếu không, cộng baseImageUrl với tên ảnh.
+                if (selectedImageName.startsWith("http")) {
+                    image.setUrl(selectedImageName);
+                } else {
+                    image.setUrl(baseImageUrl + selectedImageName);
+                }
+
                 image.setOrderIndex(j);
                 image.setPost(post);
                 images.add(image);

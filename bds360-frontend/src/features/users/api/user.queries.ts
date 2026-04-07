@@ -1,9 +1,9 @@
 // @/features/users/api/users.queries.ts
 
 import customFetch from '@/lib/custom-fetch';
-import { PageResponse } from '@/types';
+import { PageResponse, User } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { User, UserFilterParams } from './types';
+import { UserFilterParams } from './types';
 
 export const USERS_QUERY_KEYS = {
     all: ['users'] as const,

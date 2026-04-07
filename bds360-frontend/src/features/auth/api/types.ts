@@ -1,7 +1,7 @@
 // @/features/auth/api/types.ts
 
 import { Gender } from '@/constants';
-import { User } from '@/features/users';
+import { User } from '@/types';
 
 export interface LoginPayload {
     username: string; // Trong Spring Boot đang dùng field name là username

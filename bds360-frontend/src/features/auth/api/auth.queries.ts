@@ -1,7 +1,7 @@
 // @/features/auth/api/auth.queries.ts
 
-import { User } from '@/features/users';
 import customFetch from '@/lib/custom-fetch';
+import { User } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 
 export const AUTH_QUERY_KEYS = {
