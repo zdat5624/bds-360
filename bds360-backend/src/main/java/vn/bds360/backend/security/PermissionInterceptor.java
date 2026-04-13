@@ -32,7 +32,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
         System.out.println(">>> httpMethod= " + httpMethod);
 
         // Lấy email từ SecurityUtil
-        String email = SecurityUtil.getCurrentUserLogin().orElse("");
+        String email = SecurityService.getCurrentUserLogin().orElse("");
         if (email.isEmpty()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }

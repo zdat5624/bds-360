@@ -20,10 +20,12 @@ bds360-backend
 │  │  │           │  └─ StartupRunner.java
 │  │  │           ├─ common
 │  │  │           │  ├─ annotation
+│  │  │           │  │  └─ ApiGlobalResponse.java
 │  │  │           │  ├─ config
 │  │  │           │  │  ├─ AppProperties.java
 │  │  │           │  │  ├─ CorsConfig.java
 │  │  │           │  │  ├─ InterceptorConfig.java
+│  │  │           │  │  ├─ OpenApiConfig.java
 │  │  │           │  │  └─ WebArgumentResolverConfig.java
 │  │  │           │  ├─ constant
 │  │  │           │  │  ├─ ListingType.java
@@ -79,6 +81,7 @@ bds360-backend
 │  │  │           │  │  │  ├─ request
 │  │  │           │  │  │  │  ├─ ChangePasswordRequest.java
 │  │  │           │  │  │  │  ├─ ForgotPasswordRequest.java
+│  │  │           │  │  │  │  ├─ GoogleLoginRequest.java
 │  │  │           │  │  │  │  ├─ LoginRequest.java
 │  │  │           │  │  │  │  ├─ RegisterRequest.java
 │  │  │           │  │  │  │  └─ ResetPasswordRequest.java
@@ -170,7 +173,7 @@ bds360-backend
 │  │  │           │  │  │  └─ PostService.java
 │  │  │           │  │  └─ specification
 │  │  │           │  │     └─ PostSpecification.java
-│  │  │           │  ├─ statistics
+│  │  │           │  ├─ statistic
 │  │  │           │  │  ├─ controller
 │  │  │           │  │  │  └─ AdminStatisticsController.java
 │  │  │           │  │  ├─ dto
@@ -283,5 +286,6 @@ bds360-backend
 │           └─ bds360
 │              └─ backend
 │                 └─ Bds360BackendApplicationTests.java
+└
 
 ```

@@ -1,34 +1,46 @@
 package vn.bds360.backend.modules.auth.service;
 
+import java.util.Collections;
+import java.util.UUID;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.modules.auth.dto.request.GoogleLoginRequest;
 import vn.bds360.backend.modules.auth.dto.request.LoginRequest;
 import vn.bds360.backend.modules.auth.dto.request.RegisterRequest;
 import vn.bds360.backend.modules.auth.dto.response.LoginResponse;
+import vn.bds360.backend.modules.user.constant.Gender;
 import vn.bds360.backend.modules.user.dto.response.UserResponse;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.mapper.UserMapper; // Import Mapper
 import vn.bds360.backend.modules.user.service.UserService;
-import vn.bds360.backend.security.SecurityUtil;
+import vn.bds360.backend.security.SecurityService;
+import vn.bds360.backend.security.config.GoogleProperties;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
-    private final SecurityUtil securityService;
+    private final SecurityService securityService;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
-
+    private final GoogleProperties googleProperties;
     private final UserMapper userMapper;
 
     public LoginResponse login(LoginRequest request) {
@@ -71,5 +83,70 @@ public class AuthService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
 
         return userMapper.toUserResponse(currentUserDB);
+    }
+
+    public LoginResponse googleLogin(GoogleLoginRequest request) {
+        try {
+            // 1. Cấu hình GoogleIdTokenVerifier
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(),
+                    new GsonFactory())
+                    .setAudience(Collections.singletonList(googleProperties.getId()))
+                    .build();
+
+            // 2. Verify token từ client gửi lên
+            GoogleIdToken idToken = verifier.verify(request.getToken());
+            if (idToken == null) {
+                throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+            }
+
+            // 3. Lấy thông tin từ payload
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+
+            // 4. Kiểm tra user trong DB (hàm này trả về null nếu không tìm thấy, không cần
+            // try-catch)
+            User currentUserDB = userService.handleGetUserByUserName(email);
+
+            // 5. Tạo mới nếu chưa tồn tại
+            if (currentUserDB == null) {
+                User newUser = new User();
+                newUser.setEmail(email);
+                newUser.setName(name != null ? name : "Unknown User");
+
+                // Set các trường mặc định bắt buộc
+                newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+                newUser.setRole(Role.USER);
+                newUser.setPhone(null);
+                newUser.setGender(Gender.OTHER);
+
+                currentUserDB = userService.saveInternalUser(newUser);
+            }
+
+            // 6. Xác thực hệ thống & Sinh JWT Token đồng bộ với CustomUserDetailsService
+            // Khởi tạo UserDetails giống cách CustomUserDetailsService
+            org.springframework.security.core.userdetails.UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    currentUserDB.getEmail(),
+                    currentUserDB.getPassword(),
+                    Collections.singletonList(new SimpleGrantedAuthority(currentUserDB.getRole().name())));
+
+            // Truyền userDetails vào làm Principal
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Sinh token
+            String accessToken = securityService.createToken(authentication);
+
+            return new LoginResponse(accessToken, userMapper.toUserResponse(currentUserDB));
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+        }
     }
 }

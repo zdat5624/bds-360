@@ -15,6 +15,7 @@ import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.modules.auth.dto.request.ChangePasswordRequest;
 import vn.bds360.backend.modules.auth.dto.request.ForgotPasswordRequest;
+import vn.bds360.backend.modules.auth.dto.request.GoogleLoginRequest;
 import vn.bds360.backend.modules.auth.dto.request.LoginRequest;
 import vn.bds360.backend.modules.auth.dto.request.RegisterRequest;
 import vn.bds360.backend.modules.auth.dto.request.ResetPasswordRequest;
@@ -79,5 +80,11 @@ public class AuthController {
 
         userService.changePassword(user.getEmail(), request.getCurrentPassword(), request.getNewPassword());
         return ApiResponse.success(null, "Đổi mật khẩu thành công.");
+    }
+
+    @PostMapping("/google")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<LoginResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        return ApiResponse.success(authService.googleLogin(request), "Đăng nhập Google thành công");
     }
 }

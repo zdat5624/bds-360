@@ -1,3 +1,4 @@
+// @/config/routes.ts
 /**
  * TẬP TRUNG TẤT CẢ ĐƯỜNG DẪN CỦA ỨNG DỤNG VÀO ĐÂY
  * Sử dụng để điều hướng: router.push(APP_ROUTES.AUTH.LOGIN)
@@ -22,6 +23,7 @@ export const APP_ROUTES = {
 
     // 3. USER ROUTES (Yêu cầu đăng nhập, tất cả nằm trong /user)
     USER: {
+        DASH_BOARD: '/user',
         PROFILE: '/user/profile',
         CHANGE_PASSWORD: '/user/change-password',
         MY_POSTS: '/user/posts',
@@ -34,7 +36,7 @@ export const APP_ROUTES = {
     },
 
     // 4. KHU VỰC DÀNH CHO NHÂN VIÊN VÀ QUẢN TRỊ (Back-office)
-    ADMIN: {
+    MANAGE: {
         DASHBOARD: '/manage',
         USERS: '/manage/users',
         VIPS: '/manage/vips',

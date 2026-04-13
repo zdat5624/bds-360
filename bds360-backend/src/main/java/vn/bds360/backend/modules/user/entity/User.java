@@ -26,7 +26,7 @@ import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.user.constant.Gender;
-import vn.bds360.backend.security.SecurityUtil;
+import vn.bds360.backend.security.SecurityService;
 
 @Getter
 @Setter
@@ -87,7 +87,7 @@ public class User {
 
     @PrePersist
     public void handleBeforeCreate() {
-        String currentUser = SecurityUtil.getCurrentUserLogin().orElse("anonymousUser");
+        String currentUser = SecurityService.getCurrentUserLogin().orElse("anonymousUser");
 
         if ("anonymousUser".equals(currentUser) || currentUser.trim().isEmpty()) {
             this.createdBy = this.email;
@@ -104,7 +104,7 @@ public class User {
 
     @PreUpdate
     public void handleBeforeUpdate() {
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().orElse(this.email);
+        this.updatedBy = SecurityService.getCurrentUserLogin().orElse(this.email);
         this.updatedAt = Instant.now();
     }
 

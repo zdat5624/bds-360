@@ -8,7 +8,7 @@ export const antdTheme: ThemeConfig = {
 
     token: {
         colorPrimary: '#1677ff',
-        fontFamily: inter.style.fontFamily,
+        fontFamily: `${inter.style.fontFamily}, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`,
 
     },
     components: {

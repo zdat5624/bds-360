@@ -22,7 +22,7 @@ import vn.bds360.backend.security.config.JwtProperties;
 
 @Service
 @RequiredArgsConstructor
-public class SecurityUtil {
+public class SecurityService {
 
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;

@@ -6,3 +6,5 @@ export * from '@/features/users/api/user.mutations';
 export * from '@/features/users/api/user.queries';
 
 
+// @/features/users/index.ts
+export { ProfileSidebar } from './components/profile-sidebar';

@@ -36,7 +36,7 @@ import vn.bds360.backend.modules.category.entity.Category;
 import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.vip.entity.Vip;
-import vn.bds360.backend.security.SecurityUtil;
+import vn.bds360.backend.security.SecurityService;
 
 @Getter
 @Setter
@@ -131,7 +131,7 @@ public class Post {
     @PrePersist
     public void handleBeforeCreate() {
         if (this.createdBy == null) {
-            this.createdBy = SecurityUtil.getCurrentUserLogin().orElse("");
+            this.createdBy = SecurityService.getCurrentUserLogin().orElse("");
         }
 
         this.createdAt = Instant.now();
@@ -139,7 +139,7 @@ public class Post {
 
     @PreUpdate
     public void handleBeforeUpdate() {
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().orElse("");
+        this.updatedBy = SecurityService.getCurrentUserLogin().orElse("");
         this.updatedAt = Instant.now();
     }
 

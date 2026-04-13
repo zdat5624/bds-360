@@ -2,7 +2,7 @@
 
 import { antdTheme } from '@/config/theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider } from 'antd';
+import { App, ConfigProvider } from 'antd';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -18,9 +18,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
 
             <ConfigProvider theme={antdTheme}>
-
-                {children}
-
+                <App >
+                    {children}
+                </App>
             </ConfigProvider>
 
         </QueryClientProvider>
