@@ -103,7 +103,7 @@ public class AuthService {
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String name = (String) payload.get("name");
-
+            String avatarUrl = (String) payload.get("picture");
             // 4. Kiểm tra user trong DB (hàm này trả về null nếu không tìm thấy, không cần
             // try-catch)
             User currentUserDB = userService.handleGetUserByUserName(email);
@@ -112,13 +112,20 @@ public class AuthService {
             if (currentUserDB == null) {
                 User newUser = new User();
                 newUser.setEmail(email);
-                newUser.setName(name != null ? name : "Unknown User");
 
-                // Set các trường mặc định bắt buộc
+                // Xử lý Name: Nếu Google không có name (hiếm), set tạm 1 tên
+                newUser.setName(name != null ? name : "Người dùng " + email.split("@")[0]);
+
+                // Xử lý Avatar: Nhét thẳng link ảnh Google vào
+                newUser.setAvatar(avatarUrl);
+
                 newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
                 newUser.setRole(Role.USER);
-                newUser.setPhone(null);
                 newUser.setGender(Gender.OTHER);
+
+                // FIX BUG: Truyền số điện thoại ảo ("0000000000") thay vì null
+                // để vượt qua valid @NotBlank của Entity. User có thể tự update lại sau.
+                newUser.setPhone("0000000000");
 
                 currentUserDB = userService.saveInternalUser(newUser);
             }

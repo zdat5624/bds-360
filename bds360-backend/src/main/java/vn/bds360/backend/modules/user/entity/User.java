@@ -96,7 +96,7 @@ public class User {
         }
 
         if (this.avatar == null || this.avatar.trim().isEmpty()) {
-            this.avatar = "avatar-default.webp";
+            this.avatar = "http://localhost:8080/uploads/avatar-default.webp";
         }
 
         this.createdAt = Instant.now();

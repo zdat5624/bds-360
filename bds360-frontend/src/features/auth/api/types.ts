@@ -8,6 +8,10 @@ export interface LoginPayload {
     password: string;
 }
 
+export interface GoogleLoginPayload {
+    token: string; // Đây là ID Token nhận được từ Google SDK
+}
+
 export interface LoginResponse {
     accessToken: string;
     user: User;

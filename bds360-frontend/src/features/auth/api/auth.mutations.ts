@@ -7,6 +7,7 @@ import { AUTH_QUERY_KEYS } from './auth.queries';
 import {
     ChangePasswordPayload,
     ForgotPasswordPayload,
+    GoogleLoginPayload,
     LoginPayload,
     LoginResponse,
     RegisterPayload,
@@ -15,6 +16,22 @@ import {
 
 const login = async (payload: LoginPayload): Promise<LoginResponse> => {
     return customFetch.post('/auth/login', payload);
+};
+
+const googleLogin = async (payload: GoogleLoginPayload): Promise<LoginResponse> => {
+    return customFetch.post('/auth/google', payload);
+};
+
+export const useGoogleLogin = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: googleLogin,
+        onSuccess: () => {
+            // Sau khi login thành công, xóa cache để useGetAccount lấy data mới
+            queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEYS.account() });
+        },
+    });
 };
 
 const register = async (payload: RegisterPayload): Promise<User> => {

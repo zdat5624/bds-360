@@ -15,3 +15,8 @@ export const antdTheme: ThemeConfig = {
 
     }
 };
+
+export const customColors = {
+    colorGoogle: '#DB4437',
+    colorFacebook: '#1877F2',
+} as const;

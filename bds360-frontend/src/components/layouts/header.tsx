@@ -108,14 +108,14 @@ export function Header() {
             </div>
 
             {/* ================= PHẢI: AUTH ACTIONS (DESKTOP) ================= */}
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4 h-full">
                 {!isAuthenticated ? (
-                    <Space>
+                    <Space className=' h-full'>
                         <Link href={APP_ROUTES.AUTH.LOGIN}><Button type="default">Đăng nhập</Button></Link>
                         <Link href={APP_ROUTES.AUTH.REGISTER}><Button type="primary">Đăng ký</Button></Link>
                     </Space>
                 ) : (
-                    <Space size="large" align="center">
+                    <Space size="large" align="center" className='h-full'>
                         <Badge count={3} size="small">
                             <Button
                                 type="text"

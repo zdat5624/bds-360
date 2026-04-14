@@ -16,5 +16,6 @@ public class GoogleProperties {
      * Tương ứng với biến google.client.id trong application.properties
      */
     private String id;
+    private String secret;
 
 }

@@ -1,4 +1,5 @@
 // @/hooks/use-app-theme.ts
+import { customColors } from '@/config';
 import { theme } from 'antd';
 
 export function useAppTheme() {
@@ -12,26 +13,46 @@ export function useAppTheme() {
         // 1. Nhóm Màu Nền (Backgrounds)
         colorBgContainer: token.colorBgContainer, // Nền trắng tinh (Card, Header, Sider)
         colorBgLayout: token.colorBgLayout,       // Nền xám nhạt (Nền tổng của trang, nền thẻ phụ)
-        colorPrimaryBg: token.colorPrimaryBg,     // Nền màu chủ đạo siêu nhạt (Dùng cho Avatar vừa rồi)
-        colorBgElevated: token.colorBgElevated,   // Nền nổi (Dùng cho Popup, Dropdown, Modal)
+        colorPrimaryBg: token.colorPrimaryBg,     // Nền primary siêu nhạt (Avatar, Item được chọn)
+        colorBgElevated: token.colorBgElevated,   // Nền nổi (Popup, Dropdown, Modal)
+        colorBgMask: token.colorBgMask,           // Màu màn mờ đen (Phía sau Modal/Drawer)
 
-        // 2. Nhóm Màu Chữ (Typography) - Bắt buộc phải có
-        colorText: token.colorText,                   // Chữ chính (Tiêu đề, nội dung chính)
+        // 2. Nhóm Màu Chữ (Typography)
+        colorText: token.colorText,                   // Chữ chính (Tiêu đề, nội dung)
         colorTextSecondary: token.colorTextSecondary, // Chữ phụ (Mô tả, Email, Caption)
-        colorTextTertiary: token.colorTextTertiary,   // Chữ mờ (Gợi ý Placeholder, Disabled)
+        colorTextTertiary: token.colorTextTertiary,   // Chữ mờ (Placeholder, icon phụ)
+        colorTextLightSolid: token.colorTextLightSolid, // Chữ trắng (Nằm trên nút Primary hoặc nền đậm)
 
         // 3. Nhóm Màu Viền (Borders)
         colorBorder: token.colorBorder,                   // Viền tiêu chuẩn (Khung Input, Select)
         colorBorderSecondary: token.colorBorderSecondary, // Viền nhạt (Đường Divider, viền Sidebar)
 
-        // 4. Nhóm Màu Trạng Thái (Semantic / Status) - Cực kỳ quan trọng cho hệ thống
-        colorPrimary: token.colorPrimary, // Màu chủ đạo (Nút bấm chính, Link)
-        colorSuccess: token.colorSuccess, // Màu xanh lá (Duyệt thành công, Giao dịch hoàn tất)
-        colorWarning: token.colorWarning, // Màu vàng/cam (Chờ duyệt, Cảnh báo)
-        colorError: token.colorError,     // Màu đỏ (Lỗi, Xóa tin, Khóa tài khoản)
-        colorInfo: token.colorInfo,       // Màu xanh lơ (Thông báo hệ thống thông thường)
+        // 4. Nhóm Màu Trạng Thái Đậm (Semantic Solid) - Dùng cho Text, Icon, Nút bấm
+        colorPrimary: token.colorPrimary, // Xanh chủ đạo
+        colorSuccess: token.colorSuccess, // Xanh lá (Thành công)
+        colorWarning: token.colorWarning, // Cam/Vàng (Cảnh báo, Chờ duyệt)
+        colorError: token.colorError,     // Đỏ (Lỗi, Xóa, Thất bại)
+        colorInfo: token.colorInfo,       // Xanh dương nhạt (Thông tin)
 
-        // 5. Hình khối
+        // 5. Nhóm Màu Trạng Thái Nhạt (Semantic Background) - Dùng cho nền thẻ Tag, Alert, Badge
+        colorSuccessBg: token.colorSuccessBg, // Nền xanh lá siêu nhạt
+        colorWarningBg: token.colorWarningBg, // Nền cam siêu nhạt
+        colorErrorBg: token.colorErrorBg,     // Nền đỏ siêu nhạt
+        colorInfoBg: token.colorInfoBg,       // Nền xanh lơ siêu nhạt
+
+        // 6. Nhóm Vô hiệu hóa (Disabled)
+        colorBgContainerDisabled: token.colorBgContainerDisabled, // Nền xám mờ (Input bị disable)
+        colorTextDisabled: token.colorTextDisabled,               // Chữ xám mờ (Chữ bị disable)
+
+        // 7. Hình khối & Không gian
         borderRadius: token.borderRadius,
+        boxShadow: token.boxShadow,                   // Bóng đổ chuẩn cho Card
+        boxShadowSecondary: token.boxShadowSecondary, // Bóng đổ đậm hơn cho Dropdown/Modal
+
+
+        colorGoogle: customColors.colorGoogle,
+        colorFacebook: customColors.colorFacebook,
+
+        getAlphaPrimary: (opacity: number) => `rgba(22, 119, 255, ${opacity})`,
     };
 }
