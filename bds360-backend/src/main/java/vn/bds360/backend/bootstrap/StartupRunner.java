@@ -686,11 +686,35 @@ public class StartupRunner implements CommandLineRunner {
 
             // Kiểm tra vipLevel để gán trạng thái và thời gian hiệu lực
             if (selectedVip.getVipLevel() == 0) {
-                post.setStatus(PostStatus.PENDING);
+                int rand = random.nextInt(100);
+
+                PostStatus status;
+
+                if (rand < 20)
+                    status = PostStatus.APPROVED; // 🔥 40%
+                else if (rand < 35)
+                    status = PostStatus.REVIEW_LATER; // 15%
+                else if (rand < 50)
+                    status = PostStatus.PENDING; // 25%
+                else if (rand < 75)
+                    status = PostStatus.REJECTED; // 15%
+                else
+                    status = PostStatus.EXPIRED; // 5%
+
+                post.setStatus(status);
+
                 long secondsIn1Month = 30L * 24 * 60 * 60;
                 long secondsIn3Months = 90L * 24 * 60 * 60;
                 long range = secondsIn3Months - secondsIn1Month;
-                post.setExpireDate(Instant.now().plusSeconds(secondsIn1Month + (long) (random.nextDouble() * range)));
+
+                if (status == PostStatus.EXPIRED) {
+                    long secondsInPast = (random.nextInt(30) + 1) * 24L * 60 * 60;
+                    post.setExpireDate(Instant.now().minusSeconds(secondsInPast));
+                } else {
+                    post.setExpireDate(
+                            Instant.now().plusSeconds(secondsIn1Month + (long) (random.nextDouble() * range)));
+                }
+
                 post.setNotifyOnView(false);
             } else {
                 PostStatus selectedStatus = nonPendingStatuses.get(random.nextInt(nonPendingStatuses.size()));
