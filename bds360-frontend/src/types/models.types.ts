@@ -1,3 +1,5 @@
+// @/types/models.types.ts
+
 import { Gender, Role } from "@/constants";
 
 export interface User {

@@ -16,10 +16,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(permissionInterceptor)
-                .addPathPatterns("/api/admin/**"); // Áp dụng Interceptor cho tất cả API admin
-        // .excludePathPatterns("/api/auth/**", "/api/public/**", "/",
-        // "/uploads/**",
-        // "/api/auth/**",
-        // "/api/address/**"); // Loại trừ các API công khai
+                .addPathPatterns("/api/v1/**") // Chỉ quét các API
+                .excludePathPatterns("/uploads/**", "/swagger-ui/**", "/v3/api-docs/**");
     }
 }

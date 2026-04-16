@@ -12,7 +12,6 @@ bds360-frontend
 ├─ README.md
 ├─ README_PROJECT_TREE.md
 ├─ src
-│  ├─ api
 │  ├─ app
 │  │  ├─ (back-office)
 │  │  │  └─ manage
@@ -28,8 +27,18 @@ bds360-frontend
 │  │  │  │  ├─ layout.tsx
 │  │  │  │  ├─ page.tsx
 │  │  │  │  ├─ rent
+│  │  │  │  │  └─ page.tsx
 │  │  │  │  └─ sale
+│  │  │  │     └─ page.tsx
 │  │  │  └─ layout.tsx
+│  │  ├─ auth
+│  │  │  ├─ forgot-password
+│  │  │  │  └─ page.tsx
+│  │  │  ├─ layout.tsx
+│  │  │  ├─ login
+│  │  │  │  └─ page.tsx
+│  │  │  └─ register
+│  │  │     └─ page.tsx
 │  │  ├─ favicon.ico
 │  │  ├─ fonts
 │  │  │  ├─ GeistMonoVF.woff
@@ -45,6 +54,8 @@ bds360-frontend
 │  │     ├─ footer.tsx
 │  │     ├─ header.tsx
 │  │     ├─ index.tsx
+│  │     ├─ manage-footer.tsx
+│  │     ├─ manage-header.tsx
 │  │     ├─ manage-sidebar.tsx
 │  │     └─ user-sidebar.tsx
 │  ├─ config
@@ -57,7 +68,8 @@ bds360-frontend
 │  │  ├─ gender.constant.ts
 │  │  ├─ index.ts
 │  │  ├─ listing.constant.ts
-│  │  ├─ pagination.ts
+│  │  ├─ menus.constant.tsx
+│  │  ├─ pagination.constant.ts
 │  │  └─ role.constant.ts
 │  ├─ features
 │  │  ├─ addresses
@@ -74,7 +86,9 @@ bds360-frontend
 │  │  │  │  └─ types.ts
 │  │  │  ├─ auth.schema.ts
 │  │  │  ├─ components
-│  │  │  │  └─ test.tsx
+│  │  │  │  ├─ forgot-password.form.tsx
+│  │  │  │  ├─ login.form.tsx
+│  │  │  │  └─ register.form.tsx
 │  │  │  └─ index.ts
 │  │  ├─ categories
 │  │  │  ├─ api

@@ -1,40 +1,28 @@
 // @/features/auth/api/auth.mutations.ts
 
 import customFetch from '@/lib/custom-fetch';
-import { User } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AUTH_QUERY_KEYS } from './auth.queries';
 import {
+    AuthResponse,
     ChangePasswordPayload,
     ForgotPasswordPayload,
     GoogleLoginPayload,
     LoginPayload,
-    LoginResponse,
     RegisterPayload,
     ResetPasswordPayload,
 } from './types';
 
-const login = async (payload: LoginPayload): Promise<LoginResponse> => {
+const login = async (payload: LoginPayload): Promise<AuthResponse> => {
     return customFetch.post('/auth/login', payload);
 };
 
-const googleLogin = async (payload: GoogleLoginPayload): Promise<LoginResponse> => {
+const googleLogin = async (payload: GoogleLoginPayload): Promise<AuthResponse> => {
     return customFetch.post('/auth/google', payload);
 };
 
-export const useGoogleLogin = () => {
-    const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: googleLogin,
-        onSuccess: () => {
-            // Sau khi login thành công, xóa cache để useGetAccount lấy data mới
-            queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEYS.account() });
-        },
-    });
-};
-
-const register = async (payload: RegisterPayload): Promise<User> => {
+const register = async (payload: RegisterPayload): Promise<AuthResponse> => {
     return customFetch.post('/auth/register', payload);
 };
 
@@ -50,7 +38,19 @@ const changePassword = async (payload: ChangePasswordPayload): Promise<void> => 
     return customFetch.post('/auth/change-password', payload);
 };
 
-export const useLogin = () => {
+export const useGoogleLoginMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: googleLogin,
+        onSuccess: () => {
+            // Sau khi login thành công, xóa cache để useGetAccount lấy data mới useGoogleLoginMutation
+            queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEYS.account() });
+        },
+    });
+};
+
+export const useLoginMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({

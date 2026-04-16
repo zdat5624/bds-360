@@ -23,7 +23,7 @@ import vn.bds360.backend.common.exception.ErrorCode;
 import vn.bds360.backend.modules.auth.dto.request.GoogleLoginRequest;
 import vn.bds360.backend.modules.auth.dto.request.LoginRequest;
 import vn.bds360.backend.modules.auth.dto.request.RegisterRequest;
-import vn.bds360.backend.modules.auth.dto.response.LoginResponse;
+import vn.bds360.backend.modules.auth.dto.response.AuthResponse;
 import vn.bds360.backend.modules.user.constant.Gender;
 import vn.bds360.backend.modules.user.dto.response.UserResponse;
 import vn.bds360.backend.modules.user.entity.User;
@@ -43,7 +43,7 @@ public class AuthService {
     private final GoogleProperties googleProperties;
     private final UserMapper userMapper;
 
-    public LoginResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         try {
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                     request.getUsername(), request.getPassword());
@@ -53,28 +53,40 @@ public class AuthService {
             String accessToken = securityService.createToken(authentication);
             User currentUserDB = userService.handleGetUserByUserName(request.getUsername());
 
-            return new LoginResponse(accessToken, userMapper.toUserResponse(currentUserDB));
+            return new AuthResponse(accessToken, userMapper.toUserResponse(currentUserDB));
         } catch (Exception e) {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         }
     }
 
-    public UserResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         if (userService.isEmailExist(request.getEmail())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
-        // 1. MapStruct biến Request thành Entity
         User newUser = userMapper.toUser(request);
-
-        // 2. Gán các trường đặc thù của nghiệp vụ Đăng ký
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        newUser.setRole(Role.USER); // Mặc định đăng ký là USER
-
-        // 3. Lưu thông qua hàm nội bộ của UserService
+        newUser.setRole(Role.USER);
         User savedUser = userService.saveInternalUser(newUser);
 
-        return userMapper.toUserResponse(savedUser);
+        // --- ĐOẠN THÊM VÀO ĐỂ TỰ ĐỘNG LOGIN SAU KHI ĐĂNG KÝ ---
+
+        // 1. Tạo UserDetails
+        org.springframework.security.core.userdetails.UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                savedUser.getEmail(),
+                savedUser.getPassword(),
+                Collections.singletonList(new SimpleGrantedAuthority(savedUser.getRole().name())));
+
+        // 2. Tạo Authentication
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // 3. Sinh Token
+        String accessToken = securityService.createToken(authentication);
+
+        // 4. Trả về AuthResponse
+        return new AuthResponse(accessToken, userMapper.toUserResponse(savedUser));
     }
 
     public UserResponse getAccount(String email) {
@@ -85,7 +97,7 @@ public class AuthService {
         return userMapper.toUserResponse(currentUserDB);
     }
 
-    public LoginResponse googleLogin(GoogleLoginRequest request) {
+    public AuthResponse googleLogin(GoogleLoginRequest request) {
         try {
             // 1. Cấu hình GoogleIdTokenVerifier
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(),
@@ -148,7 +160,7 @@ public class AuthService {
             // Sinh token
             String accessToken = securityService.createToken(authentication);
 
-            return new LoginResponse(accessToken, userMapper.toUserResponse(currentUserDB));
+            return new AuthResponse(accessToken, userMapper.toUserResponse(currentUserDB));
 
         } catch (AppException e) {
             throw e;

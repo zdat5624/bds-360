@@ -31,6 +31,11 @@ export const registerSchema = z.object({
         .trim()
         .min(6, { error: 'Mật khẩu phải có ít nhất 6 ký tự' }),
 
+    // Thêm field confirmPassword
+    confirmPassword: z.string({ error: 'Vui lòng xác nhận lại mật khẩu' })
+        .trim()
+        .min(1, { error: 'Vui lòng xác nhận lại mật khẩu' }),
+
     phone: z.string({ error: 'Số điện thoại không được để trống' })
         .trim()
         .min(1, { error: 'Số điện thoại không được để trống' })
@@ -39,6 +44,14 @@ export const registerSchema = z.object({
     gender: z.enum(GENDER_VALUES, {
         error: 'Giới tính không được để trống hoặc không hợp lệ',
     }),
+}).superRefine(({ confirmPassword, password }, ctx) => {
+    if (confirmPassword !== password) {
+        ctx.addIssue({
+            code: "custom",
+            message: "Mật khẩu xác nhận không trùng khớp",
+            path: ["confirmPassword"],
+        });
+    }
 });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -63,6 +76,18 @@ export const resetPasswordSchema = z.object({
     newPassword: z.string({ error: 'Mật khẩu mới không được để trống' })
         .trim()
         .min(6, { error: 'Mật khẩu mới phải có ít nhất 6 ký tự' }),
+
+    confirmPassword: z.string({ error: 'Vui lòng xác nhận lại mật khẩu' })
+        .trim()
+        .min(1, { error: 'Vui lòng xác nhận lại mật khẩu' }),
+}).superRefine(({ confirmPassword, newPassword }, ctx) => {
+    if (confirmPassword !== newPassword) {
+        ctx.addIssue({
+            code: "custom",
+            message: "Mật khẩu xác nhận không trùng khớp",
+            path: ["confirmPassword"],
+        });
+    }
 });
 
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;

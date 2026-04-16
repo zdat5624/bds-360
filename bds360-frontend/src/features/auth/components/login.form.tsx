@@ -2,28 +2,27 @@
 'use client';
 
 import { APP_ROUTES } from '@/config/routes';
-import { useLogin } from '@/features/auth/api/auth.mutations';
-import { LoginFormValues, loginSchema } from '@/features/auth/auth.schema';
-import { useAppTheme } from '@/hooks/use-app-theme';
-import { FacebookFilled, GoogleOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import { LoginFormValues, loginSchema, useLoginMutation } from '@/features/auth';
+import { useAppTheme } from '@/hooks';
+import { useAuthStore } from '@/stores';
+import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Divider, Form, Input, Typography, message } from 'antd';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
+import { GoogleAuthButton } from './google-auth.button';
 
 const { Title, Text } = Typography;
 
 export function LoginForm() {
     const {
         colorBgContainer, colorText, colorTextSecondary, colorTextTertiary,
-        colorBorderSecondary, colorPrimary, borderRadius,
-        colorGoogle, colorFacebook
+        colorBorderSecondary, colorPrimary, borderRadius
     } = useAppTheme();
 
     const router = useRouter();
 
-    // 1. Khởi tạo React Hook Form tích hợp Zod Schema
     const { control, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -32,28 +31,28 @@ export function LoginForm() {
         },
     });
 
-    // 2. Kéo Mutation Login từ React Query
-    const { mutate: loginMutation, isPending } = useLogin();
+    const { mutate: loginMutation, isPending } = useLoginMutation();
 
-    // 3. Xử lý Submit khi Form đã qua ải Validate của Zod
+    const setAuth = useAuthStore((state) => state.setAuth);
+
     const onSubmit = (values: LoginFormValues) => {
         loginMutation(values, {
-            onSuccess: () => {
+            onSuccess: async (data) => {
+                setAuth(data.user, data.accessToken);
                 message.success('Đăng nhập thành công!');
-                // Điều hướng về Dashboard của User
+
+                await new Promise((resolve) => setTimeout(resolve, 5000));
                 router.push(APP_ROUTES.USER.DASH_BOARD);
             },
-            // Lỗi (nếu có) đã được file custom-fetch.ts hiển thị tự động, không cần try/catch ở đây!
         });
     };
 
     return (
         <div
-            className="w-full max-w-[420px] p-8 shadow-2xl flex flex-col"
+            className="w-full max-w-[500px] p-8 shadow-2xl flex flex-col"
             style={{ background: colorBgContainer, borderRadius: borderRadius * 1.5 }}
         >
-            {/* --- HEADER --- */}
-            <div className="text-center mb-4">
+            <div className="text-center mb-2">
                 <Title level={2} style={{ color: colorText, margin: 0, marginBottom: 8, fontWeight: 700 }}>
                     BDS360
                 </Title>
@@ -65,35 +64,33 @@ export function LoginForm() {
                 </Text>
             </div>
 
-            {/* --- FORM --- 
-                Dùng onFinish của Antd kết hợp với handleSubmit của RHF 
-            */}
-            <Form layout="vertical" size="large" onFinish={handleSubmit(onSubmit)}>
+            {/* Bổ sung callback lỗi để đồng bộ debug với Register */}
+            <Form
+                layout="vertical"
+                size="large"
+                onFinish={handleSubmit(onSubmit, (err) => console.log('❌ Lỗi Validation:', err))}
+            >
                 <Form.Item
-                    label={<span style={{ color: colorTextSecondary, fontWeight: 500 }}>Email</span>}
-                    className="mb-5"
-                    // Gắn trạng thái lỗi từ Zod vào Antd Form.Item
+                    label="Email"
                     validateStatus={errors.username ? 'error' : ''}
                     help={errors.username?.message}
                 >
-                    {/* Bọc Input bằng Controller để RHF theo dõi dữ liệu */}
                     <Controller
                         name="username"
                         control={control}
                         render={({ field }) => (
                             <Input
                                 {...field}
-                                prefix={<MailOutlined style={{ color: colorTextTertiary, marginRight: 8 }} />}
+                                prefix={<MailOutlined style={{ color: colorTextTertiary }} />}
                                 placeholder="user@bds360.com"
-                                disabled={isPending} // Khóa Input khi đang gọi API
+                                disabled={isPending}
                             />
                         )}
                     />
                 </Form.Item>
 
                 <Form.Item
-                    label={<span style={{ color: colorTextSecondary, fontWeight: 500 }}>Mật khẩu</span>}
-                    className="mb-2"
+                    label="Mật khẩu"
                     validateStatus={errors.password ? 'error' : ''}
                     help={errors.password?.message}
                 >
@@ -103,58 +100,53 @@ export function LoginForm() {
                         render={({ field }) => (
                             <Input.Password
                                 {...field}
-                                prefix={<LockOutlined style={{ color: colorTextTertiary, marginRight: 8 }} />}
+                                prefix={<LockOutlined style={{ color: colorTextTertiary }} />}
                                 placeholder="••••••••"
-                                disabled={isPending} // Khóa Input khi đang gọi API
+                                disabled={isPending}
                             />
                         )}
                     />
                 </Form.Item>
 
-                <div className="flex justify-end mb-6">
-                    <Link href={APP_ROUTES.AUTH.FORGOT_PASSWORD} style={{ color: colorPrimary, fontSize: 13, fontWeight: 500 }}>
+                <div className="flex justify-end !mb-6" style={{ marginTop: -12 }}>
+                    <Link
+                        href={APP_ROUTES.AUTH.FORGOT_PASSWORD}
+                        style={{ color: colorPrimary, fontSize: 13, fontWeight: 500 }}
+                    >
                         Quên mật khẩu?
                     </Link>
                 </div>
 
-                <Form.Item className="mb-2">
+                <Form.Item >
                     <Button
                         type="primary"
                         htmlType="submit"
                         block
-                        style={{ fontWeight: 500 }}
+                        style={{ fontWeight: 600 }}
                         className="h-11"
-                        loading={isPending} // Tự động hiển thị vòng xoay xoay (Spinner) khi đang fetch API
+                        loading={isPending}
                     >
                         Đăng nhập
                     </Button>
                 </Form.Item>
             </Form>
 
-            {/* --- SOCIAL LOGIN --- */}
-            <Divider style={{ color: colorTextTertiary, fontSize: 13, borderColor: colorBorderSecondary }} plain>
-                hoặc kết nối với
+            {/* Cập nhật Optical Spacing chuẩn theo file Register */}
+            <Divider
+                style={{
+                    color: colorTextTertiary,
+                    fontSize: 13,
+                    borderColor: colorBorderSecondary,
+                    marginTop: 0,
+                    marginBottom: 18
+                }}
+                plain
+            >
+                hoặc
             </Divider>
 
-            <div className="flex gap-4">
-                <Button
-                    block
-                    className="h-11"
-                    icon={<GoogleOutlined style={{ color: colorGoogle }} />}
-                    style={{ color: colorTextSecondary, fontWeight: 500 }}
-                    disabled={isPending}
-                >
-                    Google
-                </Button>
-                <Button
-                    block
-                    className="h-11"
-                    icon={<FacebookFilled style={{ color: colorFacebook }} />}
-                    style={{ color: colorTextSecondary, fontWeight: 500 }}
-                    disabled={isPending}
-                >
-                    Facebook
-                </Button>
+            <div className="flex flex-col gap-3">
+                <GoogleAuthButton />
             </div>
         </div>
     );

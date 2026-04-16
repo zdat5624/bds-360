@@ -12,7 +12,7 @@ export interface GoogleLoginPayload {
     token: string; // Đây là ID Token nhận được từ Google SDK
 }
 
-export interface LoginResponse {
+export interface AuthResponse {
     accessToken: string;
     user: User;
 }

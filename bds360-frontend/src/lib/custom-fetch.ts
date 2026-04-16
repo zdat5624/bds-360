@@ -26,6 +26,7 @@ customFetch.interceptors.request.use(
         const token = authStorage.getToken();
 
         if (token && config.headers) {
+            console.debug('🔐 Đính kèm Token vào header Authorization: ', token);
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -57,14 +58,24 @@ customFetch.interceptors.response.use(
 
         // C1: Xử lý đặc thù cho lỗi 401 (Hết hạn Token hoặc Token không hợp lệ)
         if (error.response?.status === 401) {
+            // 👇 Lấy URL của API vừa gọi bị lỗi
+            const requestUrl = error.config?.url || '';
 
-            // Xóa sạch dấu vết trong LocalStorage
-            authStorage.clearAuth();
+            // 👇 Kiểm tra xem API đó có phải là API đăng nhập không
+            const isAuthAPI = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/google');
 
-            // Điều hướng về trang login (Chỉ chạy trên Client, an toàn với SSR)
-            if (typeof window !== 'undefined') {
-                message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-                window.location.href = APP_ROUTES.AUTH.LOGIN; // Điều hướng về trang login sau khi logout sạch sẽ
+            // 👇 Chỉ thực hiện force logout và redirect nếu KHÔNG phải đang ở luồng đăng nhập
+            if (!isAuthAPI) {
+                authStorage.clearAuth();
+                if (typeof window !== 'undefined') {
+                    message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+                    window.location.href = APP_ROUTES.AUTH.LOGIN;
+                }
+            } else {
+                // 👇 Nếu đang đăng nhập mà bị 401 (sai pass, token google hỏng) thì chỉ báo lỗi thôi
+                if (typeof window !== 'undefined') {
+                    message.error(error.response?.data?.message || 'Xác thực thất bại, vui lòng kiểm tra lại!');
+                }
             }
 
             return Promise.reject(error);
@@ -74,8 +85,10 @@ customFetch.interceptors.response.use(
         const errorData = error.response?.data;
         const errorMessage = errorData?.message || 'Không thể kết nối đến máy chủ!';
         if (typeof window !== 'undefined') {
-            message.error(errorMessage);
-
+            // Tránh báo lỗi 2 lần nếu là lỗi Auth đã xử lý ở trên
+            if (error.response?.status !== 401) {
+                message.error(errorMessage);
+            }
         }
 
         // Trả về errorData để Zod/RHF có thể map hiển thị lỗi trực tiếp trên Form

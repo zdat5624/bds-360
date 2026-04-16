@@ -21,34 +21,34 @@
 - **Business Logic Error:** Lỗi có `code !== 10000` được xử lý tập trung bằng `message.error` trong interceptor và ném ra `Promise.reject`.
 
 **5. Component & Styling Rules (CRITICAL):**
-    Design System: Tuân thủ tuyệt đối Ant Design System (v5 Default Aesthetic).
 
-    UI Consistency: Luôn sử dụng component của Antd (Table, Button, Form, Select, v.v.). Không tự chế UI bằng HTML/Tailwind nếu Antd đã có.
-
-    Theme Source: AI phải căn cứ vào cấu hình trong ConfigProvider (antdTheme) để sinh code.
-
-    Tailwind Usage: Chỉ dùng Tailwind cho Layout Utilities (spacing, flex, grid, alignment). Tuyệt đối không dùng Tailwind để ghi đè (override) style mặc định của Antd (như đổi màu, bo góc, bóng đổ) trừ khi có yêu cầu đặc biệt.
-
-    Visual Style: Ưu tiên phong cách Professional Enterprise đặc trưng của Antd: Sạch sẽ, chuẩn mực, tập trung vào cấu trúc dữ liệu và trải nghiệm người dùng doanh nghiệp.
-
-    Component & Styling Rules (CRITICAL): Ưu tiên Ant Design: Luôn sử dụng các component của Antd (Table, Button, Form, Select, v.v.) để đảm bảo đồng bộ Theme. Hạn chế Custom UI: Tránh việc tự định nghĩa component bằng HTML/CSS/Tailwind nếu Antd đã cung cấp giải pháp tương đương. Chỉ dùng Tailwind cho việc căn chỉnh Layout (padding, margin, flex) hoặc khi Antd không đáp ứng được yêu cầu đặc thù.
-    Dưới đây là đoạn text chuẩn mực, mang tính chất "thiết quân luật" mà bạn có thể bổ sung trực tiếp vào file `CONTEXT.md` (ở mục **5. Component & Styling Rules**) hoặc dùng làm System Prompt để ép các AI (hoặc team dev) tuân thủ tuyệt đối quy tắc sử dụng màu sắc:
-
-* **Single Source of Truth:** Toàn bộ màu sắc của ứng dụng (màu chữ, nền, viền, bóng đổ...) PHẢI được quản lý tập trung bởi Design Token của Ant Design v5 (được định nghĩa tại `src/config/theme.ts`). Tuyệt đối không hard-code mã màu HEX/RGB/HSL trong component.
-* **Zero Tailwind Colors:** NGHIÊM CẤM việc sử dụng các class màu sắc của Tailwind (ví dụ: `text-red-500`, `bg-blue-600`, `border-gray-200`, `hover:bg-gray-100`). Bất kỳ pull request/code generation nào chứa class màu Tailwind đều bị coi là vi phạm kiến trúc.
-* **Separation of Concerns:** * **Tailwind:** CHỈ DÙNG để dựng cấu trúc, layout và khoảng cách (flex, grid, p-*, m-*, gap-*, w-*, h-*, absolute...).
-    * **Antd Token:** DÙNG để định hình "lớp da" của UI (màu sắc, bo góc, bóng đổ).
-* **Implementation Rule (Hook `useAppTheme`):** Khi cần tô màu cho một thẻ HTML thường (`<div>`, `<span>`) hoặc override màu, BẮT BUỘC phải gọi custom hook `useAppTheme()` từ `@/hooks/use-app-theme.ts` để trích xuất các token màu (như `colorPrimary`, `colorBgContainer`, `colorTextSecondary`...) và truyền chúng qua thuộc tính `style={}` inline.
-* **Mục đích cốt lõi:** Đảm bảo UI đạt tính nhất quán (Consistency) 100% theo tiêu chuẩn Enterprise, đồng thời đảm bảo tính năng chuyển đổi Dark/Light mode hoặc Re-branding (đổi màu thương hiệu) sau này có thể hoạt động ngay lập tức mà không cần sửa code ở từng component.
+- **Design System & Visual Style:** Tuân thủ tuyệt đối Ant Design System (v5 Default Aesthetic). Định hướng UI theo phong cách Professional Enterprise (SaaS): sạch sẽ, chuẩn mực, ưu tiên hiển thị cấu trúc dữ liệu và tối ưu trải nghiệm người dùng doanh nghiệp.
+- **Antd First (UI Consistency):** BẮT BUỘC sử dụng các component của Antd (Table, Button, Form, Select, v.v.) làm ưu tiên hàng đầu. Tuyệt đối không tự chế lại UI bằng HTML/Tailwind nếu Antd đã cung cấp giải pháp tương đương nhằm đảm bảo đồng bộ Theme. Quy tắc tham chiếu: Khi sử dụng bất kỳ component nào, BẮT BUỘC tham khảo code mẫu (Demo) và API tại tài liệu chính thức: https://ant.design để áp dụng đúng cấu trúc props, slots và đảm bảo chuẩn UX/UI của thư viện. 
+- **Single Source of Truth (Zero Tailwind Colors):** Toàn bộ "lớp da" của ứng dụng (màu chữ, nền, viền, bóng đổ, bo góc) PHẢI được quản lý tập trung bởi Design Token của Ant Design (tại `src/config/theme.ts`). 
+  - **NGHIÊM CẤM** sử dụng các class màu sắc của Tailwind (ví dụ: `text-red-500`, `bg-blue-600`, `border-gray-200`, `hover:bg-gray-100`).
+  - Tuyệt đối không hard-code mã màu HEX/RGB/HSL trong các component.
+- **Strict Separation of Concerns:**
+  - **Tailwind CSS:** CHỈ DÙNG để dựng cấu trúc, layout và tinh chỉnh khoảng cách (utilities: `flex`, `grid`, `p-*`, `m-*`, `gap-*`, `w-*`, `h-*`, `absolute`...). Không dùng Tailwind để ghi đè (override) visual style của Antd.
+  - **Antd Token:** DÙNG để quyết định nhận diện thị giác (Visuals).
+- **Implementation Rule (Hook `useAppTheme`):** Khi cần tô màu cho một thẻ HTML thuần (`<div>`, `<span>`) hoặc cần can thiệp màu sắc, BẮT BUỘC phải gọi custom hook `useAppTheme()` (từ `@/hooks/use-app-theme.ts`) để trích xuất các token màu (như `colorPrimary`, `colorBgContainer`, `colorTextSecondary`...) và truyền qua thuộc tính `style={...}` inline. Điều này đảm bảo Consistency 100% và hệ thống luôn sẵn sàng cho Dark/Light Mode.
+- **Form Spacing Standard (Optical Alignment):**
+  - **Item Margin:** Mặc định sử dụng margin của Ant Design (thường là 24px). Chỉ dùng `mb-0` cho item cuối cùng trong một block Form để tránh cộng dồn khoảng cách với Divider/Footer.
+  - **Grouped Fields:**: không thêm margin vào thẻ `div` bọc ngoài, hãy để `Form.Item` tự quản lý khoảng cách dọc. Nếu antd không tự xử lý được mới tự style bằng taiwind hoặc style (có thể sẽ dùng important '!').
+  - 
 
 
 
 **6. Naming & Folder Conventions (CRITICAL):**
-- **File & Folder Casing:** Bắt buộc sử dụng `kebab-case` cho tên file/thư mục (e.g., `[tên-tính-năng].form.tsx`, `kebab-case.tsx`), tuyệt đối không dùng `camelCase` hay `PascalCase` để tránh lỗi môi trường hệ điều hành.
-- **File Suffixes:** Tên file phải có hậu tố chức năng rõ ràng: Components (`.tsx`), Schemas (`.schema.ts`), Constants (`.constant.ts`), Utilities (`.util.ts`), Types (`.types.ts`), API Hooks đặt theo hành động (`[action].ts` như `get-posts.ts`).
+- **File & Folder Casing:** Bắt buộc sử dụng `kebab-case` cho tên file/thư mục, tuyệt đối không dùng `camelCase` hay `PascalCase` để tránh lỗi môi trường hệ điều hành.
+- **File Suffixes cho Components (Dot-notation):** Khuyến khích sử dụng dấu chấm (`.`) để định danh rõ loại Component giao diện.
+  - **Form:** `[tên].form.tsx` (e.g., `login.form.tsx`, `forgot-password.form.tsx`)
+  - **Button:** `[tên].button.tsx` (e.g., `google-auth.button.tsx`)
+  - **Modal/Drawer:** `[tên].modal.tsx` / `[tên].drawer.tsx` (e.g., `create-post.modal.tsx`)
+  - **Standard UI:** Với các component cấu trúc chung chung (layout, block hiển thị lớn) có thể giữ hậu tố tiêu chuẩn (e.g., `user-info.tsx`, `manage-sidebar.tsx`).
+- **File Suffixes cho Non-Components:** Tên file phải có hậu tố chức năng rõ ràng: Schemas (`.schema.ts`), Constants (`.constant.ts`), Utilities (`.util.ts`), Types (`.types.ts`), API Hooks đặt theo hành động (`[action].mutations.ts` hoặc `[action].queries.ts` như `auth.queries.ts`).
 - **Code-Level Naming:** Sử dụng `PascalCase` cho React Components & Types, `camelCase` cho Functions & Variables, và `UPPER_SNAKE_CASE` cho Constants.
 - **Barrel Files (`index.ts`):** Chỉ đặt ở cấp cao nhất của thư mục Feature (e.g., `features/auth/index.ts`) hoặc Shared Component; KHÔNG tạo trong thư mục con để tối ưu Tree-shaking và tránh import vòng (circular dependency).
-**File Path Comments:**: Mọi file PHẢI bắt đầu bằng một dòng comment chứa đường dẫn đầy đủ tính từ thư mục gốc (root) để dễ dàng định vị (e.g.,  @/features/auth/api/user.queries.ts).
+- **File Path Comments:** Mọi file PHẢI bắt đầu bằng một dòng comment chứa đường dẫn đầy đủ tính từ thư mục gốc (root) để dễ dàng định vị (e.g., `// @/features/auth/components/google-auth.button.tsx`).
 
 ---
 ```text
@@ -107,176 +107,3 @@ src/
 
 ```
 
-
-Project tree hoàn chỉnh:
-
-
-```
-bds360-frontend
-├─ .eslintrc.json
-├─ CONTEXT.md
-├─ env.d.ts
-├─ next.config.mjs
-├─ orval.config.ts
-├─ package-lock.json
-├─ package.json
-├─ postcss.config.mjs
-├─ README.md
-├─ README_PROJECT_TREE.md
-├─ src
-│  ├─ api
-│  ├─ app
-│  │  ├─ (back-office)
-│  │  │  └─ manage
-│  │  │     ├─ layout.tsx
-│  │  │     └─ page.tsx
-│  │  ├─ (main)
-│  │  │  ├─ (account)
-│  │  │  │  └─ user
-│  │  │  │     ├─ layout.tsx
-│  │  │  │     └─ profile
-│  │  │  │        └─ page.tsx
-│  │  │  ├─ (public)
-│  │  │  │  ├─ layout.tsx
-│  │  │  │  ├─ page.tsx
-│  │  │  │  ├─ rent
-│  │  │  │  └─ sale
-│  │  │  └─ layout.tsx
-│  │  ├─ favicon.ico
-│  │  ├─ fonts
-│  │  │  ├─ GeistMonoVF.woff
-│  │  │  └─ GeistVF.woff
-│  │  ├─ globals.css
-│  │  ├─ layout.tsx
-│  │  └─ provider.tsx
-│  ├─ components
-│  │  ├─ base
-│  │  ├─ composite
-│  │  ├─ index.ts
-│  │  └─ layouts
-│  │     ├─ footer.tsx
-│  │     ├─ header.tsx
-│  │     ├─ index.tsx
-│  │     ├─ manage-sidebar.tsx
-│  │     └─ user-sidebar.tsx
-│  ├─ config
-│  │  ├─ env.ts
-│  │  ├─ fonts.ts
-│  │  ├─ index.ts
-│  │  ├─ routes.ts
-│  │  └─ theme.ts
-│  ├─ constants
-│  │  ├─ gender.constant.ts
-│  │  ├─ index.ts
-│  │  ├─ listing.constant.ts
-│  │  ├─ pagination.ts
-│  │  └─ role.constant.ts
-│  ├─ features
-│  │  ├─ addresses
-│  │  │  ├─ addresses.schema.ts
-│  │  │  ├─ api
-│  │  │  │  ├─ addresses.queries.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ components
-│  │  │  └─ index.ts
-│  │  ├─ auth
-│  │  │  ├─ api
-│  │  │  │  ├─ auth.mutations.ts
-│  │  │  │  ├─ auth.queries.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ auth.schema.ts
-│  │  │  ├─ components
-│  │  │  │  └─ test.tsx
-│  │  │  └─ index.ts
-│  │  ├─ categories
-│  │  │  ├─ api
-│  │  │  │  ├─ categories.mutations.ts
-│  │  │  │  ├─ categories.queries.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ categories.schema.ts
-│  │  │  ├─ components
-│  │  │  └─ index.ts
-│  │  ├─ media
-│  │  │  ├─ api
-│  │  │  │  ├─ media.mutations.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ components
-│  │  │  ├─ index.ts
-│  │  │  ├─ media.constant.ts
-│  │  │  └─ media.schema.ts
-│  │  ├─ notifications
-│  │  │  ├─ api
-│  │  │  │  ├─ notifications.mutations.ts
-│  │  │  │  ├─ notifications.queries.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ components
-│  │  │  ├─ index.ts
-│  │  │  ├─ notifications.constant.ts
-│  │  │  └─ notifications.schema.ts
-│  │  ├─ posts
-│  │  │  ├─ api
-│  │  │  │  ├─ posts.mutations.ts
-│  │  │  │  ├─ posts.queries.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ components
-│  │  │  ├─ index.ts
-│  │  │  ├─ posts.constant.ts
-│  │  │  └─ posts.schema.ts
-│  │  ├─ statistics
-│  │  │  ├─ api
-│  │  │  │  ├─ statistics.queries.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ components
-│  │  │  ├─ index.ts
-│  │  │  └─ statistics.schema.ts
-│  │  ├─ transactions
-│  │  │  ├─ api
-│  │  │  │  ├─ transactions.mutations.ts
-│  │  │  │  ├─ transactions.queries.ts
-│  │  │  │  └─ types.ts
-│  │  │  ├─ components
-│  │  │  ├─ index.ts
-│  │  │  ├─ transactions.constant.ts
-│  │  │  └─ transactions.schema.ts
-│  │  ├─ users
-│  │  │  ├─ api
-│  │  │  │  ├─ types.ts
-│  │  │  │  ├─ user.mutations.ts
-│  │  │  │  └─ user.queries.ts
-│  │  │  ├─ components
-│  │  │  │  └─ user-info.tsx
-│  │  │  ├─ index.ts
-│  │  │  ├─ users.constant.ts
-│  │  │  └─ users.schema.ts
-│  │  └─ vips
-│  │     ├─ api
-│  │     │  ├─ types.ts
-│  │     │  ├─ vips.mutations.ts
-│  │     │  └─ vips.queries.ts
-│  │     ├─ components
-│  │     ├─ index.ts
-│  │     └─ vips.schema.ts
-│  ├─ hooks
-│  │  ├─ index.ts
-│  │  └─ use-app-theme.ts
-│  ├─ lib
-│  │  ├─ custom-fetch.ts
-│  │  ├─ index.ts
-│  │  └─ utils.ts
-│  ├─ stores
-│  ├─ types
-│  │  ├─ api.types.ts
-│  │  ├─ common.types.ts
-│  │  ├─ index.ts
-│  │  └─ models.types.ts
-│  └─ utils
-│     ├─ date.util.ts
-│     ├─ error.util.ts
-│     ├─ index.ts
-│     ├─ number.util.ts
-│     ├─ storage.util.ts
-│     └─ string.util.ts
-├─ tailwind.config.ts
-└─ tsconfig.json
-
-```

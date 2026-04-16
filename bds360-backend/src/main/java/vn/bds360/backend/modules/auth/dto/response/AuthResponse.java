@@ -8,7 +8,7 @@ import vn.bds360.backend.modules.user.dto.response.UserResponse;
 @Getter
 @Setter
 @AllArgsConstructor
-public class LoginResponse {
+public class AuthResponse {
     private String accessToken;
     private UserResponse user;
 }

@@ -2,113 +2,109 @@
 'use client';
 
 import { APP_ROUTES } from '@/config/routes';
+import { GENDER_OPTIONS } from '@/constants/gender.constant';
+import { useRegister } from '@/features/auth/api/auth.mutations';
+import { RegisterFormValues, registerSchema } from '@/features/auth/auth.schema';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { FacebookFilled, GoogleOutlined, LockOutlined, MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Divider, Form, Input, Select, Typography } from 'antd';
+import { useAuthStore } from '@/stores/auth.store';
+import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, Divider, Form, Input, Select, Typography, message } from 'antd';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Controller, useForm } from 'react-hook-form';
+import { GoogleAuthButton } from './google-auth.button';
 
 const { Title, Text } = Typography;
 
 export function RegisterForm() {
-    const {
-        colorBgContainer, colorText, colorTextSecondary, colorTextTertiary,
-        colorBorderSecondary, colorPrimary, borderRadius,
-        colorGoogle, colorFacebook
-    } = useAppTheme();
+    const { colorBgContainer, colorText, colorTextSecondary, colorTextTertiary, colorBorderSecondary, colorPrimary, borderRadius } = useAppTheme();
+    const router = useRouter();
+
+    const { control, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            name: '', email: '', password: '', confirmPassword: '', phone: '', gender: 'MALE' as any
+        },
+    });
+
+    const { mutate: registerMutation, isPending } = useRegister();
+
+    const setAuth = useAuthStore((state) => state.setAuth);
+
+    const onSubmit = (values: RegisterFormValues) => {
+        // console.log('✅ Đã chạy vào onSubmit!', values);
+        const { confirmPassword, ...payload } = values;
+        registerMutation(payload, {
+            onSuccess: (data) => {
+                setAuth(data.user, data.accessToken);
+                message.success('Đăng ký tài khoản thành công!');
+                router.push(APP_ROUTES.USER.DASH_BOARD);
+            }
+        });
+    };
 
     return (
-        <div
-            className="w-full max-w-[420px] p-8 shadow-2xl flex flex-col"
-            style={{ background: colorBgContainer, borderRadius: borderRadius * 1.5 }}
-        >
-            <div className="text-center mb-4">
-                <Title level={2} style={{ color: colorText, margin: 0, marginBottom: 8, fontWeight: 700 }}>
-                    Tạo tài khoản
-                </Title>
-                <Text style={{ color: colorTextSecondary }}>
-                    Đã có tài khoản?{' '}
-                    <Link href={APP_ROUTES.AUTH.LOGIN} style={{ color: colorPrimary, fontWeight: 500 }}>
-                        Đăng nhập
-                    </Link>
-                </Text>
+        <div className="w-full max-w-[500px] p-8 shadow-2xl flex flex-col" style={{ background: colorBgContainer, borderRadius: borderRadius * 1.5 }}>
+            <div className="text-center mb-2">
+                <Title level={2} style={{ color: colorText, margin: 0, marginBottom: 8, fontWeight: 700 }}>Tạo tài khoản</Title>
+                <Text style={{ color: colorTextSecondary }}>Đã có tài khoản? <Link href={APP_ROUTES.AUTH.LOGIN} style={{ color: colorPrimary, fontWeight: 500 }}>Đăng nhập</Link></Text>
             </div>
 
-            <Form layout="vertical" size="large">
-                <Form.Item
-                    label={<span style={{ color: colorTextSecondary, fontWeight: 500 }}>Họ và tên</span>}
-                    name="name"
-                    className="mb-5" // 👈 Thêm mb-5
-                >
-                    <Input prefix={<UserOutlined style={{ color: colorTextTertiary, marginRight: 8 }} />} placeholder="Nguyễn Văn A" />
-                </Form.Item>
+            {/* Thêm callback lỗi vào handleSubmit để dễ debug */}
+            <Form layout="vertical" size="large" onFinish={handleSubmit(onSubmit, (err) => console.log('❌ Lỗi Validation:', err))}>
 
-                <Form.Item
-                    label={<span style={{ color: colorTextSecondary, fontWeight: 500 }}>Email</span>}
-                    name="email"
-                    className="mb-5" // 👈 Thêm mb-5
-                >
-                    <Input prefix={<MailOutlined style={{ color: colorTextTertiary, marginRight: 8 }} />} placeholder="user@bds360.com" />
-                </Form.Item>
-
-                {/* Bọc 2 field này trong flex và margin-bottom để chúng không bị sát nhau */}
-                <div className="flex gap-4 mb-5">
-                    <Form.Item
-                        className="flex-1 mb-0"
-                        label={<span style={{ color: colorTextSecondary, fontWeight: 500 }}>Số điện thoại</span>}
-                        name="phone"
-                    >
-                        <Input prefix={<PhoneOutlined style={{ color: colorTextTertiary, marginRight: 8 }} />} placeholder="0912..." />
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                    <Form.Item className="flex-1 !mb-2 sm:!mb-4" label="Họ và tên" validateStatus={errors.name ? 'error' : ''} help={errors.name?.message}>
+                        <Controller name="name" control={control} render={({ field }) => (
+                            <Input {...field} prefix={<UserOutlined style={{ color: colorTextTertiary }} />} placeholder="Nguyễn Văn A" disabled={isPending} />
+                        )} />
                     </Form.Item>
 
-                    <Form.Item
-                        className="flex-[0.6] mb-0"
-                        label={<span style={{ color: colorTextSecondary, fontWeight: 500 }}>Giới tính</span>}
-                        name="gender"
-                    >
-                        <Select placeholder="Chọn">
-                            <Select.Option value="MALE">Nam</Select.Option>
-                            <Select.Option value="FEMALE">Nữ</Select.Option>
-                            <Select.Option value="OTHER">Khác</Select.Option>
-                        </Select>
+                    {/* 1. TRƯỜNG EMAIL PHẢI CÓ Ở ĐÂY 👇 */}
+                    <Form.Item className="flex-1 !mb-2 sm:!mb-4" label="Email" validateStatus={errors.email ? 'error' : ''} help={errors.email?.message}>
+                        <Controller name="email" control={control} render={({ field }) => (
+                            <Input {...field} prefix={<MailOutlined style={{ color: colorTextTertiary }} />} placeholder="user@bds360.com" disabled={isPending} />
+                        )} />
                     </Form.Item>
                 </div>
 
-                <Form.Item
-                    label={<span style={{ color: colorTextSecondary, fontWeight: 500 }}>Mật khẩu</span>}
-                    name="password"
-                    className="mb-6" // Thêm margin bự hơn một chút sát nút bấm
-                >
-                    <Input.Password prefix={<LockOutlined style={{ color: colorTextTertiary, marginRight: 8 }} />} placeholder="••••••••" />
+                <div className="flex gap-4">
+                    <Form.Item className="flex-1" label="Số điện thoại" validateStatus={errors.phone ? 'error' : ''} help={errors.phone?.message}>
+                        <Controller name="phone" control={control} render={({ field }) => (
+                            <Input {...field} prefix={<PhoneOutlined style={{ color: colorTextTertiary }} />} placeholder="0912..." disabled={isPending} />
+                        )} />
+                    </Form.Item>
+
+                    <Form.Item className="flex-[0.6]" label="Giới tính">
+                        <Controller name="gender" control={control} render={({ field }) => (
+                            < Select {...field} disabled={isPending} options={GENDER_OPTIONS} />
+                        )} />
+                    </Form.Item>
+                </div>
+
+
+                <Form.Item className="flex-1" label="Mật khẩu" validateStatus={errors.password ? 'error' : ''} help={errors.password?.message}>
+                    <Controller name="password" control={control} render={({ field }) => (
+                        <Input.Password {...field} prefix={<LockOutlined style={{ color: colorTextTertiary }} />} placeholder="••••••••" disabled={isPending} />
+                    )} />
                 </Form.Item>
 
-                <Form.Item className="mb-2">
-                    <Button type="primary" htmlType="submit" block style={{ fontWeight: 500 }} className="h-11">
-                        Đăng ký
-                    </Button>
+                <Form.Item className="flex-1 !mb-6" label="Xác nhận" validateStatus={errors.confirmPassword ? 'error' : ''} help={errors.confirmPassword?.message}>
+                    <Controller name="confirmPassword" control={control} render={({ field }) => (
+                        <Input.Password {...field} prefix={<LockOutlined style={{ color: colorTextTertiary }} />} placeholder="••••••••" disabled={isPending} />
+                    )} />
+                </Form.Item>
+
+                <Form.Item>
+                    <Button type="primary" htmlType="submit" block className="h-11" loading={isPending}>Đăng ký</Button>
                 </Form.Item>
             </Form>
 
-            <Divider style={{ color: colorTextTertiary, fontSize: 13, borderColor: colorBorderSecondary }} plain>
-                hoặc kết nối với
-            </Divider>
+            <Divider style={{ color: colorTextTertiary, fontSize: 13, borderColor: colorBorderSecondary, marginTop: 0, marginBottom: 18 }} plain>hoặc</Divider>
 
-            <div className="flex gap-4">
-                <Button
-                    block
-                    className="h-11"
-                    icon={<GoogleOutlined style={{ color: colorGoogle }} />} // 👈 Đã sửa thành Token
-                    style={{ color: colorTextSecondary, fontWeight: 500 }}
-                >
-                    Google
-                </Button>
-                <Button
-                    block
-                    className="h-11"
-                    icon={<FacebookFilled style={{ color: colorFacebook }} />} // 👈 Đã sửa thành Token
-                    style={{ color: colorTextSecondary, fontWeight: 500 }}
-                >
-                    Facebook
-                </Button>
+            <div className="flex flex-col gap-3">
+                <GoogleAuthButton />
             </div>
         </div>
     );
