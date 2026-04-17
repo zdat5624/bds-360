@@ -57,7 +57,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                 closable={false}
                 onClose={() => setIsMobileMenuOpen(false)}
                 open={isMobileMenuOpen}
-                width={300}
+                size="default" // hoặc "large"
                 styles={{ body: { padding: 0 } }}
             >
                 {sidebarContent}
@@ -79,7 +79,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                     )}
                 </div>
 
-                <Content className="p-6 md:px-10 md:py-6">
+                <Content className="p-2 md:px-4 md:py-6">
                     <div className="w-full">
                         {children}
                     </div>

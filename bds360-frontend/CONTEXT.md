@@ -7,7 +7,7 @@
 - lib/custom-fetch: Axios instance with Response Unwrapping logic.
 - Validation: Zod v4
 - Styling: Tailwind CSS + Antd design
-- Phong cách: SAAS
+- Phong cách: SAAS (Clean & Flat)
 
 **2. Architectural Philosophy:**
 - **Feature-Based Architecture:** Logic chia theo Domain.

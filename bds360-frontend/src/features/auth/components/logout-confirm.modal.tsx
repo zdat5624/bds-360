@@ -4,6 +4,7 @@
 import { ConfirmModal } from '@/components/base';
 import { APP_ROUTES } from '@/config/routes';
 import { useAuthStore } from '@/stores/auth.store';
+import { message } from 'antd';
 import { useRouter } from 'next/navigation';
 
 interface Props {
@@ -19,6 +20,7 @@ export function LogoutConfirmModal({ isOpen, onClose }: Props) {
         logout();
         onClose();
         router.push(APP_ROUTES.PUBLIC.HOME);
+        message.success('Đăng xuất thành công!');
     };
 
     return (

@@ -1,24 +1,28 @@
 // @/app/(main)/(account)/user/profile/page.tsx
 'use client';
 
+import { UpdateProfileForm } from '@/features/users';
 import { Divider, Typography } from 'antd';
 
 const { Title, Text } = Typography;
 
 export default function ProfilePage() {
   return (
+    // Khống chế độ rộng tối đa (max-w-4xl) để form không bị bè ra quá đà trên màn hình to
     <>
-      <div className="mb-6">
+      {/* --- HEADER TRANG --- */}
+      <div >
         <Title level={3} style={{ margin: 0 }}>Thông tin cá nhân</Title>
         <Text type="secondary">
-          Quản lý thông tin cá nhân và cách thức liên hệ của bạn.
+          Quản lý thông tin cá nhân, cách thức liên hệ và thiết lập hồ sơ của bạn.
         </Text>
       </div>
 
-      <Divider className="my-6" />
+      <Divider className="!my-4" />
 
-      <div className="min-h-[300px] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-400">
-        [ Component Form Hồ Sơ Sẽ Đặt Ở Đây ]
+      {/* --- KHU VỰC FORM (Trực tiếp, không viền, không hộp bao quanh) --- */}
+      <div className="max-w-4xl">
+        <UpdateProfileForm />
       </div>
     </>
   );

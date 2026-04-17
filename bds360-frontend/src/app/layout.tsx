@@ -3,9 +3,9 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import type { Metadata } from 'next';
 
 import { inter } from '@/config';
+import '@/styles/antd-overrides.css';
 import './globals.css';
 import { Providers } from './provider';
-
 export const metadata: Metadata = {
   title: 'BDS 360',
   description: 'Nền tảng đăng tin bất động sản',

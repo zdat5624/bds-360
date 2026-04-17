@@ -26,7 +26,7 @@ customFetch.interceptors.request.use(
         const token = authStorage.getToken();
 
         if (token && config.headers) {
-            console.debug('🔐 Đính kèm Token vào header Authorization: ', token);
+            // console.debug('🔐 Đính kèm Token vào header Authorization: ', token);
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -90,6 +90,13 @@ customFetch.interceptors.response.use(
                 message.error(errorMessage);
             }
         }
+
+        console.error('❌ API Error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: error.response?.status,
+            response: error.response?.data,
+        });
 
         // Trả về errorData để Zod/RHF có thể map hiển thị lỗi trực tiếp trên Form
         return Promise.reject(errorData || error);

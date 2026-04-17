@@ -7,4 +7,6 @@ export * from '@/features/users/api/user.queries';
 
 
 // @/features/users/index.ts
-export { ProfileSidebar } from './components/profile-sidebar';
+export { UpdateProfileForm } from './components/update-profile.form';
+export { UserInfo } from './components/user-info';
+

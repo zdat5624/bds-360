@@ -20,7 +20,7 @@ const { Header: AntdHeader } = Layout;
 const { Title, Text } = Typography;
 
 export function Header() {
-    const { colorPrimary, colorBgContainer, colorBorderSecondary, colorError, colorTextSecondary } = useAppTheme();
+    const { colorPrimary, colorBgContainer, colorBorderSecondary, colorError, colorTextSecondary, colorBgTextHover, colorText } = useAppTheme();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -71,7 +71,7 @@ export function Header() {
                     borderBottom: `1px solid ${colorBorderSecondary}`,
                     height: 55,
                 }}
-                className="sticky top-0 z-50 flex items-center justify-between px-2 md:px-4 shadow-sm"
+                className="sticky top-0 z-50 flex items-center justify-between !px-2 md:!px-4 shadow-sm"
             >
                 {/* ================= TRÁI: LOGO & MAIN NAV ================= */}
                 <div className="flex items-center gap-8 flex-1 h-full">
@@ -98,7 +98,14 @@ export function Header() {
                 {/* ================= PHẢI: AUTH ACTIONS (DESKTOP) ================= */}
                 <div className="hidden md:flex items-center gap-4 h-full">
                     {!isInitialized ? (
-                        <Skeleton.Avatar active size="medium" shape="circle" />
+                        // Dùng 1 Skeleton.Button duy nhất đại diện cho cả cụm
+                        <div className="flex items-center h-full">
+                            <Skeleton.Button
+                                active
+                                shape="default"
+                                style={{ display: 'block', width: 200, height: 32, minWidth: 0 }}
+                            />
+                        </div>
                     ) : !isAuthenticated ? (
                         <Space className="h-full">
                             <Link href={APP_ROUTES.AUTH.LOGIN}>
@@ -131,14 +138,32 @@ export function Header() {
                         </Space>
                     )}
                 </div>
-
                 {/* ================= MOBILE: HAMBURGER BUTTON ================= */}
-                <Button
+                {/* <Button
                     type="text"
-                    icon={<MenuOutlined className="text-xl" />}
+                    icon={<MenuOutlined className="text-xl !w-full !h-full" />}
                     className="md:!hidden flex items-center justify-center p-0"
                     onClick={() => setIsMobileMenuOpen(true)}
+                /> */}
+
+
+                <MenuOutlined
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    style={{
+                        fontSize: 20,
+                        color: colorText,
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = colorBgTextHover;
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                    }}
                 />
+
 
                 {/* ================= MOBILE: DRAWER ================= */}
                 <Drawer
@@ -155,7 +180,13 @@ export function Header() {
                     <div className="flex flex-col h-full">
                         <div className="py-2 border-b" style={{ borderColor: colorBorderSecondary, background: colorBgContainer }}>
                             {!isInitialized ? (
-                                <Skeleton active avatar paragraph={{ rows: 1 }} />
+                                // FIX: Thêm div bọc ngoài, cấu trúc y hệt UI thật để giữ nguyên Layout
+                                <div className="flex items-center gap-3 h-[40px]">
+                                    <Skeleton.Avatar active size="large" />
+                                    <div className="flex flex-col w-full gap-1">
+                                        <Skeleton.Button active size="small" style={{ width: '60%', height: 16 }} />
+                                    </div>
+                                </div>
                             ) : isAuthenticated ? (
                                 <div className="flex items-center gap-3">
                                     <Avatar size="large" src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} />

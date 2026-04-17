@@ -1,0 +1,7 @@
+/* @/styles/antd-overrides.css */
+
+.custom-table .ant-table-container {
+  border: 1px solid var(--table-border-color);
+  /* border-radius: 2px; */
+  overflow: hidden;
+}

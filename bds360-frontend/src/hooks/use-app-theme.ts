@@ -22,6 +22,7 @@ export function useAppTheme() {
         colorTextSecondary: token.colorTextSecondary, // Chữ phụ (Mô tả, Email, Caption)
         colorTextTertiary: token.colorTextTertiary,   // Chữ mờ (Placeholder, icon phụ)
         colorTextLightSolid: token.colorTextLightSolid, // Chữ trắng (Nằm trên nút Primary hoặc nền đậm)
+        colorBgTextHover: token.colorBgTextHover,
 
         // 3. Nhóm Màu Viền (Borders)
         colorBorder: token.colorBorder,                   // Viền tiêu chuẩn (Khung Input, Select)

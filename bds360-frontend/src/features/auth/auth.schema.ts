@@ -93,14 +93,18 @@ export const resetPasswordSchema = z.object({
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export const changePasswordSchema = z.object({
-    currentPassword: z.string({ error: 'Mật khẩu hiện tại không được để trống' })
-        .trim()
-        .min(1, { error: 'Mật khẩu hiện tại không được để trống' }),
+    currentPassword: z.string({ message: 'Vui lòng nhập mật khẩu hiện tại' })
+        .min(1, { message: 'Vui lòng nhập mật khẩu hiện tại' }),
 
-    newPassword: z.string({ error: 'Mật khẩu mới không được để trống' })
-        .trim()
-        .min(6, { error: 'Mật khẩu mới phải có ít nhất 6 ký tự' })
-        .max(100, { error: 'Mật khẩu mới không được vượt quá 100 ký tự' }),
+    newPassword: z.string({ message: 'Mật khẩu mới không được để trống' })
+        .min(6, { message: 'Mật khẩu mới phải có ít nhất 6 ký tự' })
+        .max(50, { message: 'Mật khẩu mới không được vượt quá 50 ký tự' }),
+
+    confirmPassword: z.string({ message: 'Vui lòng xác nhận mật khẩu mới' })
+        .min(1, { message: 'Vui lòng xác nhận mật khẩu mới' }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['confirmPassword'],
 });
 
 export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
