@@ -2,6 +2,7 @@
 
 import { GENDER_VALUES, USER_ROLE_VALUES } from '@/constants';
 import { z } from 'zod';
+import { VERIFICATION_STATUS_VALUES } from './users.constant';
 
 const phoneRegex = /^(\+84|0)[0-9]{9,10}$/;
 
@@ -86,3 +87,32 @@ export const updateProfileSchema = z.object({
 });
 
 export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
+
+
+
+export const submitVerificationSchema = z.object({
+    idCardFront: z.string({ message: 'Vui lòng tải lên mặt trước' })
+        .min(1, { message: 'Vui lòng cung cấp ảnh mặt trước CCCD/CMND' }),
+    idCardBack: z.string({ message: 'Vui lòng tải lên mặt sau' })
+        .min(1, { message: 'Vui lòng cung cấp ảnh mặt sau CCCD/CMND' }),
+});
+
+export type SubmitVerificationFormValues = z.infer<typeof submitVerificationSchema>;
+
+
+export const reviewVerificationSchema = z.object({
+    requestId: z.number(),
+    status: z.enum(VERIFICATION_STATUS_VALUES, { message: 'Trạng thái không hợp lệ' }),
+    note: z.string().trim().optional(),
+}).superRefine((data, ctx) => {
+    // Logic bắt buộc nhập lý do nếu từ chối
+    if (data.status === 'REJECTED' && (!data.note || data.note.length === 0)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Vui lòng nhập lý do từ chối',
+            path: ['note'], // Focus lỗi vào ô input note
+        });
+    }
+});
+
+export type ReviewVerificationFormValues = z.infer<typeof reviewVerificationSchema>;

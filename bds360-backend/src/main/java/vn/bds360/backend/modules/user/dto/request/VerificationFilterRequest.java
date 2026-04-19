@@ -10,7 +10,6 @@ import vn.bds360.backend.modules.user.constant.VerificationStatus;
 @Setter
 public class VerificationFilterRequest extends BaseFilterRequest {
 
-    // Lọc theo trạng thái hồ sơ (Ví dụ: Chỉ xem các đơn đang PENDING)
     private VerificationStatus status;
 
     // Tìm kiếm tương đối (LIKE) theo tên hoặc email của người dùng nộp đơn

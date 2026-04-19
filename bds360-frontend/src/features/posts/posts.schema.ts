@@ -78,3 +78,49 @@ export const updatePostStatusSchema = z.object({
 });
 
 export type UpdatePostStatusFormValues = z.infer<typeof updatePostStatusSchema>;
+
+
+// @/features/posts/posts.schema.ts
+
+export const updatePostSchema = z.object({
+    id: z.number({ message: 'ID không hợp lệ' }),
+
+    title: z.string({ message: 'Tiêu đề không được để trống' })
+        .trim()
+        .min(1, { message: 'Tiêu đề không được để trống' })
+        .max(255, { message: 'Tiêu đề không được quá 255 ký tự' }),
+
+    description: z.string({ message: 'Mô tả không được để trống' })
+        .trim()
+        .min(1, { message: 'Mô tả không được để trống' }),
+
+    type: z.enum(LISTING_TYPE_VALUES, {
+        message: 'Loại tin đăng không được để trống hoặc không hợp lệ'
+    }),
+
+    price: z.coerce.number({ message: 'Giá phải là số' })
+        .min(0, { message: 'Giá phải lớn hoặc bằng 0' }),
+
+    area: z.coerce.number({ message: 'Diện tích phải là số' })
+        .min(0.1, { message: 'Diện tích phải lớn hơn 0' }),
+
+    categoryId: z.coerce.number({ message: 'Danh mục không được để trống' }),
+    provinceCode: z.coerce.number({ message: 'Tỉnh/Thành phố không được để trống' }),
+    districtCode: z.coerce.number({ message: 'Quận/Huyện không được để trống' }),
+    wardCode: z.coerce.number().optional(),
+
+    streetAddress: z.string({ message: 'Địa chỉ không được để trống' })
+        .trim()
+        .min(1, { message: 'Địa chỉ không được để trống' }),
+
+    // Thêm tọa độ (có thể chỉnh sửa trên Map)
+    latitude: z.coerce.number().optional(),
+    longitude: z.coerce.number().optional(),
+
+    imageUrls: z.array(z.string(), { message: 'Danh sách ảnh không hợp lệ' })
+        .min(1, { message: 'Phải có ít nhất 1 ảnh' }),
+
+    listingDetail: listingDetailSchema.optional(),
+});
+
+export type UpdatePostFormValues = z.infer<typeof updatePostSchema>;

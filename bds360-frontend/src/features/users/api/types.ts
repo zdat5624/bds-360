@@ -3,6 +3,7 @@
 import { BaseFilterParams } from '@/types';
 
 import { Gender, Role } from '@/constants';
+import { VerificationStatus } from '../users.constant';
 
 
 
@@ -46,4 +47,39 @@ export interface UserFilterParams extends BaseFilterParams {
     address?: string;
     createdFrom?: string;
     createdTo?: string;
+}
+
+
+// ==========================================
+// THÊM MỚI: TYPES CHO VERIFICATION
+// ==========================================
+
+export interface VerificationSubmission {
+    id: number;
+    userId: number;
+    userName: string;
+    userEmail: string;
+    idCardFront: string;
+    idCardBack: string;
+    status: VerificationStatus;
+    reviewNote?: string;
+    createdAt: string;
+    reviewedAt?: string;
+    reviewedBy?: string;
+}
+
+export interface SubmitVerificationPayload {
+    idCardFront: string;
+    idCardBack: string;
+}
+
+export interface ReviewVerificationPayload {
+    requestId: number;
+    status: VerificationStatus;
+    note?: string;
+}
+
+export interface VerificationFilterParams extends BaseFilterParams {
+    status?: VerificationStatus;
+    search?: string;
 }

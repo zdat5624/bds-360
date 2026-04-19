@@ -70,6 +70,10 @@ public class SecurityConfiguration {
 
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/v1/posts",
+                                        "/api/v1/posts/for-you",
+
+                                        "/api/v1/posts/{id}/related",
+
                                         "/api/v1/posts/{id}",
                                         "/api/v1/vips",
                                         "/api/v1/categories",

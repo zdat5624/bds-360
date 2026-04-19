@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.NotificationType;
 import vn.bds360.backend.common.constant.Role;
+import vn.bds360.backend.common.dto.request.BaseFilterRequest;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -29,14 +30,18 @@ import vn.bds360.backend.modules.notification.service.NotificationService;
 import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
+import vn.bds360.backend.modules.post.dto.request.RelatedPostRequest;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.ListingDetail;
 import vn.bds360.backend.modules.post.entity.Post;
+import vn.bds360.backend.modules.post.entity.PostViewHistory;
 import vn.bds360.backend.modules.post.mapper.PostMapper;
 import vn.bds360.backend.modules.post.repository.ImageRepository;
 import vn.bds360.backend.modules.post.repository.PostRepository;
+import vn.bds360.backend.modules.post.repository.PostViewHistoryRepository;
+import vn.bds360.backend.modules.post.specification.ForYouSpecification;
 import vn.bds360.backend.modules.post.specification.PostSpecification;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.constant.TransactionType;
@@ -61,6 +66,8 @@ public class PostService {
     private final ProvinceRepository provinceRepository;
     private final DistrictRepository districtRepository;
     private final WardRepository wardRepository;
+
+    private final PostViewHistoryRepository postViewHistoryRepository;
 
     @Transactional
     public PostResponse createPost(User user, PostCreateRequest request) {
@@ -144,7 +151,7 @@ public class PostService {
             throw new AppException(ErrorCode.POST_STATUS_INVALID);
         }
 
-        // 1. Map các trường cơ bản
+        // 1. Map các trường cơ bản và ID (categoryId, provinceCode...)
         postMapper.updateEntityFromRequest(request, post);
 
         // 2. Xử lý an toàn cho ListingDetail
@@ -162,24 +169,30 @@ public class PostService {
             post.getListingDetail().setFurnishing(request.getListingDetail().getFurnishing());
         }
 
-        if (request.getCategory() != null) {
-            post.setCategory(request.getCategory());
-        }
-
-        // Gán mã địa chỉ tạm từ request nếu có, sau đó gọi hàm validate chung
-        if (request.getProvince() != null)
-            post.setProvince(request.getProvince());
-        if (request.getDistrict() != null)
-            post.setDistrict(request.getDistrict());
-        if (request.getWard() != null)
-            post.setWard(request.getWard());
-
-        // 3. Validate và gán lại Entity Địa chỉ
+        // 3. Validate và load lại toàn bộ Entity Địa chỉ từ các Code
         validateAndSetAddress(post);
 
+        // 4. Geocoding (Nếu user không truyền tọa độ lên, sẽ tự động sinh lại)
         if (request.getLatitude() == null || request.getLongitude() == null) {
             handleGeocoding(post);
         }
+
+        // 5. 🌟 Xử lý cập nhật Hình ảnh
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            post.getImages().clear(); // Xóa sạch list cũ, orphanRemoval sẽ tự delete trong DB
+
+            List<Image> newImages = new ArrayList<>();
+            for (int i = 0; i < request.getImageUrls().size(); i++) {
+                Image img = new Image();
+                img.setUrl(request.getImageUrls().get(i));
+                img.setOrderIndex(i);
+                img.setPost(post);
+                newImages.add(img);
+            }
+            post.getImages().addAll(newImages); // Thêm list mới vào
+        }
+
+        post.setStatus(PostStatus.REVIEW_LATER);
 
         return postMapper.toResponse(postRepository.save(post));
     }
@@ -236,21 +249,30 @@ public class PostService {
     }
 
     @Transactional
-    public void deletePost(User user, Long postId, boolean isAdminDelete) {
+    public void deletePost(User user, Long postId, boolean isSystemDelete) { // Đổi tên biến cho rõ nghĩa
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        if (!user.getRole().equals(Role.ADMIN) && !post.getUser().getId().equals(user.getId())) {
+        // 🌟 SỬA ĐỔI LOGIC PHÂN QUYỀN TẠI ĐÂY
+        boolean hasSystemRole = user.getRole().equals(Role.ADMIN) || user.getRole().equals(Role.MODERATOR);
+        boolean isOwner = post.getUser().getId().equals(user.getId());
+
+        // Nếu không phải là Admin/Mod VÀ cũng không phải là chủ bài viết -> Báo lỗi
+        if (!hasSystemRole && !isOwner) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        if (isAdminDelete) {
+        // Nếu là lệnh xóa từ hệ thống (qua Controller /manage)
+        if (isSystemDelete) {
+            // Có thể chặn Mod không được xóa vĩnh viễn (Hard delete) mà chỉ Admin mới được,
+            // hoặc cho phép cả hai. Dưới đây là cho phép cả hai.
             notificationService.createNotification(post.getUser().getId(),
-                    "Tin đăng mã " + post.getId() + " đã bị quản trị viên xóa.",
+                    "Tin đăng mã " + post.getId() + " đã bị gỡ bỏ bởi quản trị viên/kiểm duyệt viên.",
                     NotificationType.POST);
             postRepository.delete(post); // Hard delete
         } else {
-            post.setDeletedByUser(true); // Soft delete
+            // Lệnh xóa từ người dùng (Soft delete)
+            post.setDeletedByUser(true);
             postRepository.save(post);
         }
     }
@@ -309,4 +331,145 @@ public class PostService {
         var page = postRepository.findAll(spec, pageable);
         return PageResponse.of(page.map(postMapper::toResponse));
     }
+
+    public PageResponse<PostResponse> getRelatedPosts(Long currentPostId, RelatedPostRequest request) {
+        Post currentPost = postRepository.findById(currentPostId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        int pageSize = (request.getSize() != null && request.getSize() > 0) ? request.getSize() : 5;
+        List<Long> excludes = request.getExcludeIds() != null ? new ArrayList<>(request.getExcludeIds())
+                : new ArrayList<>();
+        if (!excludes.contains(currentPostId)) {
+            excludes.add(currentPostId);
+        }
+
+        // Cấu hình Sort mặc định: VIP giảm dần -> Mới nhất
+        Sort sort = Sort.by(Sort.Direction.DESC, "vip.vipLevel")
+                .and(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Post> finalPosts = new ArrayList<>();
+
+        // =========================================
+        // LẦN 1: TÌM KIẾM NGẶT NGHÈO (Cùng Danh mục + Cùng Tỉnh)
+        // =========================================
+        PostFilterRequest filter1 = new PostFilterRequest();
+        filter1.setType(currentPost.getType());
+        filter1.setCategoryId(currentPost.getCategory().getId());
+        filter1.setProvinceCode(currentPost.getProvince().getCode());
+        filter1.setIsApprovedOnly(true);
+        filter1.setIsDeleteByUser(false);
+
+        var spec1 = PostSpecification.filterBy(filter1)
+                .and((root, query, cb) -> cb.not(root.get("id").in(excludes)));
+
+        List<Post> tier1Posts = postRepository.findAll(spec1, PageRequest.of(0, pageSize, sort)).getContent();
+        finalPosts.addAll(tier1Posts);
+
+        // Cập nhật lại mảng loại trừ để Lần 2 không bị trùng bài của Lần 1
+        tier1Posts.forEach(p -> excludes.add(p.getId()));
+
+        // =========================================
+        // LẦN 2: NỚI LỎNG (Cùng Danh mục, BẤT KỲ Tỉnh nào)
+        // =========================================
+        if (finalPosts.size() < pageSize) {
+            int missingCount = pageSize - finalPosts.size();
+
+            PostFilterRequest filter2 = new PostFilterRequest();
+            filter2.setType(currentPost.getType());
+            filter2.setCategoryId(currentPost.getCategory().getId()); // Giữ danh mục, bỏ Tỉnh
+            filter2.setIsApprovedOnly(true);
+            filter2.setIsDeleteByUser(false);
+
+            var spec2 = PostSpecification.filterBy(filter2)
+                    .and((root, query, cb) -> cb.not(root.get("id").in(excludes)));
+
+            List<Post> tier2Posts = postRepository.findAll(spec2, PageRequest.of(0, missingCount, sort)).getContent();
+            finalPosts.addAll(tier2Posts);
+            tier2Posts.forEach(p -> excludes.add(p.getId()));
+        }
+
+        // =========================================
+        // LẦN 3: VÉT ĐÁY (Chỉ cần Cùng Bán hoặc Cùng Thuê)
+        // =========================================
+        if (finalPosts.size() < pageSize) {
+            int missingCount = pageSize - finalPosts.size();
+
+            PostFilterRequest filter3 = new PostFilterRequest();
+            filter3.setType(currentPost.getType()); // Chỉ giữ lại loại hình (SALE/RENT)
+            filter3.setIsApprovedOnly(true);
+            filter3.setIsDeleteByUser(false);
+
+            var spec3 = PostSpecification.filterBy(filter3)
+                    .and((root, query, cb) -> cb.not(root.get("id").in(excludes)));
+
+            List<Post> tier3Posts = postRepository.findAll(spec3, PageRequest.of(0, missingCount, sort)).getContent();
+            finalPosts.addAll(tier3Posts);
+        }
+
+        // Map list cuối cùng sang DTO
+        List<PostResponse> responseList = finalPosts.stream().map(postMapper::toResponse).toList();
+
+        // Thường tin tương tự ta chỉ lấy List (không cần phân trang sâu), nên ta giả
+        // lập một Page
+        var pageImpl = new org.springframework.data.domain.PageImpl<>(responseList, PageRequest.of(0, pageSize),
+                responseList.size());
+
+        return PageResponse.of(pageImpl);
+    }
+
+    public PageResponse<PostResponse> getForYouPosts(User user, BaseFilterRequest request) {
+        int pageSize = (request.getSize() != null && request.getSize() > 0) ? request.getSize() : 10;
+
+        List<Long> prefCategoryIds = new ArrayList<>();
+        List<Long> prefProvinceCodes = new ArrayList<>();
+        List<Long> excludes = new ArrayList<>();
+
+        // 1. Phân tích "Sở thích" (Preferences) nếu user đã đăng nhập
+        if (user != null) {
+            List<PostViewHistory> history = postViewHistoryRepository.findRecentHistoryByUser(user);
+            for (PostViewHistory h : history) {
+                prefCategoryIds.add(h.getPost().getCategory().getId());
+                prefProvinceCodes.add(h.getPost().getProvince().getCode());
+                excludes.add(h.getPost().getId()); // Tránh gợi ý lại đúng tin họ vừa xem
+            }
+        }
+
+        // Cấu hình Sort mặc định: VIP giảm dần -> Mới nhất
+        Sort sort = Sort.by(Sort.Direction.DESC, "vip.vipLevel")
+                .and(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Post> finalPosts = new ArrayList<>();
+
+        // =========================================
+        // TIER 1: CÁ NHÂN HÓA (Dùng ForYouSpecification)
+        // =========================================
+        if (user != null && (!prefCategoryIds.isEmpty() || !prefProvinceCodes.isEmpty())) {
+            var spec1 = ForYouSpecification.buildTier1Spec(user.getId(), prefCategoryIds, prefProvinceCodes, excludes);
+
+            List<Post> tier1Posts = postRepository.findAll(spec1, PageRequest.of(0, pageSize, sort)).getContent();
+            finalPosts.addAll(tier1Posts);
+            tier1Posts.forEach(p -> excludes.add(p.getId())); // Cập nhật excludes cho Tier 2
+        }
+
+        // =========================================
+        // TIER 2: VÉT ĐÁY (Dùng ForYouSpecification)
+        // =========================================
+        if (finalPosts.size() < pageSize) {
+            int missingCount = pageSize - finalPosts.size();
+            Long currentUserId = (user != null) ? user.getId() : null;
+
+            var spec2 = ForYouSpecification.buildTier2Spec(currentUserId, excludes);
+
+            List<Post> tier2Posts = postRepository.findAll(spec2, PageRequest.of(0, missingCount, sort)).getContent();
+            finalPosts.addAll(tier2Posts);
+        }
+
+        // 3. Map list cuối cùng sang DTO và trả về
+        List<PostResponse> responseList = finalPosts.stream().map(postMapper::toResponse).toList();
+        var pageImpl = new org.springframework.data.domain.PageImpl<>(
+                responseList, PageRequest.of(0, pageSize), responseList.size());
+
+        return PageResponse.of(pageImpl);
+    }
+
 }

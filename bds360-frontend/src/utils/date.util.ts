@@ -13,6 +13,8 @@ dayjs.locale('vi'); // Set ngôn ngữ mặc định là tiếng Việt
 export const DATE_FORMAT = {
     DEFAULT: 'DD/MM/YYYY',
     FULL_TIME: 'HH:mm DD/MM/YYYY',
+    SHORT_DATE: 'DD/MM',
+    MONTH_YEAR: 'MM/YYYY',
 };
 
 /**

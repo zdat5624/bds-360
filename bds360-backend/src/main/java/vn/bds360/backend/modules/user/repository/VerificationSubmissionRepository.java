@@ -3,6 +3,8 @@ package vn.bds360.backend.modules.user.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -16,4 +18,9 @@ public interface VerificationSubmissionRepository extends // 🌟 Đổi tên in
     boolean existsByUserIdAndStatus(Long userId, VerificationStatus status);
 
     Optional<VerificationSubmission> findTopByUserIdOrderByCreatedAtDesc(Long userId);
+
+    Page<VerificationSubmission> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    Optional<VerificationSubmission> findTopByUserIdAndStatusOrderByCreatedAtDesc(Long userId,
+            VerificationStatus status);
 }

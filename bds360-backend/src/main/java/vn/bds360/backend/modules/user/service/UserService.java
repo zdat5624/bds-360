@@ -74,9 +74,10 @@ public class UserService {
         User currentUser = handleGetUserByUserName(email);
 
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        boolean isModerator = currentUser.getRole().equals(Role.MODERATOR); // Thêm quyền Mod
         boolean isOwner = currentUser.getId() == targetUserId;
 
-        if (!isAdmin && !isOwner) {
+        if (!isAdmin && !isModerator && !isOwner) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 

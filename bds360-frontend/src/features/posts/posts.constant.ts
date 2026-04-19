@@ -64,13 +64,34 @@ export const POST_STATUS_VALUES = [
     'APPROVED',
     'REJECTED',
     'EXPIRED',
+    'BLOCKED', // 🌟 Bổ sung để khớp với BE
 ] as const;
 
 export type PostStatus = (typeof POST_STATUS_VALUES)[number];
 
-export const POST_STATUS_OPTIONS = Object.fromEntries(
-    POST_STATUS_VALUES.map((item) => [item, item])
-) as Record<PostStatus, PostStatus>;
+// Thay đổi cách định nghĩa OPTIONS để có Label tiếng Việt cho UI
+export const POST_STATUS_LABEL: Record<PostStatus, string> = {
+    PENDING: 'Chờ duyệt',
+    REVIEW_LATER: 'Xem xét sau',
+    APPROVED: 'Đang hiển thị',
+    REJECTED: 'Bị từ chối',
+    EXPIRED: 'Hết hạn',
+    BLOCKED: 'Bị khóa/Vi phạm',
+};
+
+export const POST_STATUS_COLOR: Record<PostStatus, string> = {
+    APPROVED: 'success',     // Xanh lá
+    PENDING: 'warning',      // Vàng cam
+    REVIEW_LATER: 'processing', // Xanh dương
+    REJECTED: 'error',       // Đỏ
+    BLOCKED: 'error',        // Đỏ
+    EXPIRED: 'default',      // Xám
+};
+
+export const POST_STATUS_OPTIONS = POST_STATUS_VALUES.map((status) => ({
+    value: status,
+    label: POST_STATUS_LABEL[status],
+}));
 
 
 export const SAVED_POST_SORT_OPTIONS = [

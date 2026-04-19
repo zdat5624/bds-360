@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
+import vn.bds360.backend.common.dto.request.BaseFilterRequest;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.modules.user.dto.request.ReviewVerificationRequest;
@@ -61,6 +62,16 @@ public class VerificationController {
         return ApiResponse.success(null, "Đã xử lý hồ sơ xác thực.");
     }
 
+    // 🌟 API đã được cập nhật để gọi logic "Smart Latest" của bạn
+    @GetMapping("/manage/verification-requests/users/{userId}/latest")
+    @ResponseStatus(HttpStatus.OK)
+    @IsAdminOrModerator
+    public ApiResponse<VerificationResponse> getLatestVerification(@PathVariable Long userId) {
+        return ApiResponse.success(
+                verificationService.getLatestVerificationInfo(userId), // 👈 Đã đổi tên hàm ở đây
+                "Lấy hồ sơ xác thực mới nhất thành công");
+    }
+
     // ==========================================
     // NHÓM API DÀNH CHO NGƯỜI DÙNG (USER)
     // ==========================================
@@ -73,5 +84,17 @@ public class VerificationController {
             @Valid @RequestBody SubmitVerificationRequest request) {
         verificationService.submitRequest(user.getEmail(), request);
         return ApiResponse.success(null, "Đã gửi yêu cầu xác thực. Vui lòng chờ hệ thống kiểm duyệt.");
+    }
+
+    @GetMapping("/users/verification/history")
+    @ResponseStatus(HttpStatus.OK)
+    @RequireLogin
+    public ApiResponse<PageResponse<VerificationResponse>> getMyVerificationHistory(
+            @CurrentUser User user,
+            @Valid @ModelAttribute BaseFilterRequest filter) {
+
+        return ApiResponse.success(
+                verificationService.getMyVerificationHistory(user.getId(), filter),
+                "Lấy lịch sử xác thực thành công");
     }
 }

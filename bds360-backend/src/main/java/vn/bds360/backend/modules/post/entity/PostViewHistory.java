@@ -48,6 +48,9 @@ public class PostViewHistory {
 
     @PrePersist
     public void prePersist() {
-        this.viewedAt = Instant.now();
+        // Chỉ gán nếu chưa được set thủ công (giúp logic Seed hoạt động)
+        if (this.viewedAt == null) {
+            this.viewedAt = Instant.now();
+        }
     }
 }

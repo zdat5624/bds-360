@@ -49,6 +49,9 @@ public class SavedPost {
 
     @PrePersist
     public void prePersist() {
-        this.savedAt = Instant.now();
+
+        if (this.savedAt == null) {
+            this.savedAt = Instant.now();
+        }
     }
 }

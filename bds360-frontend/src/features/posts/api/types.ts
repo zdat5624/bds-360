@@ -96,6 +96,8 @@ export interface PostCreatePayload {
     numberOfDays: number;
 }
 
+// @/features/posts/api/types.ts
+
 export interface PostUpdatePayload {
     id: number;
     title: string;
@@ -103,15 +105,19 @@ export interface PostUpdatePayload {
     type: ListingType;
     price: number;
     area: number;
+
+    // 🌟 SỬA LẠI THÀNH CÁC TRƯỜNG PHẲNG (FLAT) GIỐNG CREATE PAYLOAD
+    categoryId: number;
+    provinceCode: number;
+    districtCode: number;
+    wardCode?: number;
     streetAddress: string;
     latitude?: number;
     longitude?: number;
-    // Payload dựa theo class Entity lồng nhau của Java
-    province?: { code: number };
-    district?: { code: number };
-    ward?: { code: number };
-    category?: { id: number };
-    images?: { url: string; orderIndex: number }[];
+
+    // 🌟 SỬA LẠI ẢNH THÀNH MẢNG STRING
+    imageUrls: string[];
+
     listingDetail?: ListingDetailPayload;
 }
 

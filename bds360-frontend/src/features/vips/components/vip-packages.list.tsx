@@ -2,6 +2,7 @@
 'use client';
 
 import { APP_ROUTES } from '@/config/routes';
+import { VIP_PACKAGES } from '@/constants';
 import { useGetVips } from '@/features/vips/api/vips.queries';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useAuthStore } from '@/stores/auth.store';
@@ -9,7 +10,6 @@ import { formatCurrency } from '@/utils';
 import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 import { Button, Card, Col, Row, Skeleton, Tag, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
-import { VIP_PACKAGES } from '../vips.constant';
 
 const { Title, Text } = Typography;
 

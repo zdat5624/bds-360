@@ -16,10 +16,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
+import vn.bds360.backend.common.dto.request.BaseFilterRequest;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
+import vn.bds360.backend.modules.post.dto.request.RelatedPostRequest;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.service.PostService;
@@ -89,6 +91,24 @@ public class PostController {
     public ApiResponse<PostResponse> getPostById(@CurrentUser User user, @PathVariable Long id) {
         // user có thể null nếu public user gọi, Service sẽ tự handle
         return ApiResponse.success(postService.getPostById(user, id), "Lấy chi tiết tin đăng thành công");
+    }
+
+    @GetMapping("/{id}/related")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PageResponse<PostResponse>> getRelatedPosts(
+            @PathVariable Long id,
+            @Valid RelatedPostRequest request) {
+        return ApiResponse.success(postService.getRelatedPosts(id, request), "Lấy danh sách tin tương tự thành công");
+    }
+
+    @GetMapping("/for-you")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PageResponse<PostResponse>> getForYouPosts(
+            @CurrentUser User user,
+            @Valid BaseFilterRequest request) { // Tái sử dụng BaseFilterRequest để lấy page/size
+
+        return ApiResponse.success(postService.getForYouPosts(user, request),
+                "Lấy danh sách tin dành cho bạn thành công");
     }
 
 }

@@ -28,8 +28,8 @@ import vn.bds360.backend.modules.user.constant.VerificationStatus;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "verification_submissions") // 🌟 Đổi tên table trong database
-public class VerificationSubmission { // 🌟 Đổi tên Entity
+@Table(name = "verification_submissions")
+public class VerificationSubmission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,10 +39,10 @@ public class VerificationSubmission { // 🌟 Đổi tên Entity
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String idCardFront;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String idCardBack;
 
     @Enumerated(EnumType.STRING)

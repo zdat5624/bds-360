@@ -1,8 +1,8 @@
-// @/features/vips/vips.constant.ts
+// @/constants/vip-packages.constant.ts
 
 export const VIP_PACKAGES = [
     {
-        id: 'VIP_0',
+        id: 1,
         name: 'Gói Tiêu Chuẩn',
         price: 'Miễn phí',
         features: [
@@ -16,7 +16,7 @@ export const VIP_PACKAGES = [
         isPopular: false,
     },
     {
-        id: 'VIP_1',
+        id: 2,
         name: 'Gói VIP 1',
         price: '2.000đ / ngày',
         features: [
@@ -30,7 +30,7 @@ export const VIP_PACKAGES = [
         isPopular: true,
     },
     {
-        id: 'VIP_2',
+        id: 3,
         name: 'Gói VIP 2',
         price: '4.000đ / ngày',
         features: [

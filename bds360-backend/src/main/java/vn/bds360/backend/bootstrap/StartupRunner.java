@@ -4,9 +4,11 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
@@ -41,15 +43,22 @@ import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.ListingDetail;
 import vn.bds360.backend.modules.post.entity.Post;
+import vn.bds360.backend.modules.post.entity.PostViewHistory;
+import vn.bds360.backend.modules.post.entity.SavedPost;
 import vn.bds360.backend.modules.post.repository.PostRepository;
+import vn.bds360.backend.modules.post.repository.PostViewHistoryRepository;
+import vn.bds360.backend.modules.post.repository.SavedPostRepository;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.constant.TransactionType;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.transaction.util.VnPayUtil;
 import vn.bds360.backend.modules.user.constant.Gender;
+import vn.bds360.backend.modules.user.constant.VerificationStatus;
 import vn.bds360.backend.modules.user.entity.User;
+import vn.bds360.backend.modules.user.entity.VerificationSubmission;
 import vn.bds360.backend.modules.user.repository.UserRepository;
+import vn.bds360.backend.modules.user.repository.VerificationSubmissionRepository;
 import vn.bds360.backend.modules.user.service.UserService;
 import vn.bds360.backend.modules.vip.entity.Vip;
 import vn.bds360.backend.modules.vip.repository.VipRepository;
@@ -70,6 +79,11 @@ public class StartupRunner implements CommandLineRunner {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final MapboxGeocodeService mapboxGeocodeService;
+
+    private final PostViewHistoryRepository postViewHistoryRepository;
+    private final SavedPostRepository savedPostRepository;
+
+    private final VerificationSubmissionRepository verificationRepo;
     // private final VnPayProperties vnPayProperties;
     private final AppProperties appProperties;
 
@@ -122,6 +136,8 @@ public class StartupRunner implements CommandLineRunner {
 
         initSamplePosts();
 
+        initSampleInteractions();
+
         initSampleTransactions();
 
         initSampleNotifications();
@@ -131,40 +147,111 @@ public class StartupRunner implements CommandLineRunner {
     }
 
     private void initSampleUsers() {
+        if (userRepository.count() > 1)
+            return; // Tránh seed đè dữ liệu
+
         List<User> userList = new ArrayList<>();
+        String password = passwordEncoder.encode("123456");
 
-        // Thêm user admin mẫu
-        User adminUser = new User();
-        adminUser.setEmail("admin@gmail.com");
-        adminUser.setName("Quản trị viên");
-        adminUser.setPassword(this.passwordEncoder.encode("123456"));
-        adminUser.setRole(Role.ADMIN);
-        adminUser.setGender(Gender.MALE);
-        adminUser.setBalance(999999999L);
-        adminUser.setPhone("0123456789");
-        adminUser.setAddress("Thành Phố Hồ Chí Minh");
-        userList.add(adminUser);
+        // 1. Tạo Admin
+        User admin = new User();
+        admin.setEmail("admin@gmail.com");
+        admin.setName("Quản trị viên");
+        admin.setPassword(password);
+        admin.setRole(Role.ADMIN);
+        admin.setGender(Gender.MALE);
+        admin.setAvatar("https://randomuser.me/api/portraits/men/97.jpg");
 
-        // Tạo 100 user mẫu với thông tin ngẫu nhiên
+        admin.setBalance(1000000000L);
+        admin.setPhone("0123456789");
+        admin.setAddress("TP. Hồ Chí Minh");
+        userList.add(admin);
+
+        // 2. Tạo 50 Users ngẫu nhiên
         for (int i = 1; i <= 50; i++) {
             User user = new User();
             user.setEmail("user" + i + "@gmail.com");
-            user.setName("TestUser" + i);
-            user.setPassword(this.passwordEncoder.encode("123456"));
+            user.setName(i % 2 == 0 ? "Nguyễn Văn " + i : "Trần Thị " + i);
+            user.setPassword(password);
             user.setRole(Role.USER);
-            user.setGender(i % 2 == 0 ? Gender.MALE : Gender.FEMALE);
-            user.setBalance(1000000L * i); // Số dư tăng dần
-            user.setPhone("01234567" + String.format("%02d", i));
-            user.setAddress(i % 2 == 0 ? "Thành Phố Hồ Chí Minh" : "Thành Phố Hà Nội");
+
+            // Logic giới tính
+            Gender gender = (i % 2 == 0) ? Gender.MALE : Gender.FEMALE;
+            user.setGender(gender);
+
+            String genderApiDir = (gender == Gender.MALE) ? "men" : "women";
+            user.setAvatar("https://randomuser.me/api/portraits/" + genderApiDir + "/" + i + ".jpg");
+
+            user.setBalance(500000L * i);
+            user.setPhone("090" + String.format("%07d", i));
+            user.setAddress(i % 3 == 0 ? "Hà Nội" : (i % 3 == 1 ? "Đà Nẵng" : "TP. Hồ Chí Minh"));
+
             userList.add(user);
         }
 
-        for (User user : userList) {
-            boolean isEmailExist = this.userService.isEmailExist(user.getEmail());
-            if (!isEmailExist) {
-                this.userService.saveInternalUser(user);
+        userRepository.saveAll(userList);
+
+        // 3. Seed dữ liệu hồ sơ xác thực (Verification Submissions)
+        seedVerificationSubmissions(userList);
+    }
+
+    private void seedVerificationSubmissions(List<User> users) {
+        List<VerificationSubmission> submissions = new ArrayList<>();
+        Instant now = Instant.now();
+
+        for (int i = 0; i < Math.min(users.size(), 20); i++) { // Tăng lên 20 user cho data dày
+            User user = users.get(i);
+
+            // Mặc định ban đầu là false (đề phòng)
+            user.setIsVerified(false);
+
+            if (i % 3 == 0) {
+                // CASE 1: Có đơn APPROVED -> BẮT BUỘC setVerified(true)
+                submissions.add(createSub(user, VerificationStatus.REJECTED, "Ảnh mờ", now.minusSeconds(86400 * 3)));
+                submissions.add(createSub(user, VerificationStatus.APPROVED, "Ok", now.minusSeconds(86400 * 1)));
+
+                user.setIsVerified(true);
+            } else if (i % 3 == 1) {
+                // CASE 2: Chỉ có REJECTED và PENDING -> isVerified phải là false
+                submissions.add(
+                        createSub(user, VerificationStatus.REJECTED, "Sai định dạng", now.minusSeconds(86400 * 2)));
+                submissions.add(createSub(user, VerificationStatus.PENDING, null, now.minusSeconds(3600)));
+
+                user.setIsVerified(false);
+            } else {
+                // CASE 3: Đang chờ duyệt lần đầu -> isVerified phải là false
+                submissions.add(createSub(user, VerificationStatus.PENDING, null, now.minusSeconds(7200)));
+
+                user.setIsVerified(false);
             }
         }
+
+        // Lưu lại User sau khi đã cập nhật isVerified chính xác theo hồ sơ
+        userRepository.saveAll(users.subList(0, Math.min(users.size(), 20)));
+        verificationRepo.saveAll(submissions);
+    }
+
+    // Hàm helper để tạo object submission nhanh gọn
+    private VerificationSubmission createSub(User user, VerificationStatus status, String note, Instant createdAt) {
+        VerificationSubmission sub = VerificationSubmission.builder()
+                .user(user)
+                .idCardFront(
+                        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/C%C4%83n_c%C6%B0%E1%BB%9Bc_c%C3%B4ng_d%C3%A2n_g%E1%BA%AFn_ch%C3%ADp_m%E1%BA%B7t_tr%C6%B0%E1%BB%9Bc.jpg/960px-C%C4%83n_c%C6%B0%E1%BB%9Bc_c%C3%B4ng_d%C3%A2n_g%E1%BA%AFn_ch%C3%ADp_m%E1%BA%B7t_tr%C6%B0%E1%BB%9Bc.jpg")
+                .idCardBack("https://media.vov.vn/sites/default/files/styles/large/public/2021-10/Can%20cuoc.jpg")
+                .status(status)
+                .reviewNote(note)
+                .build();
+
+        // Vì Builder không set được @PrePersist khi seed thủ công có timeline, ta set
+        // cứng createdAt
+        sub.setCreatedAt(createdAt);
+
+        if (status != VerificationStatus.PENDING) {
+            sub.setReviewedAt(createdAt.plusSeconds(3600 * 2)); // Duyệt sau khi nộp 2 tiếng
+            sub.setReviewedBy("admin@gmail.com");
+        }
+
+        return sub;
     }
 
     private void initSampleCategories() {
@@ -248,12 +335,11 @@ public class StartupRunner implements CommandLineRunner {
         List<Province> provinces = provinceRepository.findAll();
         List<Vip> vips = vipRepository.findAll();
 
-        // Danh sách các trạng thái cho các level VIP > 0 (loại bỏ PENDING)
         List<PostStatus> nonPendingStatuses = new ArrayList<>(Arrays.asList(
                 PostStatus.REVIEW_LATER,
                 PostStatus.APPROVED,
                 PostStatus.REJECTED,
-                PostStatus.EXPIRED));
+                PostStatus.EXPIRED, PostStatus.BLOCKED));
         // Chuẩn bị dữ liệu Enum ngẫu nhiên
         CompassDirection[] orientations = CompassDirection.values();
         LegalStatus[] legalStatuses = LegalStatus.values();
@@ -687,20 +773,21 @@ public class StartupRunner implements CommandLineRunner {
 
             // Kiểm tra vipLevel để gán trạng thái và thời gian hiệu lực
             if (selectedVip.getVipLevel() == 0) {
+                PostStatus status;
                 int rand = random.nextInt(100);
 
-                PostStatus status;
-
-                if (rand < 20)
-                    status = PostStatus.APPROVED; // 🔥 40%
-                else if (rand < 35)
-                    status = PostStatus.REVIEW_LATER; // 15%
-                else if (rand < 50)
-                    status = PostStatus.PENDING; // 25%
-                else if (rand < 75)
-                    status = PostStatus.REJECTED; // 15%
+                if (rand < 30)
+                    status = PostStatus.APPROVED; // 30% Hiển thị
+                else if (rand < 45)
+                    status = PostStatus.PENDING; // 15% Đang chờ duyệt
+                else if (rand < 60)
+                    status = PostStatus.REVIEW_LATER; // 15% Cần xem xét thêm
+                else if (rand < 80)
+                    status = PostStatus.REJECTED; // 20% Bị từ chối khi duyệt
+                else if (rand < 90)
+                    status = PostStatus.BLOCKED; // 🌟 10% Bị khóa (Vi phạm/Bị report)
                 else
-                    status = PostStatus.EXPIRED; // 5%
+                    status = PostStatus.EXPIRED; // 10% Hết hạn
 
                 post.setStatus(status);
 
@@ -796,6 +883,87 @@ public class StartupRunner implements CommandLineRunner {
         postRepository.saveAll(posts);
 
         System.out.println(">>> INIT ADDRESS DATA TABLE 'posts' WITH IMAGES : SUCCESS");
+    }
+
+    private void initSampleInteractions() {
+        if (postViewHistoryRepository.count() > 0 || savedPostRepository.count() > 0) {
+            System.out.println(">>> SKIP! INTERACTION DATA ALREADY EXISTS...");
+            return;
+        }
+
+        List<Post> allPosts = postRepository.findAll();
+        List<User> allUsers = userRepository.findAll();
+        Random random = new Random();
+        Instant now = Instant.now();
+
+        List<PostViewHistory> viewHistories = new ArrayList<>();
+        List<SavedPost> savedPosts = new ArrayList<>();
+
+        System.out.println(">>> SEEDING INTERACTIONS: This may take a moment...");
+
+        // 1. SEED LƯỢT XEM (PostViewHistory)
+        // Phân bổ lượt xem trong 90 ngày gần nhất để biểu đồ trông thật hơn
+        for (Post post : allPosts) {
+            // Mỗi bài đăng có từ 50 đến 300 lượt xem lịch sử
+            int viewsToGenerate = random.nextInt(251) + 50;
+
+            for (int j = 0; j < viewsToGenerate; j++) {
+                // Ngẫu nhiên thời gian xem trong 90 ngày qua
+                long randomSecondsAgo = (long) random.nextInt(90 * 24 * 60 * 60);
+                Instant viewedAt = now.minusSeconds(randomSecondsAgo);
+
+                // 70% là khách (User null), 30% là User đăng nhập
+                User viewer = (random.nextInt(100) < 30) ? allUsers.get(random.nextInt(allUsers.size())) : null;
+
+                PostViewHistory history = PostViewHistory.builder()
+                        .post(post)
+                        .user(viewer)
+                        .ipAddress("192.168.1." + random.nextInt(255))
+                        .viewedAt(viewedAt) // Nhớ cho phép set thủ công trong Entity
+                        .build();
+                viewHistories.add(history);
+
+                // Lưu theo batch để tránh tràn bộ nhớ nếu số lượng quá lớn
+                if (viewHistories.size() >= 5000) {
+                    postViewHistoryRepository.saveAll(viewHistories);
+                    viewHistories.clear();
+                }
+            }
+        }
+        postViewHistoryRepository.saveAll(viewHistories); // Lưu nốt phần còn lại
+
+        // 2. SEED TIN ĐÃ LƯU (SavedPost)
+        // Mỗi User sẽ lưu ngẫu nhiên từ 5 đến 20 bài đăng
+        for (User user : allUsers) {
+            int postsToSave = random.nextInt(16) + 5;
+            // Sử dụng Set để tránh trùng lặp post_id cho cùng 1 user (Unique Constraint)
+            Set<Long> savedPostIds = new HashSet<>();
+
+            for (int k = 0; k < postsToSave; k++) {
+                Post targetPost = allPosts.get(random.nextInt(allPosts.size()));
+
+                if (!savedPostIds.contains(targetPost.getId())) {
+                    long randomSecondsAgo = (long) random.nextInt(30 * 24 * 60 * 60); // Lưu trong 30 ngày qua
+
+                    SavedPost saved = SavedPost.builder()
+                            .user(user)
+                            .post(targetPost)
+                            .savedAt(now.minusSeconds(randomSecondsAgo))
+                            .build();
+
+                    savedPosts.add(saved);
+                    savedPostIds.add(targetPost.getId());
+                }
+
+                if (savedPosts.size() >= 1000) {
+                    savedPostRepository.saveAll(savedPosts);
+                    savedPosts.clear();
+                }
+            }
+        }
+        savedPostRepository.saveAll(savedPosts);
+
+        System.out.println(">>> SEEDING INTERACTIONS: SUCCESSFUL!");
     }
 
     private void initSampleTransactions() {
@@ -905,14 +1073,14 @@ public class StartupRunner implements CommandLineRunner {
         List<Transaction> transactions = transactionRepository.findAll();
         List<Notification> notifications = new ArrayList<>();
 
-        // Tăng giới hạn số random (0 đến 6) vì giờ ta có 7 case
+        // Tăng giới hạn số random (0 đến 7) vì giờ ta có 8 case
         for (int i = 1; i <= 1000; i++) {
             Notification notification = new Notification();
 
             User selectedUser = users.get(random.nextInt(users.size()));
             notification.setUser(selectedUser);
 
-            int notificationTypeIndex = random.nextInt(7); // 👈 Tăng dải số random
+            int notificationTypeIndex = random.nextInt(8); // 👈 Cập nhật lên 8
             String message = "";
             NotificationType type;
 
@@ -963,8 +1131,6 @@ public class StartupRunner implements CommandLineRunner {
                     notification.setUser(depositTx.getUser());
                     break;
 
-                // ================= CÁC CASE MỚI THÊM VÀO =================
-
                 case 4: // TRANSACTION: Trừ tiền (Đẩy tin/Mua VIP)
                     if (transactions.isEmpty())
                         continue;
@@ -983,12 +1149,22 @@ public class StartupRunner implements CommandLineRunner {
                 case 5: // SYSTEM_ALERT: Cảnh báo sắp hết hạn VIP
                     message = "Gói VIP của bạn sẽ hết hạn trong vòng 3 ngày tới. Vui lòng gia hạn để duy trì quyền lợi.";
                     type = NotificationType.SYSTEM_ALERT;
-                    // notification.setUser đã được gán selectedUser ngẫu nhiên ở trên
                     break;
 
                 case 6: // SYSTEM_ALERT: Bảo trì hệ thống / Khuyến mãi
                     message = "Hệ thống BDS360 sẽ bảo trì định kỳ từ 00:00 đến 02:00 sáng mai. Xin lỗi vì sự bất tiện này!";
                     type = NotificationType.SYSTEM_ALERT;
+                    break;
+
+                // ================= CASE MỚI THÊM VÀO =================
+                case 7: // POST: Tin đăng bị khóa do vi phạm
+                    if (posts.isEmpty())
+                        continue;
+                    Post blockedPost = posts.get(random.nextInt(posts.size()));
+                    message = String.format("Tin đăng mã '%d' của bạn đã bị khóa do vi phạm chính sách của hệ thống.",
+                            blockedPost.getId());
+                    type = NotificationType.POST;
+                    notification.setUser(blockedPost.getUser());
                     break;
 
                 default:
@@ -997,9 +1173,8 @@ public class StartupRunner implements CommandLineRunner {
 
             notification.setMessage(message);
             notification.setType(type);
-            notification.setRead(random.nextBoolean()); // Random 50/50 đọc hay chưa
+            notification.setRead(random.nextBoolean());
 
-            // Random ngày tạo trong vòng 30 ngày qua
             long secondsIn30Days = 30L * 24 * 60 * 60;
             long randomSeconds = (long) (random.nextDouble() * secondsIn30Days);
             notification.setCreatedAt(Instant.now().minusSeconds(randomSeconds));
