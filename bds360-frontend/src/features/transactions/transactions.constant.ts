@@ -1,17 +1,48 @@
 // @/features/transactions/transactions.constant.ts
 
-export const TRANSACTION_STATUS_OPTIONS = {
-    PENDING: 'PENDING',
-    SUCCESS: 'SUCCESS',
-    FAILED: 'FAILED',
-} as const;
+import type { PresetStatusColorType } from 'antd/es/_util/colors';
+// ==========================================
+// 1. TRẠNG THÁI GIAO DỊCH (STATUS)
+// ==========================================
+export const TRANSACTION_STATUS_VALUES = ['PENDING', 'SUCCESS', 'FAILED'] as const;
 
-export type TransactionStatus = keyof typeof TRANSACTION_STATUS_OPTIONS;
+export type TransactionStatus = (typeof TRANSACTION_STATUS_VALUES)[number];
 
-export const TRANSACTION_FILTER_TYPE_OPTIONS = {
-    DEPOSIT: 'DEPOSIT',
-    PAYMENT: 'PAYMENT',
-    ALL: 'ALL',
-} as const;
+// Từ điển Map sang tiếng Việt
+export const TRANSACTION_STATUS_LABEL: Record<TransactionStatus, string> = {
+    PENDING: 'Đang xử lý',
+    SUCCESS: 'Thành công',
+    FAILED: 'Thất bại',
+};
 
-export type TransactionFilterType = keyof typeof TRANSACTION_FILTER_TYPE_OPTIONS;
+// Mảng Options build sẵn cho <Select>, <Radio> của Antd
+export const TRANSACTION_STATUS_OPTIONS = TRANSACTION_STATUS_VALUES.map((value) => ({
+    value,
+    label: TRANSACTION_STATUS_LABEL[value],
+}));
+
+
+// ==========================================
+// 2. LOẠI GIAO DỊCH (TYPE)
+// ==========================================
+export const TRANSACTION_TYPE_VALUES = ['DEPOSIT', 'PAYMENT'] as const;
+
+export type TransactionType = (typeof TRANSACTION_TYPE_VALUES)[number];
+
+// Từ điển Map sang tiếng Việt
+export const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
+    DEPOSIT: 'Nạp tiền',
+    PAYMENT: 'Thanh toán',
+};
+
+// Mảng Options build sẵn cho <Select>, <Radio> của Antd
+export const TRANSACTION_TYPE_OPTIONS = TRANSACTION_TYPE_VALUES.map((value) => ({
+    value,
+    label: TRANSACTION_TYPE_LABEL[value],
+}));
+
+export const TRANSACTION_STATUS_COLOR: Record<TransactionStatus, PresetStatusColorType> = {
+    SUCCESS: 'success',
+    PENDING: 'warning',
+    FAILED: 'error',
+};

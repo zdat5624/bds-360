@@ -39,6 +39,7 @@ import vn.bds360.backend.modules.post.repository.ImageRepository;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.post.specification.PostSpecification;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionType;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.user.entity.User;
@@ -124,6 +125,7 @@ public class PostService {
         transaction.setDescription("Thanh toán phí đăng tin mã " + savedPost.getId());
         transaction.setStatus(TransactionStatus.SUCCESS);
         transaction.setUser(user);
+        transaction.setType(TransactionType.PAYMENT);
         transactionRepository.save(transaction);
 
         return postMapper.toResponse(savedPost);

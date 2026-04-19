@@ -4,4 +4,5 @@
   border: 1px solid var(--table-border-color);
   /* border-radius: 2px; */
   overflow: hidden;
+  box-shadow: none;
 }

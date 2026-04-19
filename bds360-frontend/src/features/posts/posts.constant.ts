@@ -71,3 +71,12 @@ export type PostStatus = (typeof POST_STATUS_VALUES)[number];
 export const POST_STATUS_OPTIONS = Object.fromEntries(
     POST_STATUS_VALUES.map((item) => [item, item])
 ) as Record<PostStatus, PostStatus>;
+
+
+export const SAVED_POST_SORT_OPTIONS = [
+    { label: 'Mới lưu gần đây', value: 'newest' }, // Backend xử lý DESC mặc định
+    { label: 'Lưu trước nhất', value: 'oldest' }, // Backend xử lý ASC
+    { label: 'Tin mới đăng nhất', value: 'latest' },
+    { label: 'Giá: Thấp đến Cao', value: 'price', sortDirection: 'ASC' },
+    { label: 'Giá: Cao đến Thấp', value: 'price', sortDirection: 'DESC' },
+] as const;

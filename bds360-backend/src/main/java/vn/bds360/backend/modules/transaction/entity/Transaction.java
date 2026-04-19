@@ -18,6 +18,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionType;
 import vn.bds360.backend.modules.user.entity.User;
 
 @Getter
@@ -42,6 +43,10 @@ public class Transaction {
     private String txnId;
 
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TransactionType type;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

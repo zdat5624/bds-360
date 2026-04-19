@@ -85,6 +85,9 @@ public class User {
     @JsonIgnore
     private List<PasswordResetToken> passwordResetTokens;
 
+    @Column(nullable = false)
+    private Boolean isVerified = false;
+
     @PrePersist
     public void handleBeforeCreate() {
         String currentUser = SecurityService.getCurrentUserLogin().orElse("anonymousUser");

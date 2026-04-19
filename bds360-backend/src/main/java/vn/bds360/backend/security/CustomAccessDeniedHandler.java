@@ -32,6 +32,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                 ErrorCode.FORBIDDEN.getCode(),
                 ErrorCode.FORBIDDEN.getMessage());
 
+        System.out.println("Log lỗi ở CustomAccessDeniedHandler implements AccessDeniedHandler");
+
         mapper.writeValue(response.getWriter(), apiResponse);
     }
 }

@@ -16,7 +16,7 @@ export const useCreatePayment = () => {
         mutationFn: createPayment,
         onSuccess: () => {
             // Invalidate danh sách giao dịch để khi user quay lại từ VNPAY, list tự được làm mới
-            queryClient.invalidateQueries({ queryKey: TRANSACTIONS_QUERY_KEYS.lists() });
+            queryClient.invalidateQueries({ queryKey: TRANSACTIONS_QUERY_KEYS.all });
         },
     });
 };

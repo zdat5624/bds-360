@@ -27,24 +27,14 @@ export const USER_MENU_ITEMS: MenuProps['items'] = [
         label: <Link href={APP_ROUTES.USER.DASH_BOARD}>Bảng điều khiển</Link>,
     },
     {
-        key: APP_ROUTES.USER.PROFILE,
-        icon: <UserOutlined />,
-        label: <Link href={APP_ROUTES.USER.PROFILE}>Thông tin cá nhân</Link>,
-    },
-    {
-        key: APP_ROUTES.USER.CHANGE_PASSWORD,
-        icon: <KeyOutlined />,
-        label: <Link href={APP_ROUTES.USER.CHANGE_PASSWORD}>Đổi mật khẩu</Link>,
+        key: APP_ROUTES.USER.CREATE_POST,
+        icon: <PlusCircleOutlined />,
+        label: <Link href={APP_ROUTES.USER.CREATE_POST}>Đăng tin mới</Link>,
     },
     {
         key: APP_ROUTES.USER.MY_POSTS,
         icon: <FileTextOutlined />,
         label: <Link href={APP_ROUTES.USER.MY_POSTS}>Quản lý tin đăng</Link>,
-    },
-    {
-        key: APP_ROUTES.USER.CREATE_POST,
-        icon: <PlusCircleOutlined />,
-        label: <Link href={APP_ROUTES.USER.CREATE_POST}>Đăng tin mới</Link>,
     },
     {
         key: APP_ROUTES.USER.NOTIFICATIONS,
@@ -56,11 +46,26 @@ export const USER_MENU_ITEMS: MenuProps['items'] = [
         icon: <CreditCardOutlined />,
         label: <Link href={APP_ROUTES.USER.PAYMENTS}>Lịch sử giao dịch</Link>,
     },
+
     {
         key: APP_ROUTES.USER.VIPS,
         icon: <CrownOutlined />,
         label: <Link href={APP_ROUTES.USER.VIPS}>Gói VIP</Link>,
     },
+
+    {
+        key: APP_ROUTES.USER.PROFILE,
+        icon: <UserOutlined />,
+        label: <Link href={APP_ROUTES.USER.PROFILE}>Thông tin cá nhân</Link>,
+    },
+    {
+        key: APP_ROUTES.USER.CHANGE_PASSWORD,
+        icon: <KeyOutlined />,
+        label: <Link href={APP_ROUTES.USER.CHANGE_PASSWORD}>Đổi mật khẩu</Link>,
+    },
+
+
+
 ];
 
 // ==========================================

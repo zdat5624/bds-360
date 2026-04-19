@@ -1,9 +1,9 @@
-// @/components/base/data-table.tsx
+// @/components/base/data.table.tsx
 'use client';
 
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constants';
 import { useAppTheme } from '@/hooks/use-app-theme'; // 👈 Dùng custom hook của dự án
-import { Table } from 'antd';
+import { Table, TableProps } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 
@@ -29,6 +29,11 @@ interface DataTableProps<T> {
     onRowClick?: (record: T) => void;
     showPaging?: boolean;
     rowKey?: string | ((record: T) => string);
+
+    scroll?: TableProps<T>['scroll'];
+
+    selectedRowKeys?: React.Key[];
+
 }
 
 export function DataTable<T extends object>({
@@ -42,7 +47,10 @@ export function DataTable<T extends object>({
     onRowSelectionChange,
     onRowClick,
     showPaging = true,
-    rowKey = 'id'
+    rowKey = 'id',
+    scroll,
+
+    selectedRowKeys,
 }: DataTableProps<T>) {
 
     // Trích xuất biến màu từ custom theme
@@ -88,6 +96,7 @@ export function DataTable<T extends object>({
                 enableRowSelection
                     ? {
                         type: 'checkbox',
+                        selectedRowKeys: selectedRowKeys,
                         onChange: (selectedRowKeys, selectedRows) => {
                             onRowSelectionChange?.(selectedRowKeys, selectedRows);
                         },
@@ -110,7 +119,7 @@ export function DataTable<T extends object>({
                 className: onRowClick ? 'cursor-pointer' : '',
             })}
             onChange={handleChange}
-            scroll={{ x: 'max-content' }}
+            scroll={scroll || (data && data.length > 0 ? { x: "max-content" } : undefined)}
         />
     );
 }

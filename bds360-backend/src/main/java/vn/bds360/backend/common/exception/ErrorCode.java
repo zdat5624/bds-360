@@ -39,6 +39,8 @@ public enum ErrorCode {
     POST_NOT_FOUND(12001, HttpStatus.NOT_FOUND, "Không tìm thấy bài đăng bất động sản."),
     POST_STATUS_INVALID(12002, HttpStatus.BAD_REQUEST, "Trạng thái bài đăng không hợp lệ để thao tác."),
     CATEGORY_NOT_FOUND(12003, HttpStatus.NOT_FOUND, "Không tìm thấy danh mục bất động sản."),
+    POST_SAVED_NOT_FOUND(12003, HttpStatus.NOT_FOUND, "Không tìm thấy tin đã lưu."),
+    POST_ALREADY_SAVED(12004, HttpStatus.CONFLICT, "Tin đã được lưu trước đó."),
 
     // ==========================================
     // 13. ADDRESS MODULE (Tọa độ, Bản đồ)
@@ -67,7 +69,17 @@ public enum ErrorCode {
     // ==========================================
     FILE_TOO_LARGE(16001, HttpStatus.CONTENT_TOO_LARGE, "Kích thước file vượt quá mức cho phép."),
     FILE_FORMAT_INVALID(16002, HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Định dạng file không được hỗ trợ."),
-    FILE_UPLOAD_FAILED(16003, HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống trong quá trình lưu trữ file.");
+    FILE_UPLOAD_FAILED(16003, HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống trong quá trình lưu trữ file."),
+
+    // ==========================================
+    // 17. VERIFICATION MODULE (Xác thực tài khoản) - VỪA BỔ SUNG
+    // ==========================================
+    USER_ALREADY_VERIFIED(17001, HttpStatus.BAD_REQUEST, "Tài khoản đã được xác thực trước đó."),
+    VERIFICATION_REQUEST_PENDING(17002, HttpStatus.BAD_REQUEST,
+            "Bạn đang có một yêu cầu chờ duyệt. Vui lòng không nộp lại."),
+    VERIFICATION_REQUEST_NOT_FOUND(17003, HttpStatus.NOT_FOUND, "Không tìm thấy yêu cầu xác thực."),
+    VERIFICATION_REQUEST_ALREADY_PROCESSED(17004, HttpStatus.BAD_REQUEST, "Yêu cầu này đã được xử lý trước đó."),
+    REJECT_NOTE_REQUIRED(17005, HttpStatus.BAD_REQUEST, "Vui lòng nhập lý do từ chối.");
 
     // ------------------------------------------
     // FIELDS & CONSTRUCTORS

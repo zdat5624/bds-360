@@ -7,8 +7,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.dto.request.BaseFilterRequest;
-import vn.bds360.backend.modules.transaction.constant.TransactionFilterType;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionType;
 
 @Getter
 @Setter
@@ -24,7 +24,7 @@ public class TransactionFilterRequest extends BaseFilterRequest {
     private Long transactionId;
     private String txnId;
     private TransactionStatus status;
-    private TransactionFilterType type = TransactionFilterType.ALL;
+    private TransactionType type;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private Instant startDate;

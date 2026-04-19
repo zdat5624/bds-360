@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,16 +23,16 @@ import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.service.PostService;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.security.annotation.CurrentUser;
-import vn.bds360.backend.security.annotation.IsAdmin;
+import vn.bds360.backend.security.annotation.IsAdminOrModerator;
 
-@RestController
-@RequestMapping("/api/v1/admin/posts")
+// 🌟 Đổi endpoint từ /admin/posts thành /manage/posts
+@RequestMapping("/api/v1/manage/posts")
 @RequiredArgsConstructor
 @Validated
-@IsAdmin
+@IsAdminOrModerator
 @ApiGlobalResponse
-@Tag(name = "posts", description = "Quản lý bài đăng")
-public class AdminPostController {
+@Tag(name = "manage-posts", description = "Back-office: Quản lý bài đăng")
+public class ManagePostController { // 🌟 Đổi tên class
 
     private final PostService postService;
 

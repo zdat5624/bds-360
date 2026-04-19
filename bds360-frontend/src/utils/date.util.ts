@@ -12,8 +12,7 @@ dayjs.locale('vi'); // Set ngôn ngữ mặc định là tiếng Việt
 // Định nghĩa các Format chuẩn của hệ thống để dùng chung
 export const DATE_FORMAT = {
     DEFAULT: 'DD/MM/YYYY',
-    FULL_TIME: 'HH:mm - DD/MM/YYYY',
-    API_FORMAT: 'YYYY-MM-DD', // Chuẩn ISO thường dùng gửi lên Backend
+    FULL_TIME: 'HH:mm DD/MM/YYYY',
 };
 
 /**
@@ -90,16 +89,44 @@ export const getSmartRelativeTime = (
     return parsedDate.format(DATE_FORMAT.DEFAULT);
 };
 
+
+
 /**
- * 4. Chuyển Date sang String để gửi lên API
- * @example toApiDate(new Date()) => '2024-03-15'
+ * 4.1 Chuyển Date sang chuẩn ISO (UTC) ĐẦU NGÀY để gửi lên Backend kiểu Instant
+ * @example toApiStartDate('2024-03-15') => '2024-03-14T17:00:00.000Z'
  */
-export const toApiDate = (
-    date?: string | Date | number | null
+export const toApiStartDate = (
+    date?: string | Date | number | null | dayjs.Dayjs
 ): string | undefined => {
     if (!date) return undefined;
     const parsedDate = dayjs(date);
-    return parsedDate.isValid() ? parsedDate.format(DATE_FORMAT.API_FORMAT) : undefined;
+    return parsedDate.isValid() ? parsedDate.startOf('day').toISOString() : undefined;
+};
+
+/**
+ * 4.2 Chuyển Date sang chuẩn ISO (UTC) CUỐI NGÀY để gửi lên Backend kiểu Instant
+ * @example toApiEndDate('2024-03-15') => '2024-03-15T16:59:59.999Z'
+ */
+export const toApiEndDate = (
+    date?: string | Date | number | null | dayjs.Dayjs
+): string | undefined => {
+    if (!date) return undefined;
+    const parsedDate = dayjs(date);
+    return parsedDate.isValid() ? parsedDate.endOf('day').toISOString() : undefined;
+};
+
+/**
+ * 4.3 Chuyển Date sang chuẩn ISO (UTC) GIỮ NGUYÊN GIỜ để gửi lên Backend
+ * Dùng khi UI cho phép người dùng chọn cả ngày và giờ chi tiết.
+ * @example toApiDateTime('2024-03-15 14:30:00') => '2024-03-15T07:30:00.000Z'
+ */
+export const toApiDateTime = (
+    date?: string | Date | number | null | dayjs.Dayjs
+): string | undefined => {
+    if (!date) return undefined;
+    const parsedDate = dayjs(date);
+    // Không dùng startOf/endOf, chỉ gọi thẳng toISOString()
+    return parsedDate.isValid() ? parsedDate.toISOString() : undefined;
 };
 
 /**

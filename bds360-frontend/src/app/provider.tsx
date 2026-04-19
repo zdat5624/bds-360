@@ -3,9 +3,11 @@
 
 import { antdTheme } from '@/config/theme';
 import { AuthProvider } from '@/providers';
+import { SocketProvider } from '@/providers/socket.provider'; // 👈 1. Bổ sung import
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App, ConfigProvider } from 'antd';
+import viVN from 'antd/locale/vi_VN';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -20,10 +22,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
             <QueryClientProvider client={queryClient}>
-                <ConfigProvider theme={antdTheme}>
+                <ConfigProvider locale={viVN} theme={antdTheme}>
                     <App>
                         <AuthProvider>
-                            {children}
+                            <SocketProvider>
+                                {children}
+                            </SocketProvider>
                         </AuthProvider>
                     </App>
                 </ConfigProvider>

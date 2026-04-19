@@ -1,3 +1,7 @@
 export { ConfirmModal } from './confirm.modal';
-export { DataTable } from './data.table';
+export * from './data.table';
+
+export { AppModal } from './app.modal';
+
+export * from './search.input';
 

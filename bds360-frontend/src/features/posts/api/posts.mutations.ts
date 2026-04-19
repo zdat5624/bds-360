@@ -17,12 +17,26 @@ const deletePost = async (id: number): Promise<void> => {
     return customFetch.delete(`/posts/${id}`);
 };
 
+// 🌟 Sửa đổi: Đổi /admin thành /manage cho đồng bộ với Backend mới
 const deleteAdminPost = async (id: number): Promise<void> => {
-    return customFetch.delete(`/admin/posts/${id}`);
+    return customFetch.delete(`/manage/posts/${id}`);
 };
 
+// 🌟 Sửa đổi: Đổi /admin thành /manage cho đồng bộ với Backend mới
 const updatePostStatus = async (payload: UpdatePostStatusPayload): Promise<Post> => {
-    return customFetch.put('/admin/posts/status', payload);
+    return customFetch.put('/manage/posts/status', payload);
+};
+
+const savePost = async (id: number): Promise<void> => {
+    return customFetch.post(`/posts/${id}/save`);
+};
+
+const unsavePost = async (id: number): Promise<void> => {
+    return customFetch.delete(`/posts/${id}/save`);
+};
+
+const incrementView = async (id: number): Promise<void> => {
+    return customFetch.post(`/posts/${id}/view`);
 };
 
 // --- HOOKS ---
@@ -32,7 +46,6 @@ export const useCreatePost = () => {
     return useMutation({
         mutationFn: createPost,
         onSuccess: () => {
-            // Làm mới danh sách khi tạo tin
             queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
         },
     });
@@ -68,4 +81,35 @@ export const useUpdatePostStatus = () => {
             queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.detail(variables.postId) });
         },
     });
+};
+
+export const useSavePost = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: savePost,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: [...POSTS_QUERY_KEYS.lists(), 'saved']
+            });
+            // Update UI list (vd icon trái tim)
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
+        },
+    });
+};
+
+export const useUnsavePost = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: unsavePost,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: [...POSTS_QUERY_KEYS.lists(), 'saved']
+            });
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
+        },
+    });
+};
+
+export const useIncrementPostView = () => {
+    return useMutation({ mutationFn: incrementView });
 };

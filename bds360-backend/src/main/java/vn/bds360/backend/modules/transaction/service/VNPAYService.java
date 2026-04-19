@@ -27,6 +27,7 @@ import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.notification.service.NotificationService;
 import vn.bds360.backend.modules.transaction.config.VnPayProperties;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionType;
 import vn.bds360.backend.modules.transaction.dto.response.PaymentLinkResponse;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
@@ -62,11 +63,13 @@ public class VNPAYService {
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh_toan_giao_dich_nap_tien_ID: " + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan giao dich nap tien Id: " + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", vnPayProperties.getReturnUrlBackend());
         vnp_Params.put("vnp_IpAddr", ipAdress);
+
+        vnp_Params.put("vnp_BankCode", "NCB");
 
         // Thời gian tạo và hết hạn
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
@@ -111,6 +114,8 @@ public class VNPAYService {
         transaction.setUser(user);
         transaction.setPaymentLink(paymentUrl);
         transaction.setTxnId(vnp_TxnRef);
+        transaction.setType(TransactionType.DEPOSIT);
+
         transactionRepository.save(transaction);
 
         return new PaymentLinkResponse(paymentUrl);

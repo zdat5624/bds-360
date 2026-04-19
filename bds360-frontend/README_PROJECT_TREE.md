@@ -10,7 +10,6 @@ bds360-frontend
 ├─ package.json
 ├─ postcss.config.mjs
 ├─ README.md
-├─ README_PROJECT_TREE.md
 ├─ src
 │  ├─ app
 │  │  ├─ (back-office)
@@ -20,8 +19,17 @@ bds360-frontend
 │  │  ├─ (main)
 │  │  │  ├─ (account)
 │  │  │  │  └─ user
+│  │  │  │     ├─ change-password
+│  │  │  │     │  └─ page.tsx
 │  │  │  │     ├─ layout.tsx
-│  │  │  │     └─ profile
+│  │  │  │     ├─ page.tsx
+│  │  │  │     ├─ payments
+│  │  │  │     │  ├─ page.tsx
+│  │  │  │     │  └─ result
+│  │  │  │     │     └─ page.tsx
+│  │  │  │     ├─ profile
+│  │  │  │     │  └─ page.tsx
+│  │  │  │     └─ vips
 │  │  │  │        └─ page.tsx
 │  │  │  ├─ (public)
 │  │  │  │  ├─ layout.tsx
@@ -45,10 +53,19 @@ bds360-frontend
 │  │  │  └─ GeistVF.woff
 │  │  ├─ globals.css
 │  │  ├─ layout.tsx
+│  │  ├─ not-found.tsx
 │  │  └─ provider.tsx
 │  ├─ components
 │  │  ├─ base
+│  │  │  ├─ app.modal.tsx
+│  │  │  ├─ confirm.modal.tsx
+│  │  │  ├─ data.table.tsx
+│  │  │  ├─ index.ts
+│  │  │  └─ search.input.tsx
 │  │  ├─ composite
+│  │  │  ├─ index.ts
+│  │  │  ├─ table-action.dropdown.tsx
+│  │  │  └─ user-info.tsx
 │  │  ├─ index.ts
 │  │  └─ layouts
 │  │     ├─ footer.tsx
@@ -86,8 +103,11 @@ bds360-frontend
 │  │  │  │  └─ types.ts
 │  │  │  ├─ auth.schema.ts
 │  │  │  ├─ components
+│  │  │  │  ├─ change-password.form.tsx
 │  │  │  │  ├─ forgot-password.form.tsx
+│  │  │  │  ├─ google-auth.button.tsx
 │  │  │  │  ├─ login.form.tsx
+│  │  │  │  ├─ logout-confirm.modal.tsx
 │  │  │  │  └─ register.form.tsx
 │  │  │  └─ index.ts
 │  │  ├─ categories
@@ -102,7 +122,6 @@ bds360-frontend
 │  │  │  ├─ api
 │  │  │  │  ├─ media.mutations.ts
 │  │  │  │  └─ types.ts
-│  │  │  ├─ components
 │  │  │  ├─ index.ts
 │  │  │  ├─ media.constant.ts
 │  │  │  └─ media.schema.ts
@@ -137,6 +156,9 @@ bds360-frontend
 │  │  │  │  ├─ transactions.queries.ts
 │  │  │  │  └─ types.ts
 │  │  │  ├─ components
+│  │  │  │  ├─ top-up.button.tsx
+│  │  │  │  ├─ top-up.modal.tsx
+│  │  │  │  └─ transaction-detail.modal.tsx
 │  │  │  ├─ index.ts
 │  │  │  ├─ transactions.constant.ts
 │  │  │  └─ transactions.schema.ts
@@ -146,6 +168,7 @@ bds360-frontend
 │  │  │  │  ├─ user.mutations.ts
 │  │  │  │  └─ user.queries.ts
 │  │  │  ├─ components
+│  │  │  │  ├─ update-profile.form.tsx
 │  │  │  │  └─ user-info.tsx
 │  │  │  ├─ index.ts
 │  │  │  ├─ users.constant.ts
@@ -156,7 +179,9 @@ bds360-frontend
 │  │     │  ├─ vips.mutations.ts
 │  │     │  └─ vips.queries.ts
 │  │     ├─ components
+│  │     │  └─ vip-packages.list.tsx
 │  │     ├─ index.ts
+│  │     ├─ vips.constant.ts
 │  │     └─ vips.schema.ts
 │  ├─ hooks
 │  │  ├─ index.ts
@@ -165,7 +190,14 @@ bds360-frontend
 │  │  ├─ custom-fetch.ts
 │  │  ├─ index.ts
 │  │  └─ utils.ts
+│  ├─ providers
+│  │  ├─ auth.provider.tsx
+│  │  └─ index.ts
 │  ├─ stores
+│  │  ├─ auth.store.ts
+│  │  └─ index.ts
+│  ├─ styles
+│  │  └─ antd-overrides.css
 │  ├─ types
 │  │  ├─ api.types.ts
 │  │  ├─ common.types.ts

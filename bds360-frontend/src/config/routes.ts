@@ -47,7 +47,6 @@ export const APP_ROUTES = {
 
     // 5. ERROR ROUTES
     ERRORS: {
-        FORBIDDEN: '/forbidden',
-        NOT_FOUND: '/404',
+        FORBIDDEN: 'errors/forbidden',
     },
 } as const;

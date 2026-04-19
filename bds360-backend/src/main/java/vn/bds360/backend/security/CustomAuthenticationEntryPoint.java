@@ -33,6 +33,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 ErrorCode.UNAUTHORIZED.getCode(),
                 ErrorCode.UNAUTHORIZED.getMessage());
 
+        System.out.println("Log lỗi ở CustomAuthenticationEntryPoint implements AuthenticationEntryPoint");
+
         mapper.writeValue(response.getWriter(), apiResponse);
     }
 }

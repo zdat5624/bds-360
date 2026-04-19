@@ -1,7 +1,9 @@
 // @/app/(main)/(account)/user/profile/page.tsx
 'use client';
-
 import { UpdateProfileForm } from '@/features/users';
+import {
+  UserOutlined
+} from '@ant-design/icons';
 import { Divider, Typography } from 'antd';
 
 const { Title, Text } = Typography;
@@ -12,7 +14,10 @@ export default function ProfilePage() {
     <>
       {/* --- HEADER TRANG --- */}
       <div >
-        <Title level={3} style={{ margin: 0 }}>Thông tin cá nhân</Title>
+        <Title level={3} className="!m-0 flex items-center gap-2">
+          <UserOutlined />
+          Thông tin cá nhân
+        </Title>
         <Text type="secondary">
           Quản lý thông tin cá nhân, cách thức liên hệ và thiết lập hồ sơ của bạn.
         </Text>

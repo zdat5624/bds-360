@@ -34,7 +34,10 @@
 - **Form Spacing Standard (Optical Alignment):**
   - **Item Margin:** Mặc định sử dụng margin của Ant Design (thường là 24px). Chỉ dùng `mb-0` cho item cuối cùng trong một block Form để tránh cộng dồn khoảng cách với Divider/Footer.
   - **Grouped Fields:**: không thêm margin vào thẻ `div` bọc ngoài, hãy để `Form.Item` tự quản lý khoảng cách dọc. Nếu antd không tự xử lý được mới tự style bằng taiwind hoặc style (có thể sẽ dùng important '!').
-  - 
+- **Ant Design v5+ API Strict Compliance (Zero Warnings):** Tuyệt đối không sử dụng các props đã bị Deprecated để tránh Warning trên Console. Bắt buộc cập nhật tài liệu và tuân thủ các quy chuẩn API mới nhất của Ant Design (v5.14+):
+  - **Modal/Drawer:** Dùng `destroyOnHidden` (TUYỆT ĐỐI KHÔNG dùng `destroyOnClose`).
+  - **Modal/Drawer:** Dùng `mask={{ closable: boolean }}` (TUYỆT ĐỐI KHÔNG dùng `maskClosable={boolean}`).
+  - **Tag:** Dùng `variant="filled"` hoặc `variant="outlined"` hoặc ... (TUYỆT ĐỐI KHÔNG dùng `bordered={false}`).
 
 
 

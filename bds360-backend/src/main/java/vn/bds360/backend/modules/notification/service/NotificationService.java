@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ import vn.bds360.backend.common.constant.Role;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.modules.notification.dto.request.NotificationFilterRequest;
 import vn.bds360.backend.modules.notification.dto.request.ViewPhoneNotificationRequest;
 import vn.bds360.backend.modules.notification.dto.response.NotificationCountResponse;
 import vn.bds360.backend.modules.notification.dto.response.NotificationResponse;
@@ -71,12 +74,21 @@ public class NotificationService {
         }
     }
 
-    /**
-     * 2. LẤY DANH SÁCH THÔNG BÁO (Cho bản thân người dùng)
-     */
-    public PageResponse<NotificationResponse> getUserNotifications(User user, Boolean isRead, NotificationType type,
-            Pageable pageable) {
-        var page = notificationRepository.findByUserAndFilters(user.getId(), isRead, type, pageable);
+    public PageResponse<NotificationResponse> getUserNotifications(User user, NotificationFilterRequest request) {
+        // 1. Tạo đối tượng Pageable từ BaseFilterRequest
+        Pageable pageable = PageRequest.of(
+                request.getPage(),
+                request.getSize(),
+                Sort.by(request.getSortDirection(), request.getSortBy()));
+
+        // 2. Truy vấn dữ liệu với các filter đặc thù
+        var page = notificationRepository.findByUserAndFilters(
+                user.getId(),
+                request.getIsRead(),
+                request.getType(),
+                pageable);
+
+        // 3. Map sang DTO Response
         return PageResponse.of(page.map(notificationMapper::toResponse));
     }
 
@@ -127,33 +139,47 @@ public class NotificationService {
      * 5. HELPER: ĐẨY SỐ LƯỢNG TIN CHƯA ĐỌC QUA WEBSOCKET
      */
     private void pushUnreadCount(Long userId) {
-        long count = notificationRepository.countByUserIdAndIsReadFalse(userId);
+        // Lấy danh sách thống kê thay vì một con số tổng
+        List<NotificationCountResponse> detailedCounts = this.getUnreadCountsByUserId(userId);
 
-        // Gửi tới cả 2 channel để Frontend dễ bắt (tùy config socket của bạn)
-        messagingTemplate.convertAndSendToUser(String.valueOf(userId), "/topic/notifications", count);
-        messagingTemplate.convertAndSendToUser(String.valueOf(userId), "/user/notifications", count);
+        // Đẩy List DTO này thành JSON Array qua WebSocket
+        messagingTemplate.convertAndSendToUser(String.valueOf(userId), "/topic/notifications", detailedCounts);
+        messagingTemplate.convertAndSendToUser(String.valueOf(userId), "/user/notifications", detailedCounts);
     }
 
-    public long getUnreadCount(User user) {
-        return notificationRepository.countByUserIdAndIsReadFalse(user.getId());
-    }
-
+    // Public API gọi từ Controller
     public List<NotificationCountResponse> getUnreadCounts(User user) {
-        // 1. Lấy dữ liệu từ Repo (vẫn dùng Map để xử lý trung gian cho nhanh)
-        Iterable<Object[]> results = notificationRepository.countUnreadByType(user.getId());
+        return this.getUnreadCountsByUserId(user.getId());
+    }
+
+    // Tách logic lõi ra hàm private để tái sử dụng
+    private List<NotificationCountResponse> getUnreadCountsByUserId(Long userId) {
+        Iterable<Object[]> results = notificationRepository.countUnreadByType(userId);
         Map<NotificationType, Long> rawMap = new EnumMap<>(NotificationType.class);
 
         for (Object[] result : results) {
             rawMap.put((NotificationType) result[0], (Long) result[1]);
         }
 
-        // 2. Chuyển đổi sang List DTO và bổ sung Label
         return Stream.of(NotificationType.values())
                 .map(type -> NotificationCountResponse.builder()
                         .type(type)
                         .count(rawMap.getOrDefault(type, 0L))
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteNotifications(User user, List<Long> ids) {
+        if (ids == null || ids.isEmpty())
+            return;
+
+        notificationRepository.deleteByIdInAndUserId(ids, user.getId());
+
+        // Đẩy lại số lượng chưa đọc mới sau khi xóa (vì có thể user xóa tin chưa đọc)
+        this.pushUnreadCount(user.getId());
+
+        log.info(">>> Đã xóa {} thông báo cho User ID: {}", ids.size(), user.getId());
     }
 
 }

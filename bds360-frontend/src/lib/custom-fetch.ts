@@ -15,13 +15,14 @@ const customFetch = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+
 });
 
 // =========================================================================
 // 1. INTERCEPTOR REQUEST: Tự động đính kèm Token vào mọi API gửi đi
 // =========================================================================
 customFetch.interceptors.request.use(
-    (config) => {
+    async (config) => {
         // Lấy token an toàn qua authStorage (đã check SSR bên trong)
         const token = authStorage.getToken();
 
@@ -29,6 +30,11 @@ customFetch.interceptors.request.use(
             // console.debug('🔐 Đính kèm Token vào header Authorization: ', token);
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // test
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+
         return config;
     },
     (error) => Promise.reject(error)
@@ -38,7 +44,10 @@ customFetch.interceptors.request.use(
 // 2. INTERCEPTOR RESPONSE: Xử lý bóc tách dữ liệu và Bắt lỗi tập trung
 // =========================================================================
 customFetch.interceptors.response.use(
-    (response: AxiosResponse<ApiResponse>) => {
+    async (response: AxiosResponse<ApiResponse>) => {
+
+
+
         const { code, message: msg, data } = response.data;
 
         // [A] Luồng Thành Công: Bóc vỏ Envelope và chỉ trả về Data lõi

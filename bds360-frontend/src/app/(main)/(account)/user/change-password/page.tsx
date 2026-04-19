@@ -1,7 +1,9 @@
 // @/app/(main)/(account)/user/change-password/page.tsx
 'use client';
-
 import { ChangePasswordForm } from '@/features/auth';
+import {
+    KeyOutlined
+} from '@ant-design/icons';
 import { Divider, Typography } from 'antd';
 
 const { Title, Text } = Typography;
@@ -11,7 +13,10 @@ export default function ChangePasswordPage() {
         < >
             {/* --- HEADER TRANG --- */}
             <div>
-                <Title level={3} style={{ margin: 0 }}>Đổi mật khẩu</Title>
+                <Title level={3} className="!m-0 flex items-center gap-2">
+                    <KeyOutlined />
+                    Đổi mật khẩu
+                </Title>
                 <Text type="secondary">
                     Bảo vệ tài khoản của bạn bằng cách sử dụng mật khẩu mạnh và không dùng chung với các tài khoản khác.
                 </Text>

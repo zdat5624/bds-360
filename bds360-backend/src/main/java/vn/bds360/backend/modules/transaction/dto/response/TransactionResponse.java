@@ -5,6 +5,7 @@ import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionType;
 
 @Getter
 @Setter
@@ -19,6 +20,8 @@ public class TransactionResponse {
     private String paymentLink;
 
     private String txnId;
+
+    private TransactionType type;
 
     private String description;
 

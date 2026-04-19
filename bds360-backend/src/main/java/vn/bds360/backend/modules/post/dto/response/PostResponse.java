@@ -4,9 +4,9 @@ import java.time.Instant;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.modules.post.constant.CompassDirection;
 import vn.bds360.backend.modules.post.constant.Furnishing;
@@ -14,7 +14,7 @@ import vn.bds360.backend.modules.post.constant.LegalStatus;
 import vn.bds360.backend.modules.post.constant.PostStatus;
 
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class

@@ -1,57 +1,134 @@
-// @/app/(main)/(account)/user/payments/page.tsx
+// @/app/(main)/(account)/user/transactions/page.tsx
 'use client';
 
-import { DataTable, TableState } from '@/components/base/data.table';
-import { ActionItem, TableActionDropdown } from '@/components/composite/table-action.dropdown'; // 👈 Import component Dropdown 3 chấm
-import { useAppTheme } from '@/hooks';
-import { formatCurrency } from '@/utils';
-import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
-import { Divider, Tag, Typography, message } from 'antd';
+import { DataTable, TableState } from '@/components/base';
+import { TableActionDropdown } from '@/components/composite/table-action.dropdown';
+import { TopUpButton } from '@/features/transactions/components/top-up.button';
+import { TransactionDetailModal } from '@/features/transactions/components/transaction-detail.modal';
+import { useAppTheme } from '@/hooks/use-app-theme';
+import { DATE_FORMAT, dayjs, formatCurrency, formatDateTime, toApiEndDate, toApiStartDate } from '@/utils';
+import { CreditCardOutlined, EyeOutlined, SwapOutlined } from '@ant-design/icons';
+import { App, DatePicker, Divider, Select, Tabs, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+// Import từ module transactions
+import { useGetMyTransactions } from '@/features/transactions/api/transactions.queries';
+import { Transaction, TransactionFilterParams } from '@/features/transactions/api/types';
+import { TRANSACTION_STATUS_COLOR, TRANSACTION_STATUS_LABEL, TRANSACTION_STATUS_OPTIONS, TRANSACTION_TYPE_LABEL, TRANSACTION_TYPE_OPTIONS, TransactionStatus, TransactionType } from '@/features/transactions/transactions.constant';
 
 const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 
-interface PaymentRecord {
-    id: string;
-    transCode: string;
-    amount: number;
-    status: 'SUCCESS' | 'PENDING' | 'FAILED';
-    createdAt: string;
-}
+export default function UserTransactionsPage() {
+    // --- HOOKS & THEME ---
+    const { colorSuccess, colorTextSecondary, colorText } = useAppTheme();
+    const { notification } = App.useApp();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
-const MOCK_DATA: PaymentRecord[] = [
-    { id: '1', transCode: 'BDS_99182', amount: 500000, status: 'SUCCESS', createdAt: '2026-04-16 14:30:00' },
-    { id: '2', transCode: 'BDS_99183', amount: 20000, status: 'PENDING', createdAt: '2026-04-15 09:15:00' },
-    { id: '3', transCode: 'BDS_99184', amount: 100000, status: 'FAILED', createdAt: '2026-04-14 18:20:00' },
-    { id: '4', transCode: 'BDS_99185', amount: 2000000, status: 'SUCCESS', createdAt: '2026-04-10 10:00:00' },
-];
-
-export default function UserPaymentsPage() {
-    const { colorSuccess, colorPrimary } = useAppTheme();
-
-    const [tableState, setTableState] = useState<TableState>({
-        currentPage: 1,
-        pageSize: 10,
+    // --- STATE BỘ LỌC ---
+    const [filters, setFilters] = useState<TransactionFilterParams>({
+        page: 0,
+        size: 10,
+        sortBy: 'createdAt',
+        sortDirection: 'DESC',
+        type: undefined,
+        status: 'SUCCESS',
+        startDate: undefined,
+        endDate: undefined,
     });
-    const [loading, setLoading] = useState(false);
 
-    // --- HÀNH ĐỘNG CỦA BẢNG ---
-    const handleDetail = (record: PaymentRecord) => {
-        message.info(`Xem chi tiết giao dịch: ${record.transCode}`);
+    // --- STATE BẬT TẮT MODAL CHI TIẾT ---
+    const [detailModal, setDetailModal] = useState<{ isOpen: boolean; transactionId: number | null }>({
+        isOpen: false,
+        transactionId: null,
+    });
+
+    const tableState: TableState = {
+        currentPage: (filters.page ?? 0) + 1,
+        pageSize: filters.size ?? 10,
+        sortBy: filters.sortBy,
+        sortDirection: filters.sortDirection,
     };
 
-    const handleDelete = (record: PaymentRecord) => {
-        message.error(`Bạn không được phép xóa giao dịch: ${record.transCode}`);
+    const handleTableStateChange = (newState: TableState) => {
+        setFilters((prev) => ({
+            ...prev,
+            page: newState.currentPage - 1,
+            size: newState.pageSize,
+            sortBy: newState.sortBy || 'createdAt',
+            sortDirection: newState.sortDirection || 'DESC',
+        }));
     };
 
-    // --- ĐỊNH NGHĨA CỘT ---
-    const columns: ColumnsType<PaymentRecord> = [
+    const { data, isFetching } = useGetMyTransactions(filters);
+
+    // --- HIỂN THỊ THÔNG BÁO TỪ VNPAY CALLBACK ---
+    useEffect(() => {
+        const vnp_TransactionStatus = searchParams.get('transactionStatus');
+        const vnp_TxnRef = searchParams.get('transactionId');
+
+        if (vnp_TransactionStatus && vnp_TxnRef) {
+            handleVnPayNotification(vnp_TransactionStatus, vnp_TxnRef);
+            router.replace(pathname, { scroll: false });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    const handleVnPayNotification = (status: string, txnId: string) => {
+        const isSuccess = status === '00';
+        const type = isSuccess ? 'success' : 'error';
+        const message = isSuccess ? 'Giao dịch thành công' : 'Giao dịch thất bại';
+        const description = isSuccess
+            ? `Nạp tiền thành công. Mã giao dịch: ${txnId}`
+            : `Lỗi giao dịch (${status}). Mã: ${txnId}. Vui lòng thử lại.`;
+
+        notification[type]({ message, description, placement: 'topRight' });
+    };
+
+    // --- HANDLERS BỘ LỌC ---
+    const handleTabChange = (key: string) => {
+        setFilters((prev) => ({
+            ...prev,
+            page: 0,
+            type: key === 'ALL' ? undefined : (key as TransactionType),
+        }));
+    };
+
+    const handleStatusChange = (value?: string) => {
+        setFilters((prev) => ({
+            ...prev,
+            page: 0,
+            status: value as any,
+        }));
+    };
+
+    const handleDateRangeChange = (dates: any) => {
+        setFilters((prev) => ({
+            ...prev,
+            page: 0,
+            startDate: dates?.[0] ? toApiStartDate(dates[0]) : undefined,
+            endDate: dates?.[1] ? toApiEndDate(dates[1]) : undefined,
+        }));
+    };
+
+    // --- ĐỊNH NGHĨA CỘT BẢNG ---
+    const columns: ColumnsType<Transaction> = [
         {
-            title: 'Mã giao dịch',
-            dataIndex: 'transCode',
-            key: 'transCode',
-            render: (text) => <span className="font-medium">{text}</span>,
+            title: 'Loại giao dịch',
+            dataIndex: 'type',
+            width: 140,
+            sorter: true,
+
+            key: 'type',
+            render: (type: TransactionType) => (
+                <span style={{ color: colorText }}>
+                    {TRANSACTION_TYPE_LABEL[type]}
+                </span>
+            ),
         },
         {
             title: 'Số tiền',
@@ -59,89 +136,176 @@ export default function UserPaymentsPage() {
             key: 'amount',
             align: 'right',
             sorter: true,
-            render: (amount) => (
-                <span className="font-semibold text-blue-600">
-                    {formatCurrency ? formatCurrency(amount) : `${amount} đ`}
-                </span>
-            ),
-        },
-        {
-            title: 'Thời gian',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
+            render: (amount: number, record: Transaction) => {
+                const absAmount = Math.abs(amount);
+                const formattedAmount = formatCurrency(absAmount);
+                const isDeposit = record.type === 'DEPOSIT';
+
+                return (
+                    <span
+                        className={isDeposit ? "font-semibold" : ""}
+                        style={{ color: isDeposit ? colorSuccess : colorText }}
+                    >
+                        {isDeposit ? '+' : '-'}{formattedAmount}
+                    </span>
+                );
+            },
         },
         {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
+            sorter: true,
+
             align: 'center',
-            render: (status: PaymentRecord['status']) => {
-                const colorMap = { SUCCESS: 'success', PENDING: 'warning', FAILED: 'error' };
-                const textMap = { SUCCESS: 'Thành công', PENDING: 'Đang xử lý', FAILED: 'Thất bại' };
-                return <Tag color={colorMap[status]} bordered={false}>{textMap[status]}</Tag>;
-            },
+            render: (status: TransactionStatus) => (
+                <Tag color={TRANSACTION_STATUS_COLOR[status]} variant="filled">
+                    {TRANSACTION_STATUS_LABEL[status]}
+                </Tag>
+            ),
         },
-        // 👇 CỘT ACTION MỚI (Sử dụng TableActionDropdown)
         {
-            title: '', // Không để tiêu đề (Đúng như bạn đã yêu cầu)
-            key: 'actions',
-            width: 48, // Ép kích thước nhỏ lại chỉ vừa đủ nút 3 chấm
-            fixed: 'right', // Ghim bên phải
-            align: 'center',
-            render: (_, record) => {
-                // Khai báo mảng hành động cho dòng hiện tại
-                const rowActions: ActionItem[] = [
-                    {
-                        key: 'detail',
-                        label: 'Xem chi tiết',
-                        icon: <EyeOutlined />,
-                        onClick: () => handleDetail(record),
-                        color: colorPrimary,
+            title: 'Mô tả',
+            dataIndex: 'description',
+            key: 'description',
+            width: '35%',
+            sorter: true,
 
-                    },
-                    {
-                        key: 'edit',
-                        label: 'Chỉnh sửa',
-                        icon: <EditOutlined />,
-                        onClick: () => message.info(`Sửa: ${record.transCode}`),
-                        color: colorSuccess,
-                    },
-                    {
-                        key: 'delete',
-                        label: 'Xóa giao dịch',
-                        icon: <DeleteOutlined />,
-                        danger: true, // Tự động tô đỏ
-                        onClick: () => handleDelete(record),
-                        disabled: record.status === 'SUCCESS', // Giao dịch SUCCESS thì mờ nút xóa
-                    },
-                ];
-
-                // Render component 3 chấm
-                return <TableActionDropdown actions={rowActions} />;
-            },
+            render: (text) => (
+                <Tooltip title={text} placement="topLeft">
+                    <div
+                        // line-clamp-1: Ép hiển thị tối đa 1 dòng rồi ra 3 chấm
+                        // break-all / break-words: Đảm bảo chữ dài không dấu cách cũng bị bẻ gãy
+                        className="line-clamp-1 break-words"
+                        style={{ color: colorTextSecondary }}
+                    >
+                        {text}
+                    </div>
+                </Tooltip>
+            ),
         },
+        {
+            title: 'Thời gian',
+            align: 'right',
+            width: 140,
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+            sorter: true,
+            render: (date) => formatDateTime(date),
+        },
+        {
+            title: '',
+            key: 'action',
+            width: 40,
+            align: 'center',
+            fixed: 'right',
+            render: (_, record) => (
+                <TableActionDropdown
+                    actions={[
+                        {
+                            key: 'view_detail',
+                            label: 'Xem chi tiết',
+                            icon: <EyeOutlined />,
+                            onClick: () => setDetailModal({ isOpen: true, transactionId: record.id }),
+                        },
+                    ]}
+                />
+            ),
+        },
+
+
+
     ];
 
     return (
-        <div className="w-full">
-            <div className="mb-6">
-                <Title level={3} style={{ margin: 0 }}>Lịch sử giao dịch</Title>
-                <Text type="secondary" className="block mt-2">
-                    Quản lý danh sách các biên lai nạp tiền và thanh toán gói dịch vụ của bạn.
-                </Text>
+        <div className="w-full flex flex-col gap-4">
+            {/* 1. KHU VỰC HEADER */}
+            <div>
+                <div>
+                    <Title level={3} className="!m-0 flex items-center gap-2">
+                        <CreditCardOutlined />
+                        Lịch sử giao dịch
+                    </Title>
+                    <Text type="secondary" className="mt-1 block">
+                        Quản lý lịch sử nạp tiền và thanh toán phí đăng tin của bạn.
+                    </Text>
+                </div>
+                <Divider className="!mt-4 !mb-0" />
             </div>
 
-            <Divider className="!mt-6 !mb-[26px]" />
+            {/* 2. KHU VỰC THANH CÔNG CỤ (Action Bar) */}
+            <div className="flex flex-wrap items-center justify-between gap-4 w-full">
 
-            {/* Bỏ cái box bọc bên ngoài đi, vì DataTable đã là một khối độc lập chuẩn SAAS rồi */}
-            <DataTable<PaymentRecord>
-                data={MOCK_DATA}
-                total={MOCK_DATA.length}
-                loading={loading}
+                {/* 2.1 Bên trái: Tabs + Bộ Lọc */}
+                {/* flex-1 giúp khu vực này tự chiếm hết không gian còn lại để đẩy nút nạp tiền sang phải */}
+                <div className="flex flex-wrap items-center gap-4 flex-1 min-w-0">
+
+                    {/* VÙNG TABS */}
+                    <div className="min-w-0 overflow-hidden max-w-full">
+                        <Tabs
+                            activeKey={filters.type || 'ALL'}
+                            onChange={handleTabChange}
+                            className="[&_.ant-tabs-nav]:!mb-0"
+                            items={[
+                                { key: 'ALL', label: 'Tất cả' },
+                                ...TRANSACTION_TYPE_OPTIONS.map(opt => ({ key: opt.value, label: opt.label }))
+                            ]}
+                        />
+                    </div>
+
+                    {/* VÙNG FILTERS: DatePicker + Select */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <RangePicker
+                            format={DATE_FORMAT.DEFAULT}
+                            placeholder={['Từ ngày', 'Đến ngày']}
+                            onChange={handleDateRangeChange}
+                            className="w-full sm:w-[240px]"
+                            allowClear
+                            value={[
+                                filters.startDate ? dayjs(filters.startDate) : null,
+                                filters.endDate ? dayjs(filters.endDate) : null,
+                            ]}
+                        />
+
+                        <Select
+                            allowClear
+                            placeholder="Lọc theo trạng thái"
+                            onChange={handleStatusChange}
+                            value={filters.status}
+                            className="w-full sm:w-[180px]"
+                            options={TRANSACTION_STATUS_OPTIONS}
+                        />
+                    </div>
+                </div>
+
+                {/* 2.2 Bên phải: Nút Nạp Tiền */}
+                {/* Ở mobile thì dài ra (w-full), từ sm trở lên thì ôm gọn (sm:w-auto) */}
+                <TopUpButton
+                    type="primary"
+                    icon={<SwapOutlined />}
+                    className="w-full sm:w-auto h-9 sm:h-8 text-sm shrink-0"
+                >
+                    Nạp tiền
+                </TopUpButton>
+            </div>
+
+            {/* 3. KHU VỰC BẢNG DỮ LIỆU */}
+            <DataTable<Transaction>
                 columns={columns}
+                data={data?.content || []}
+                total={data?.totalElements || 0}
+                loading={isFetching}
                 tableState={tableState}
-                onChangeState={setTableState}
+                onChangeState={handleTableStateChange}
                 rowKey="id"
+                onRowClick={(record) => setDetailModal({ isOpen: true, transactionId: record.id })}
+            />
+
+            {/* 4. MODAL CHI TIẾT */}
+            <TransactionDetailModal
+                isOpen={detailModal.isOpen}
+                transactionId={detailModal.transactionId}
+                onClose={() => setDetailModal({ isOpen: false, transactionId: null })}
             />
         </div>
     );

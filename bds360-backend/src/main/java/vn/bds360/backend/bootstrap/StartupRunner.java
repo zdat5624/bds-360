@@ -43,6 +43,7 @@ import vn.bds360.backend.modules.post.entity.ListingDetail;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionType;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.transaction.repository.TransactionRepository;
 import vn.bds360.backend.modules.transaction.util.VnPayUtil;
@@ -810,7 +811,8 @@ public class StartupRunner implements CommandLineRunner {
                 TransactionStatus.FAILED);
 
         // Tạo 200 giao dịch mẫu
-        for (int i = 1; i <= 1000; i++) {
+        // Tạo 1000 giao dịch mẫu
+        for (int i = 1; i <= 2000; i++) {
             Transaction transaction = new Transaction();
 
             // Gán user ngẫu nhiên
@@ -818,14 +820,15 @@ public class StartupRunner implements CommandLineRunner {
             transaction.setUser(selectedUser);
 
             // Lấy danh sách Post của user này
-            List<Post> userPosts = postRepository.findByUser(selectedUser); // Giả định có phương thức này trong
-                                                                            // PostRepository
+            List<Post> userPosts = postRepository.findByUser(selectedUser);
 
             // Quyết định loại giao dịch: nạp tiền (50%) hoặc thanh toán phí đăng tin (50%)
             boolean isDeposit = random.nextBoolean();
             long amount;
             String description = "";
-            String txnId = VnPayUtil.getRandomNumber(10);
+
+            // 👇 FIX 1: Đảm bảo txnId là duy nhất tuyệt đối bằng cách ghép thêm biến i
+            String txnId = VnPayUtil.getRandomNumber(8) + "_" + i;
 
             if (isDeposit || userPosts.isEmpty()) { // Nếu không có Post hoặc là giao dịch nạp tiền
                 // Giao dịch nạp tiền
@@ -833,8 +836,12 @@ public class StartupRunner implements CommandLineRunner {
                 long maxAmount = 10_000_000L;
                 long amountRange = maxAmount - minAmount;
                 amount = minAmount + (long) (random.nextDouble() * amountRange); // Số tiền dương
+
                 TransactionStatus selectedStatus = statuses.get(random.nextInt(statuses.size()));
                 transaction.setStatus(selectedStatus);
+
+                // 👇 FIX 2: Set loại giao dịch là Nạp tiền
+                transaction.setType(TransactionType.DEPOSIT);
 
                 switch (selectedStatus) {
                     case PENDING:
@@ -849,16 +856,21 @@ public class StartupRunner implements CommandLineRunner {
                 }
                 transaction.setPaymentLink("https://payment.example.com/txn/" + txnId);
             } else {
-
+                // Giao dịch thanh toán phí đăng tin
                 Post selectedPost = userPosts.get(random.nextInt(userPosts.size()));
                 long minCost = 10_000L;
                 long maxCost = 1_000_000L;
                 long costRange = maxCost - minCost;
                 amount = -(minCost + (long) (random.nextDouble() * costRange));
+
                 transaction.setStatus(TransactionStatus.SUCCESS);
+
+                // 👇 FIX 2: Set loại giao dịch là Thanh toán (Trừ tiền)
+                transaction.setType(TransactionType.PAYMENT);
+
                 description = "Thanh toán phí đăng tin mã " + selectedPost.getId() + " thành công";
                 transaction.setPaymentLink(null);
-                txnId = null;
+                txnId = null; // Thanh toán nội bộ thì không có mã VNPAY
             }
 
             transaction.setAmount(amount);
@@ -877,7 +889,6 @@ public class StartupRunner implements CommandLineRunner {
 
             transactions.add(transaction);
         }
-
         transactionRepository.saveAll(transactions);
         System.out.println(">>> INIT DATA TABLE 'transactions' WITH DEPOSIT AND POST FEE: SUCCESS");
     }
@@ -894,60 +905,90 @@ public class StartupRunner implements CommandLineRunner {
         List<Transaction> transactions = transactionRepository.findAll();
         List<Notification> notifications = new ArrayList<>();
 
+        // Tăng giới hạn số random (0 đến 6) vì giờ ta có 7 case
         for (int i = 1; i <= 1000; i++) {
             Notification notification = new Notification();
 
             User selectedUser = users.get(random.nextInt(users.size()));
             notification.setUser(selectedUser);
 
-            // Chọn loại thông báo ngẫu nhiên (4 loại)
-            int notificationTypeIndex = random.nextInt(4);
+            int notificationTypeIndex = random.nextInt(7); // 👈 Tăng dải số random
             String message = "";
             NotificationType type;
 
             switch (notificationTypeIndex) {
-                case 0: // Người dùng xem tin đăng
+                case 0: // POST: Người dùng xem tin đăng
                     if (posts.isEmpty())
                         continue;
                     Post viewedPost = posts.get(random.nextInt(posts.size()));
                     User viewer = users.get(random.nextInt(users.size()));
-                    message = "Người dùng '" + viewer.getName() + " - " + viewer.getPhone() +
-                            " đã xem tin đăng mã " + viewedPost.getId() + " của  bạn.";
+                    message = String.format("Người dùng '%s - %s' đã xem số điện thoại của tin đăng mã '%d' của bạn.",
+                            viewer.getName(), viewer.getPhone(), viewedPost.getId());
                     type = NotificationType.POST;
                     notification.setUser(viewedPost.getUser());
                     break;
 
-                case 1: // tin đăng được chấp nhận
+                case 1: // POST: Tin đăng được chấp nhận
                     if (posts.isEmpty())
                         continue;
                     Post approvedPost = posts.get(random.nextInt(posts.size()));
-                    message = "Tin đăng mã '" + approvedPost.getId() + "' của bạn đã được kiểm  duyệt viên chấp nhận.";
-                    type = NotificationType.SYSTEM_ALERT;
+                    message = String.format("Tin đăng mã '%d' của bạn đã được kiểm duyệt viên chấp nhận.",
+                            approvedPost.getId());
+                    type = NotificationType.POST;
                     notification.setUser(approvedPost.getUser());
                     break;
 
-                case 2: // tin đăng bị từ chối
+                case 2: // POST: Tin đăng bị từ chối
                     if (posts.isEmpty())
                         continue;
                     Post rejectedPost = posts.get(random.nextInt(posts.size()));
-                    message = "Tin đăng mã '" + rejectedPost.getId() + "' của bạn đã bị kiểm  duyệt viên từ chối.";
-                    type = NotificationType.SYSTEM_ALERT;
+                    message = String.format("Tin đăng mã '%d' của bạn đã bị từ chối do vi phạm điều khoản.",
+                            rejectedPost.getId());
+                    type = NotificationType.POST;
                     notification.setUser(rejectedPost.getUser());
                     break;
 
-                case 3:
+                case 3: // TRANSACTION: Nạp tiền thành công
                     if (transactions.isEmpty())
                         continue;
-                    Transaction successfulTransaction = transactions.stream()
+                    Transaction depositTx = transactions.stream()
                             .filter(t -> t.getStatus() == TransactionStatus.SUCCESS && t.getAmount() > 0)
                             .findAny()
                             .orElse(null);
-                    if (successfulTransaction == null)
+                    if (depositTx == null)
                         continue;
-                    message = "Giao dịch nạp tiền thành công, tài khoản  của bạn cộng "
-                            + successfulTransaction.getAmount() + " VNĐ";
+                    message = String.format("Giao dịch thành công. Tài khoản của bạn được cộng %,d VNĐ.",
+                            depositTx.getAmount());
                     type = NotificationType.TRANSACTION;
-                    notification.setUser(successfulTransaction.getUser());
+                    notification.setUser(depositTx.getUser());
+                    break;
+
+                // ================= CÁC CASE MỚI THÊM VÀO =================
+
+                case 4: // TRANSACTION: Trừ tiền (Đẩy tin/Mua VIP)
+                    if (transactions.isEmpty())
+                        continue;
+                    Transaction paymentTx = transactions.stream()
+                            .filter(t -> t.getStatus() == TransactionStatus.SUCCESS && t.getAmount() < 0)
+                            .findAny()
+                            .orElse(null);
+                    if (paymentTx == null)
+                        continue;
+                    message = String.format("Thanh toán thành công. Tài khoản của bạn bị trừ %,d VNĐ cho dịch vụ %s.",
+                            Math.abs(paymentTx.getAmount()), paymentTx.getDescription());
+                    type = NotificationType.TRANSACTION;
+                    notification.setUser(paymentTx.getUser());
+                    break;
+
+                case 5: // SYSTEM_ALERT: Cảnh báo sắp hết hạn VIP
+                    message = "Gói VIP của bạn sẽ hết hạn trong vòng 3 ngày tới. Vui lòng gia hạn để duy trì quyền lợi.";
+                    type = NotificationType.SYSTEM_ALERT;
+                    // notification.setUser đã được gán selectedUser ngẫu nhiên ở trên
+                    break;
+
+                case 6: // SYSTEM_ALERT: Bảo trì hệ thống / Khuyến mãi
+                    message = "Hệ thống BDS360 sẽ bảo trì định kỳ từ 00:00 đến 02:00 sáng mai. Xin lỗi vì sự bất tiện này!";
+                    type = NotificationType.SYSTEM_ALERT;
                     break;
 
                 default:
@@ -956,8 +997,9 @@ public class StartupRunner implements CommandLineRunner {
 
             notification.setMessage(message);
             notification.setType(type);
-            notification.setRead(random.nextBoolean());
+            notification.setRead(random.nextBoolean()); // Random 50/50 đọc hay chưa
 
+            // Random ngày tạo trong vòng 30 ngày qua
             long secondsIn30Days = 30L * 24 * 60 * 60;
             long randomSeconds = (long) (random.nextDouble() * secondsIn30Days);
             notification.setCreatedAt(Instant.now().minusSeconds(randomSeconds));

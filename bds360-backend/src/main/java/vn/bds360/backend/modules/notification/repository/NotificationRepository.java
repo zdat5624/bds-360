@@ -1,5 +1,7 @@
 package vn.bds360.backend.modules.notification.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,10 +29,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
                         Pageable pageable);
 
         @Modifying
-        @Query("DELETE FROM Notification n WHERE n.id IN :ids AND n.user.id = :userId")
-        int deleteByIdsAndUserId(@Param("ids") Iterable<Long> ids, @Param("userId") Long userId);
-
-        @Modifying
         @Query("UPDATE Notification n SET n.isRead = true WHERE n.id IN :ids AND n.user.id = :userId")
         int markAsReadByIdsAndUserId(@Param("ids") Iterable<Long> ids, @Param("userId") Long userId);
 
@@ -42,4 +40,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
                         + "FROM Notification n WHERE n.user.id = :userId AND n.isRead = false "
                         + "GROUP BY n.type")
         Iterable<Object[]> countUnreadByType(@Param("userId") Long userId);
+
+        void deleteByIdInAndUserId(List<Long> ids, Long userId);
 }

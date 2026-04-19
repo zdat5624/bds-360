@@ -7,7 +7,7 @@ export interface Notification {
     id: number;
     message: string;
     type: NotificationType;
-    isRead: boolean;
+    read: boolean;
     createdAt: string;
 }
 
@@ -16,11 +16,16 @@ export interface NotificationCount {
     count: number;
 }
 
+export interface CreateNotificationPayload {
+    userId: number;
+    message: string;
+    type: NotificationType;
+}
+
 export interface NotificationFilterParams extends BaseFilterParams {
     isRead?: boolean;
     type?: NotificationType;
 }
-
 export interface ViewPhoneNotificationPayload {
     postId: number;
     recipientId: number;

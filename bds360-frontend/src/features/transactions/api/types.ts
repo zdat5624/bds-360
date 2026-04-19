@@ -1,7 +1,7 @@
 // @/features/transactions/api/types.ts
 
 import { BaseFilterParams } from '@/types';
-import { TransactionFilterType, TransactionStatus } from '../transactions.constant';
+import { TransactionStatus, TransactionType } from '../transactions.constant';
 
 export interface TransactionUser {
     id: number;
@@ -15,6 +15,7 @@ export interface Transaction {
     status: TransactionStatus;
     paymentLink?: string;
     txnId?: string;
+    type: TransactionType; // BỔ SUNG: Khớp với TransactionResponse.java
     description?: string;
     createdAt: string;
     updatedAt?: string;
@@ -34,7 +35,7 @@ export interface TransactionFilterParams extends BaseFilterParams {
     transactionId?: number;
     txnId?: string;
     status?: TransactionStatus;
-    type?: TransactionFilterType;
+    type?: TransactionType;
     startDate?: string;
     endDate?: string;
 }

@@ -7,7 +7,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
-import vn.bds360.backend.modules.transaction.constant.TransactionFilterType;
 import vn.bds360.backend.modules.transaction.dto.request.TransactionFilterRequest;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
 import vn.bds360.backend.modules.user.entity.User;
@@ -46,12 +45,8 @@ public class TransactionSpecification {
             }
 
             // 6. Lọc theo loại giao dịch (DEPOSIT: nạp tiền, PAYMENT: trừ tiền)
-            if (filter.getType() != null && filter.getType() != TransactionFilterType.ALL) {
-                if (filter.getType() == TransactionFilterType.DEPOSIT) {
-                    predicates.add(cb.greaterThan(root.get("amount"), 0L));
-                } else if (filter.getType() == TransactionFilterType.PAYMENT) {
-                    predicates.add(cb.lessThan(root.get("amount"), 0L));
-                }
+            if (filter.getType() != null) {
+                predicates.add(cb.equal(root.get("type"), filter.getType()));
             }
 
             // 7. Lọc theo khoảng thời gian tạo giao dịch

@@ -17,12 +17,15 @@ export function useAppTheme() {
         colorBgElevated: token.colorBgElevated,   // Nền nổi (Popup, Dropdown, Modal)
         colorBgMask: token.colorBgMask,           // Màu màn mờ đen (Phía sau Modal/Drawer)
 
+        colorFillAlter: token.colorFillAlter,
+
         // 2. Nhóm Màu Chữ (Typography)
         colorText: token.colorText,                   // Chữ chính (Tiêu đề, nội dung)
         colorTextSecondary: token.colorTextSecondary, // Chữ phụ (Mô tả, Email, Caption)
         colorTextTertiary: token.colorTextTertiary,   // Chữ mờ (Placeholder, icon phụ)
         colorTextLightSolid: token.colorTextLightSolid, // Chữ trắng (Nằm trên nút Primary hoặc nền đậm)
         colorBgTextHover: token.colorBgTextHover,
+        colorTextPlaceholder: token.colorTextPlaceholder,
 
         // 3. Nhóm Màu Viền (Borders)
         colorBorder: token.colorBorder,                   // Viền tiêu chuẩn (Khung Input, Select)

@@ -73,7 +73,7 @@ export function UserInfo() {
             </div>
 
             <div
-                className="p-3.5 rounded-xl border shadow-sm flex flex-col gap-1.5"
+                className="p-3.5 rounded-md border shadow-sm flex flex-col gap-1.5"
                 style={{ background: colorBgLayout, borderColor: colorBorderSecondary }}
             >
                 {/* THUỐC CHỮA 2: Ép cứng chiều cao h-[24px] ở UI thật */}
@@ -81,7 +81,7 @@ export function UserInfo() {
                     <span className="text-[12px] font-medium uppercase tracking-wider leading-none" style={{ color: colorTextSecondary }}>
                         Số dư hiện tại
                     </span>
-                    <Button type="primary" shape="round" icon={<PlusOutlined />} className="shadow-none text-[12px] h-6 px-2.5">
+                    <Button type="primary" shape="default" icon={<PlusOutlined />} className="shadow-none text-[12px] h-6 px-2.5">
                         Nạp
                     </Button>
                 </div>

@@ -53,7 +53,6 @@ public class SecurityConfiguration {
 
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/v1/posts/my-posts").authenticated()
                                 .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers(
                                         "/",
@@ -61,7 +60,7 @@ public class SecurityConfiguration {
                                         "/api/v1/auth/**",
                                         "/api/v1/address/**",
 
-                                        "/api/v1/payment/vnpay-payment-return",
+                                        "/api/v1/payment/vnpay-return",
 
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
@@ -75,15 +74,18 @@ public class SecurityConfiguration {
                                         "/api/v1/vips",
                                         "/api/v1/categories",
                                         "/api/v1/categories/**",
-                                        "/api/v1/notifications",
                                         "/api/v1/posts/{postId}/address"
 
                                 ).permitAll()
 
+                                .requestMatchers(HttpMethod.POST, "/api/v1/posts/*/view").permitAll()
+
                                 .anyRequest().authenticated()
 
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler))

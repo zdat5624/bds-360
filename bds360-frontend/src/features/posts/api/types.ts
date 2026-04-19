@@ -144,3 +144,17 @@ export interface PostFilterParams extends BaseFilterParams {
     legalStatus?: LegalStatus;
     furnishing?: Furnishing;
 }
+
+export interface SavedPostFilterParams extends BaseFilterParams {
+    // Thêm các field đặc thù nếu cần, BaseFilterParams đã có page, size, sortBy, sortDirection
+}
+
+// Nếu bạn muốn tracking thêm ngày lưu ở Frontend
+export interface SavedPostResponse extends Post {
+    savedAt?: string;
+}
+
+export interface PostViewChartResponse {
+    date: string; // Có thể là "YYYY-MM-DD" (daily) hoặc "YYYY-MM" (monthly)
+    views: number;
+}

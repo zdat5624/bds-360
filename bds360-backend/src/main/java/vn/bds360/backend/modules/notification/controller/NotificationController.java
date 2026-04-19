@@ -2,21 +2,22 @@ package vn.bds360.backend.modules.notification.controller;
 
 import java.util.List;
 
-import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
-import vn.bds360.backend.common.constant.NotificationType;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
+import vn.bds360.backend.modules.notification.dto.request.CreateNotificationRequest;
+import vn.bds360.backend.modules.notification.dto.request.NotificationFilterRequest;
 import vn.bds360.backend.modules.notification.dto.request.ViewPhoneNotificationRequest;
 import vn.bds360.backend.modules.notification.dto.response.NotificationCountResponse;
 import vn.bds360.backend.modules.notification.dto.response.NotificationResponse;
@@ -38,16 +39,9 @@ public class NotificationController {
     @RequireLogin
     public ApiResponse<PageResponse<NotificationResponse>> getMyNotifications(
             @CurrentUser User user,
-            @RequestParam(required = false) Boolean isRead,
-            @RequestParam(required = false) NotificationType type,
-            Pageable pageable) {
-        return ApiResponse.success(notificationService.getUserNotifications(user, isRead, type, pageable));
-    }
-
-    @GetMapping("/unread-count")
-    @RequireLogin
-    public ApiResponse<Long> getUnreadCount(@CurrentUser User user) {
-        return ApiResponse.success(notificationService.getUnreadCount(user));
+            @Valid NotificationFilterRequest request) {
+        // Chuyển toàn bộ request DTO vào service
+        return ApiResponse.success(notificationService.getUserNotifications(user, request));
     }
 
     @PutMapping("/mark-as-read")
@@ -79,5 +73,28 @@ public class NotificationController {
         return ApiResponse.success(
                 notificationService.getUnreadCounts(user),
                 "Lấy thống kê thông báo thành công");
+    }
+
+    @PostMapping
+    @RequireLogin
+    public ApiResponse<Void> createNotification(
+            @RequestBody CreateNotificationRequest request) {
+
+        // Gọi hàm đã được viết sẵn trong NotificationService
+        notificationService.createNotification(
+                request.getUserId(),
+                request.getMessage(),
+                request.getType());
+
+        return ApiResponse.success(null, "Gửi thông báo thành công");
+    }
+
+    @DeleteMapping
+    @RequireLogin
+    public ApiResponse<Void> deleteNotifications(
+            @CurrentUser User user,
+            @RequestBody List<Long> ids) {
+        notificationService.deleteNotifications(user, ids);
+        return ApiResponse.success(null, "Xóa thông báo thành công");
     }
 }

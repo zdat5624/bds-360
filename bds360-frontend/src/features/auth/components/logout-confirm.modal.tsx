@@ -32,7 +32,7 @@ export function LogoutConfirmModal({ isOpen, onClose }: Props) {
             content="Bạn có chắc chắn muốn đăng xuất khỏi hệ thống BDS360 không?"
             okText="Đăng xuất"
             cancelText="Hủy"
-            isDanger={true}
+            isDanger={false}
         />
     );
 }

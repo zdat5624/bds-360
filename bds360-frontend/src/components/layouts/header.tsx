@@ -7,11 +7,10 @@ import { LogoutConfirmModal } from '@/features/auth/components/logout-confirm.mo
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useAuthStore } from '@/stores/auth.store';
 import {
-    BellOutlined,
     LogoutOutlined,
     MenuOutlined
 } from '@ant-design/icons';
-import { Avatar, Badge, Button, Divider, Drawer, Dropdown, Layout, Menu, Skeleton, Space, Typography } from 'antd';
+import { Avatar, Button, Divider, Drawer, Dropdown, Layout, Menu, Skeleton, Space, Typography } from 'antd';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -117,14 +116,6 @@ export function Header() {
                         </Space>
                     ) : (
                         <Space size="large" align="center" className="h-full">
-                            <Badge count={3} size="small">
-                                <Button
-                                    type="text"
-                                    shape="circle"
-                                    icon={<BellOutlined style={{ color: colorTextSecondary, fontSize: '18px' }} />}
-                                    onClick={() => router.push(APP_ROUTES.USER.NOTIFICATIONS)}
-                                />
-                            </Badge>
 
                             <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
                                 <div className="flex items-center gap-3 p-1 pr-3 rounded-full border border-transparent cursor-pointer transition-all hover:bg-slate-50">
@@ -156,6 +147,7 @@ export function Header() {
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                     }}
+                    className="md:!hidden"
                     onMouseEnter={(e) => {
                         e.currentTarget.style.background = colorBgTextHover;
                     }}
