@@ -152,8 +152,18 @@ public class StartupRunner implements CommandLineRunner {
 
         List<User> userList = new ArrayList<>();
         String password = passwordEncoder.encode("123456");
+        Random random = new Random();
 
-        // 1. Tạo Admin
+        // ===== DATA NAME =====
+        String[] lastNames = { "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Đặng" };
+        String[] maleMiddleNames = { "Văn", "Hữu", "Đức" };
+        String[] femaleMiddleNames = { "Thị", "Ngọc", "Thu" };
+        String[] maleFirstNames = { "Anh", "Bình", "Cường", "Dũng", "Hải", "Hưng", "Khánh", "Minh", "Nam" };
+        String[] femaleFirstNames = { "Anh", "Hà", "Hương", "Lan", "Linh", "Mai", "Ngọc", "Thảo", "Trang" };
+
+        String[] addresses = { "Hà Nội", "Đà Nẵng", "TP. Hồ Chí Minh" };
+
+        // ===== 1. ADMIN =====
         User admin = new User();
         admin.setEmail("admin@gmail.com");
         admin.setName("Quản trị viên");
@@ -161,37 +171,52 @@ public class StartupRunner implements CommandLineRunner {
         admin.setRole(Role.ADMIN);
         admin.setGender(Gender.MALE);
         admin.setAvatar("https://randomuser.me/api/portraits/men/97.jpg");
-
-        admin.setBalance(1000000000L);
+        admin.setBalance(1_000_000_000L);
         admin.setPhone("0123456789");
         admin.setAddress("TP. Hồ Chí Minh");
+
         userList.add(admin);
 
-        // 2. Tạo 50 Users ngẫu nhiên
+        // ===== 2. USERS =====
         for (int i = 1; i <= 50; i++) {
             User user = new User();
+
             user.setEmail("user" + i + "@gmail.com");
-            user.setName(i % 2 == 0 ? "Nguyễn Văn " + i : "Trần Thị " + i);
             user.setPassword(password);
             user.setRole(Role.USER);
 
-            // Logic giới tính
-            Gender gender = (i % 2 == 0) ? Gender.MALE : Gender.FEMALE;
+            // Giới tính
+            Gender gender = random.nextBoolean() ? Gender.MALE : Gender.FEMALE;
             user.setGender(gender);
 
-            String genderApiDir = (gender == Gender.MALE) ? "men" : "women";
-            user.setAvatar("https://randomuser.me/api/portraits/" + genderApiDir + "/" + i + ".jpg");
+            // ===== RANDOM NAME =====
+            String lastName = lastNames[random.nextInt(lastNames.length)];
+            String middleName = (gender == Gender.MALE)
+                    ? maleMiddleNames[random.nextInt(maleMiddleNames.length)]
+                    : femaleMiddleNames[random.nextInt(femaleMiddleNames.length)];
 
-            user.setBalance(500000L * i);
-            user.setPhone("090" + String.format("%07d", i));
-            user.setAddress(i % 3 == 0 ? "Hà Nội" : (i % 3 == 1 ? "Đà Nẵng" : "TP. Hồ Chí Minh"));
+            String firstName = (gender == Gender.MALE)
+                    ? maleFirstNames[random.nextInt(maleFirstNames.length)]
+                    : femaleFirstNames[random.nextInt(femaleFirstNames.length)];
+
+            user.setName(lastName + " " + middleName + " " + firstName);
+
+            // ===== AVATAR =====
+            String genderApiDir = (gender == Gender.MALE) ? "men" : "women";
+            int avatarIndex = random.nextInt(100); // tránh vượt range
+            user.setAvatar("https://randomuser.me/api/portraits/" + genderApiDir + "/" + avatarIndex + ".jpg");
+
+            // ===== OTHER INFO =====
+            user.setBalance(500_000L * i);
+            user.setPhone("09" + String.format("%08d", random.nextInt(100_000_000)));
+            user.setAddress(addresses[random.nextInt(addresses.length)]);
 
             userList.add(user);
         }
 
         userRepository.saveAll(userList);
 
-        // 3. Seed dữ liệu hồ sơ xác thực (Verification Submissions)
+        // ===== 3. VERIFICATION =====
         seedVerificationSubmissions(userList);
     }
 
