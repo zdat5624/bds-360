@@ -224,35 +224,66 @@ public class StartupRunner implements CommandLineRunner {
         List<VerificationSubmission> submissions = new ArrayList<>();
         Instant now = Instant.now();
 
-        for (int i = 0; i < Math.min(users.size(), 20); i++) { // Tăng lên 20 user cho data dày
+        for (int i = 0; i < users.size(); i++) {
             User user = users.get(i);
 
-            // Mặc định ban đầu là false (đề phòng)
+            // Reset mặc định
             user.setIsVerified(false);
 
-            if (i % 3 == 0) {
-                // CASE 1: Có đơn APPROVED -> BẮT BUỘC setVerified(true)
-                submissions.add(createSub(user, VerificationStatus.REJECTED, "Ảnh mờ", now.minusSeconds(86400 * 3)));
-                submissions.add(createSub(user, VerificationStatus.APPROVED, "Ok", now.minusSeconds(86400 * 1)));
+            int caseType = i % 3;
 
-                user.setIsVerified(true);
-            } else if (i % 3 == 1) {
-                // CASE 2: Chỉ có REJECTED và PENDING -> isVerified phải là false
-                submissions.add(
-                        createSub(user, VerificationStatus.REJECTED, "Sai định dạng", now.minusSeconds(86400 * 2)));
-                submissions.add(createSub(user, VerificationStatus.PENDING, null, now.minusSeconds(3600)));
+            switch (caseType) {
+                case 0 -> {
+                    // ===== CASE 1: Đã duyệt =====
+                    submissions.add(createSub(
+                            user,
+                            VerificationStatus.REJECTED,
+                            "Ảnh mờ",
+                            now.minusSeconds(86400 * 3)));
 
-                user.setIsVerified(false);
-            } else {
-                // CASE 3: Đang chờ duyệt lần đầu -> isVerified phải là false
-                submissions.add(createSub(user, VerificationStatus.PENDING, null, now.minusSeconds(7200)));
+                    submissions.add(createSub(
+                            user,
+                            VerificationStatus.APPROVED,
+                            "Hợp lệ",
+                            now.minusSeconds(86400)));
 
-                user.setIsVerified(false);
+                    user.setIsVerified(true);
+                }
+
+                case 1 -> {
+                    // ===== CASE 2: Bị từ chối + đang chờ =====
+                    submissions.add(createSub(
+                            user,
+                            VerificationStatus.REJECTED,
+                            "Sai định dạng",
+                            now.minusSeconds(86400 * 2)));
+
+                    submissions.add(createSub(
+                            user,
+                            VerificationStatus.PENDING,
+                            null,
+                            now.minusSeconds(3600)));
+
+                    user.setIsVerified(false);
+                }
+
+                case 2 -> {
+                    // ===== CASE 3: Mới gửi lần đầu =====
+                    submissions.add(createSub(
+                            user,
+                            VerificationStatus.PENDING,
+                            null,
+                            now.minusSeconds(7200)));
+
+                    user.setIsVerified(false);
+                }
             }
         }
 
-        // Lưu lại User sau khi đã cập nhật isVerified chính xác theo hồ sơ
-        userRepository.saveAll(users.subList(0, Math.min(users.size(), 20)));
+        // Lưu toàn bộ user
+        userRepository.saveAll(users);
+
+        // Lưu toàn bộ submissions
         verificationRepo.saveAll(submissions);
     }
 
