@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.constant.NotificationType;
 import vn.bds360.backend.common.constant.Role;
-import vn.bds360.backend.common.dto.request.BaseFilterRequest;
 import vn.bds360.backend.common.dto.response.PageResponse;
 import vn.bds360.backend.common.exception.AppException;
 import vn.bds360.backend.common.exception.ErrorCode;
@@ -28,6 +27,7 @@ import vn.bds360.backend.modules.address.repository.WardRepository;
 import vn.bds360.backend.modules.address.service.MapboxGeocodeService;
 import vn.bds360.backend.modules.notification.service.NotificationService;
 import vn.bds360.backend.modules.post.constant.PostStatus;
+import vn.bds360.backend.modules.post.dto.request.ForYouPostRequest;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.dto.request.RelatedPostRequest;
@@ -417,54 +417,54 @@ public class PostService {
         return PageResponse.of(pageImpl);
     }
 
-    public PageResponse<PostResponse> getForYouPosts(User user, BaseFilterRequest request) {
+    public PageResponse<PostResponse> getForYouPosts(User user, ForYouPostRequest request) {
         int pageSize = (request.getSize() != null && request.getSize() > 0) ? request.getSize() : 10;
 
         List<Long> prefCategoryIds = new ArrayList<>();
         List<Long> prefProvinceCodes = new ArrayList<>();
         List<Long> excludes = new ArrayList<>();
 
-        // 1. Phân tích "Sở thích" (Preferences) nếu user đã đăng nhập
         if (user != null) {
             List<PostViewHistory> history = postViewHistoryRepository.findRecentHistoryByUser(user);
             for (PostViewHistory h : history) {
                 prefCategoryIds.add(h.getPost().getCategory().getId());
                 prefProvinceCodes.add(h.getPost().getProvince().getCode());
-                excludes.add(h.getPost().getId()); // Tránh gợi ý lại đúng tin họ vừa xem
+                excludes.add(h.getPost().getId());
             }
         }
 
-        // Cấu hình Sort mặc định: VIP giảm dần -> Mới nhất
         Sort sort = Sort.by(Sort.Direction.DESC, "vip.vipLevel")
                 .and(Sort.by(Sort.Direction.DESC, "createdAt"));
 
         List<Post> finalPosts = new ArrayList<>();
 
         // =========================================
-        // TIER 1: CÁ NHÂN HÓA (Dùng ForYouSpecification)
+        // TIER 1: CÁ NHÂN HÓA
         // =========================================
         if (user != null && (!prefCategoryIds.isEmpty() || !prefProvinceCodes.isEmpty())) {
-            var spec1 = ForYouSpecification.buildTier1Spec(user.getId(), prefCategoryIds, prefProvinceCodes, excludes);
+            // 🌟 TRUYỀN THÊM request.getType()
+            var spec1 = ForYouSpecification.buildTier1Spec(user.getId(), prefCategoryIds, prefProvinceCodes, excludes,
+                    request.getType());
 
             List<Post> tier1Posts = postRepository.findAll(spec1, PageRequest.of(0, pageSize, sort)).getContent();
             finalPosts.addAll(tier1Posts);
-            tier1Posts.forEach(p -> excludes.add(p.getId())); // Cập nhật excludes cho Tier 2
+            tier1Posts.forEach(p -> excludes.add(p.getId()));
         }
 
         // =========================================
-        // TIER 2: VÉT ĐÁY (Dùng ForYouSpecification)
+        // TIER 2: VÉT ĐÁY
         // =========================================
         if (finalPosts.size() < pageSize) {
             int missingCount = pageSize - finalPosts.size();
             Long currentUserId = (user != null) ? user.getId() : null;
 
-            var spec2 = ForYouSpecification.buildTier2Spec(currentUserId, excludes);
+            // 🌟 TRUYỀN THÊM request.getType()
+            var spec2 = ForYouSpecification.buildTier2Spec(currentUserId, excludes, request.getType());
 
             List<Post> tier2Posts = postRepository.findAll(spec2, PageRequest.of(0, missingCount, sort)).getContent();
             finalPosts.addAll(tier2Posts);
         }
 
-        // 3. Map list cuối cùng sang DTO và trả về
         List<PostResponse> responseList = finalPosts.stream().map(postMapper::toResponse).toList();
         var pageImpl = new org.springframework.data.domain.PageImpl<>(
                 responseList, PageRequest.of(0, pageSize), responseList.size());

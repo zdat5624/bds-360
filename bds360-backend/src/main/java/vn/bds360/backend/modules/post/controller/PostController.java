@@ -16,9 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
-import vn.bds360.backend.common.dto.request.BaseFilterRequest;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
+import vn.bds360.backend.modules.post.dto.request.ForYouPostRequest;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.dto.request.RelatedPostRequest;
@@ -105,7 +105,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PostResponse>> getForYouPosts(
             @CurrentUser User user,
-            @Valid BaseFilterRequest request) { // Tái sử dụng BaseFilterRequest để lấy page/size
+            @Valid ForYouPostRequest request) { // 🌟 Đổi tham số nhận vào
 
         return ApiResponse.success(postService.getForYouPosts(user, request),
                 "Lấy danh sách tin dành cho bạn thành công");

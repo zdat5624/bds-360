@@ -59,7 +59,6 @@ import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.entity.VerificationSubmission;
 import vn.bds360.backend.modules.user.repository.UserRepository;
 import vn.bds360.backend.modules.user.repository.VerificationSubmissionRepository;
-import vn.bds360.backend.modules.user.service.UserService;
 import vn.bds360.backend.modules.vip.entity.Vip;
 import vn.bds360.backend.modules.vip.repository.VipRepository;
 
@@ -74,7 +73,6 @@ public class StartupRunner implements CommandLineRunner {
     private final WardRepository wardRepository;
     private final PasswordEncoder passwordEncoder;
     private final CategoryRepository categoryRepository;
-    private final UserService userService;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
