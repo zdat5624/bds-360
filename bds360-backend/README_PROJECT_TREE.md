@@ -8,7 +8,6 @@ bds360-backend
 ├─ mvnw.cmd
 ├─ pom.xml
 ├─ README.md
-├─ README_PROJECT_TREE.md
 ├─ src
 │  ├─ main
 │  │  ├─ java
@@ -86,7 +85,7 @@ bds360-backend
 │  │  │           │  │  │  │  ├─ RegisterRequest.java
 │  │  │           │  │  │  │  └─ ResetPasswordRequest.java
 │  │  │           │  │  │  └─ response
-│  │  │           │  │  │     └─ LoginResponse.java
+│  │  │           │  │  │     └─ AuthResponse.java
 │  │  │           │  │  ├─ entity
 │  │  │           │  │  │  └─ PasswordResetToken.java
 │  │  │           │  │  ├─ mapper
@@ -130,6 +129,7 @@ bds360-backend
 │  │  │           │  │  ├─ dto
 │  │  │           │  │  │  ├─ request
 │  │  │           │  │  │  │  ├─ CreateNotificationRequest.java
+│  │  │           │  │  │  │  ├─ NotificationFilterRequest.java
 │  │  │           │  │  │  │  └─ ViewPhoneNotificationRequest.java
 │  │  │           │  │  │  └─ response
 │  │  │           │  │  │     ├─ NotificationCountResponse.java
@@ -149,29 +149,42 @@ bds360-backend
 │  │  │           │  │  │  ├─ LegalStatus.java
 │  │  │           │  │  │  └─ PostStatus.java
 │  │  │           │  │  ├─ controller
-│  │  │           │  │  │  ├─ AdminPostController.java
-│  │  │           │  │  │  └─ PostController.java
+│  │  │           │  │  │  ├─ ManagePostController.java
+│  │  │           │  │  │  ├─ PostAnalyticsController.java
+│  │  │           │  │  │  ├─ PostController.java
+│  │  │           │  │  │  └─ SavedPostController.java
 │  │  │           │  │  ├─ dto
 │  │  │           │  │  │  ├─ request
+│  │  │           │  │  │  │  ├─ ForYouPostRequest.java
 │  │  │           │  │  │  │  ├─ ListingDetailRequest.java
 │  │  │           │  │  │  │  ├─ PostCreateRequest.java
 │  │  │           │  │  │  │  ├─ PostFilterRequest.java
+│  │  │           │  │  │  │  ├─ RelatedPostRequest.java
 │  │  │           │  │  │  │  ├─ UpdatePostRequest.java
 │  │  │           │  │  │  │  └─ UpdatePostStatusRequest.java
 │  │  │           │  │  │  └─ response
-│  │  │           │  │  │     └─ PostResponse.java
+│  │  │           │  │  │     ├─ PostResponse.java
+│  │  │           │  │  │     ├─ PostViewChartResponse.java
+│  │  │           │  │  │     └─ SavedPostResponse.java
 │  │  │           │  │  ├─ entity
 │  │  │           │  │  │  ├─ Image.java
 │  │  │           │  │  │  ├─ ListingDetail.java
-│  │  │           │  │  │  └─ Post.java
+│  │  │           │  │  │  ├─ Post.java
+│  │  │           │  │  │  ├─ PostViewHistory.java
+│  │  │           │  │  │  └─ SavedPost.java
 │  │  │           │  │  ├─ mapper
 │  │  │           │  │  │  └─ PostMapper.java
 │  │  │           │  │  ├─ repository
 │  │  │           │  │  │  ├─ ImageRepository.java
-│  │  │           │  │  │  └─ PostRepository.java
+│  │  │           │  │  │  ├─ PostRepository.java
+│  │  │           │  │  │  ├─ PostViewHistoryRepository.java
+│  │  │           │  │  │  └─ SavedPostRepository.java
 │  │  │           │  │  ├─ service
-│  │  │           │  │  │  └─ PostService.java
+│  │  │           │  │  │  ├─ PostAnalyticsService.java
+│  │  │           │  │  │  ├─ PostService.java
+│  │  │           │  │  │  └─ SavedPostService.java
 │  │  │           │  │  └─ specification
+│  │  │           │  │     ├─ ForYouSpecification.java
 │  │  │           │  │     └─ PostSpecification.java
 │  │  │           │  ├─ statistic
 │  │  │           │  │  ├─ controller
@@ -189,8 +202,8 @@ bds360-backend
 │  │  │           │  │  ├─ config
 │  │  │           │  │  │  └─ VnPayProperties.java
 │  │  │           │  │  ├─ constant
-│  │  │           │  │  │  ├─ TransactionFilterType.java
-│  │  │           │  │  │  └─ TransactionStatus.java
+│  │  │           │  │  │  ├─ TransactionStatus.java
+│  │  │           │  │  │  └─ TransactionType.java
 │  │  │           │  │  ├─ controller
 │  │  │           │  │  │  ├─ PaymentController.java
 │  │  │           │  │  │  └─ TransactionController.java
@@ -216,27 +229,38 @@ bds360-backend
 │  │  │           │  │     └─ VnPayUtil.java
 │  │  │           │  ├─ user
 │  │  │           │  │  ├─ constant
-│  │  │           │  │  │  └─ Gender.java
+│  │  │           │  │  │  ├─ Gender.java
+│  │  │           │  │  │  └─ VerificationStatus.java
 │  │  │           │  │  ├─ controller
-│  │  │           │  │  │  └─ UserController.java
+│  │  │           │  │  │  ├─ UserController.java
+│  │  │           │  │  │  └─ VerificationController.java
 │  │  │           │  │  ├─ dto
 │  │  │           │  │  │  ├─ request
 │  │  │           │  │  │  │  ├─ CreateUserRequest.java
+│  │  │           │  │  │  │  ├─ ReviewVerificationRequest.java
+│  │  │           │  │  │  │  ├─ SubmitVerificationRequest.java
 │  │  │           │  │  │  │  ├─ UpdateProfileRequest.java
 │  │  │           │  │  │  │  ├─ UpdateUserRequest.java
-│  │  │           │  │  │  │  └─ UserFilterRequest.java
+│  │  │           │  │  │  │  ├─ UserFilterRequest.java
+│  │  │           │  │  │  │  └─ VerificationFilterRequest.java
 │  │  │           │  │  │  └─ response
-│  │  │           │  │  │     └─ UserResponse.java
+│  │  │           │  │  │     ├─ UserResponse.java
+│  │  │           │  │  │     └─ VerificationResponse.java
 │  │  │           │  │  ├─ entity
-│  │  │           │  │  │  └─ User.java
+│  │  │           │  │  │  ├─ User.java
+│  │  │           │  │  │  └─ VerificationSubmission.java
 │  │  │           │  │  ├─ mapper
-│  │  │           │  │  │  └─ UserMapper.java
+│  │  │           │  │  │  ├─ UserMapper.java
+│  │  │           │  │  │  └─ VerificationMapper.java
 │  │  │           │  │  ├─ repository
-│  │  │           │  │  │  └─ UserRepository.java
+│  │  │           │  │  │  ├─ UserRepository.java
+│  │  │           │  │  │  └─ VerificationSubmissionRepository.java
 │  │  │           │  │  ├─ service
-│  │  │           │  │  │  └─ UserService.java
+│  │  │           │  │  │  ├─ UserService.java
+│  │  │           │  │  │  └─ VerificationService.java
 │  │  │           │  │  └─ specification
-│  │  │           │  │     └─ UserSpecification.java
+│  │  │           │  │     ├─ UserSpecification.java
+│  │  │           │  │     └─ VerificationSpecification.java
 │  │  │           │  └─ vip
 │  │  │           │     ├─ controller
 │  │  │           │     │  └─ VipController.java
@@ -259,8 +283,10 @@ bds360-backend
 │  │  │           │  ├─ annotation
 │  │  │           │  │  ├─ CurrentUser.java
 │  │  │           │  │  ├─ IsAdmin.java
+│  │  │           │  │  ├─ IsAdminOrModerator.java
 │  │  │           │  │  └─ RequireLogin.java
 │  │  │           │  ├─ config
+│  │  │           │  │  ├─ GoogleProperties.java
 │  │  │           │  │  └─ JwtProperties.java
 │  │  │           │  ├─ CustomAccessDeniedHandler.java
 │  │  │           │  ├─ CustomAuthenticationEntryPoint.java
@@ -269,7 +295,7 @@ bds360-backend
 │  │  │           │  ├─ resolver
 │  │  │           │  │  └─ CurrentUserArgumentResolver.java
 │  │  │           │  ├─ SecurityConfiguration.java
-│  │  │           │  └─ SecurityUtil.java
+│  │  │           │  └─ SecurityService.java
 │  │  │           └─ websocket
 │  │  │              └─ WebSocketConfig.java
 │  │  └─ resources
@@ -286,6 +312,3 @@ bds360-backend
 │           └─ bds360
 │              └─ backend
 │                 └─ Bds360BackendApplicationTests.java
-└
-
-```

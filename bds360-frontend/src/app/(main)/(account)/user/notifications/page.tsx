@@ -40,7 +40,7 @@ const { Title, Text } = Typography;
 
 export default function UserNotificationsPage() {
     // --- HOOKS & THEME ---
-    const { colorTextSecondary, colorText, colorPrimary, colorError } = useAppTheme();
+    const { colorTextSecondary, colorText, colorPrimary, colorBorderSecondary } = useAppTheme();
 
     // --- STATE BỘ LỌC & PHÂN TRANG ---
     const [filters, setFilters] = useState<NotificationFilterParams>({
@@ -281,7 +281,15 @@ export default function UserNotificationsPage() {
                     <Tabs
                         activeKey={filters.type || 'ALL'}
                         onChange={handleTabChange}
-                        className="[&_.ant-tabs-nav]:!mb-0"
+                        className="
+                            [&_.ant-tabs-nav]:!mb-0
+                            [&_.ant-tabs-nav::before]:hidden
+                            [&_.ant-tabs-nav-list]:border-b
+                        "
+                        style={{
+                            // 👇 inject màu dynamic từ theme
+                            ['--tabs-border-color' as any]: colorBorderSecondary
+                        }}
                         items={[
                             { key: 'ALL', label: 'Tất cả' },
                             ...Object.values(NOTIFICATION_TYPE_OPTIONS).map(type => ({

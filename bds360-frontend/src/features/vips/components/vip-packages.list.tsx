@@ -14,38 +14,54 @@ import { useRouter } from 'next/navigation';
 const { Title, Text } = Typography;
 
 export function VipPackagesList() {
-    // Kéo thêm colorTextLightSolid ra để dùng cho chữ màu trắng
     const {
-        colorSuccess, colorError, colorTextSecondary, colorBorderSecondary, colorPrimary, colorTextLightSolid
+        colorSuccess,
+        colorError,
+        colorTextSecondary,
+        colorBorderSecondary,
+        colorPrimary,
+        colorTextLightSolid
     } = useAppTheme();
 
     const router = useRouter();
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+    // Lấy dữ liệu thực tế từ Backend (chứa giá tiền)
     const { data: vipsData, isLoading } = useGetVips();
 
-    const handleSelectPackage = (pkgId: string) => {
+    const handleSelectPackage = (pkgId: number) => {
         if (!isAuthenticated) {
             router.push(APP_ROUTES.AUTH.LOGIN);
             return;
         }
-        router.push(`${APP_ROUTES.PUBLIC.HOME}create-post?vip=${pkgId}`);
+        // Chuyển hướng sang trang đăng tin kèm tham số gói VIP
+        router.push(`${APP_ROUTES.USER.CREATE_POST}?vip=${pkgId}`);
     };
 
-    const getRealPrice = (pkgId: string, defaultPriceText: string) => {
+    /**
+     * Lấy giá tiền từ API dựa trên ID trong constant
+     * Giả định: pkg.id 1 -> level 0, pkg.id 2 -> level 1, pkg.id 3 -> level 2
+     */
+    const getRealPrice = (pkgId: number, defaultPriceText: string) => {
         if (!vipsData) return defaultPriceText;
 
-        const level = parseInt(pkgId.split('_')[1]);
-        const realVip = vipsData.find(v => v.vipLevel === level);
+        // Ánh xạ id (1,2,3) sang vipLevel (0,1,2)
+        const levelMapping = pkgId - 1;
+        const realVip = vipsData.find(v => v.vipLevel === levelMapping);
 
         if (realVip && realVip.pricePerDay > 0) {
             return `${formatCurrency(realVip.pricePerDay)} / ngày`;
         }
-        return 'Miễn phí';
+
+        return pkgId === 1 ? 'Miễn phí' : defaultPriceText;
     };
 
     if (isLoading) {
-        return <Skeleton active paragraph={{ rows: 8 }} />;
+        return (
+            <div className="py-10">
+                <Skeleton active paragraph={{ rows: 10 }} />
+            </div>
+        );
     }
 
     return (
@@ -59,13 +75,17 @@ export function VipPackagesList() {
                                 borderColor: pkg.isPopular ? colorPrimary : colorBorderSecondary,
                             }}
                             styles={{
-                                body: { display: 'flex', flexDirection: 'column', height: '100%', padding: '24px' },
+                                body: {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: '100%',
+                                    padding: '24px'
+                                },
                             }}
                         >
                             {pkg.isPopular && (
                                 <div
-                                    // Xóa text-white, chuyển thành token colorTextLightSolid trong style
-                                    className="absolute top-0 right-0 text-[11px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg uppercase tracking-wider"
+                                    className="absolute top-0 right-0 text-[11px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg uppercase tracking-wider z-10"
                                     style={{
                                         background: colorPrimary,
                                         color: colorTextLightSolid
@@ -84,7 +104,7 @@ export function VipPackagesList() {
                                 </Title>
                             </div>
 
-                            <ul className="flex-1 flex flex-col gap-4 mb-8">
+                            <ul className="flex-1 flex flex-col gap-4 mb-8 list-none p-0">
                                 {pkg.features.map((feature, i) => (
                                     <li key={i} className="flex items-start gap-3">
                                         {feature.available ? (
@@ -103,11 +123,12 @@ export function VipPackagesList() {
                             </ul>
 
                             <Button
-                                type={pkg.id === 'VIP_0' ? 'default' : 'primary'}
+                                // Gói tiêu chuẩn (id: 1) dùng kiểu default, các gói VIP dùng primary
+                                type={pkg.id === 1 ? 'default' : 'primary'}
                                 size="large"
                                 block
                                 onClick={() => handleSelectPackage(pkg.id)}
-                                className="font-semibold shadow-none"
+                                className="font-semibold shadow-none h-11"
                             >
                                 {pkg.buttonText}
                             </Button>

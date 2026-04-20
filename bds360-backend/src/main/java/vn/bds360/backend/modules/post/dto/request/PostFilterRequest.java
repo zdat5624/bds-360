@@ -1,5 +1,7 @@
 package vn.bds360.backend.modules.post.dto.request;
 
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.ListingType;
@@ -16,7 +18,6 @@ public class PostFilterRequest extends BaseFilterRequest {
     private Long maxPrice;
     private Double minArea;
     private Double maxArea;
-    private PostStatus status;
     private Long categoryId;
     private ListingType type;
     private Long provinceCode;
@@ -29,8 +30,13 @@ public class PostFilterRequest extends BaseFilterRequest {
 
     private Integer bedrooms; // Truyền 1, 2, 3, 4, 5
     private Integer bathrooms; // Truyền 1, 2, 3, 4, 5
-    private CompassDirection direction;
+    private CompassDirection houseDirection;
     private CompassDirection balconyDirection;
     private LegalStatus legalStatus;
     private Furnishing furnishing;
+
+    private List<PostStatus> statuses;
+
+    private String userEmail;
+
 }

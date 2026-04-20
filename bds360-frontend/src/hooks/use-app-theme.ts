@@ -17,6 +17,7 @@ export function useAppTheme() {
         colorBgElevated: token.colorBgElevated,   // Nền nổi (Popup, Dropdown, Modal)
         colorBgMask: token.colorBgMask,           // Màu màn mờ đen (Phía sau Modal/Drawer)
 
+
         colorFillAlter: token.colorFillAlter,
 
         // 2. Nhóm Màu Chữ (Typography)
@@ -53,6 +54,14 @@ export function useAppTheme() {
         boxShadow: token.boxShadow,                   // Bóng đổ chuẩn cho Card
         boxShadowSecondary: token.boxShadowSecondary, // Bóng đổ đậm hơn cho Dropdown/Modal
 
+        colorSplit: token.colorSplit,
+        colorTextQuaternary: token.colorTextQuaternary,
+
+        colorFillTertiary: token.colorFillTertiary,
+        colorTextDescription: token.colorTextDescription,
+        colorFillSecondary: token.colorFillSecondary,
+
+        borderRadiusSM: token.borderRadiusSM,
 
         colorGoogle: customColors.colorGoogle,
         colorFacebook: customColors.colorFacebook,

@@ -14,11 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
+import vn.bds360.backend.modules.post.dto.request.PriceHistoryRequest;
+import vn.bds360.backend.modules.post.dto.response.NearbyLocationPriceResponse;
 import vn.bds360.backend.modules.post.dto.response.PostViewChartResponse;
+import vn.bds360.backend.modules.post.dto.response.PriceHistoryResponse;
 import vn.bds360.backend.modules.post.service.PostAnalyticsService;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.security.annotation.CurrentUser;
@@ -74,5 +78,23 @@ public class PostAnalyticsController {
                 months);
 
         return ApiResponse.success(chartData, "Lấy dữ liệu biểu đồ theo tháng thành công");
+    }
+
+    @GetMapping("/analytics/price-history")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PriceHistoryResponse> getPriceHistoryChart(
+            @Valid PriceHistoryRequest request) {
+        return ApiResponse.success(
+                postAnalyticsService.getPriceHistoryData(request),
+                "Lấy dữ liệu biểu đồ giá thành công");
+    }
+
+    @GetMapping("/analytics/nearby-locations")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<NearbyLocationPriceResponse>> getNearbyLocationsPrice(
+            @Valid PriceHistoryRequest request) {
+        return ApiResponse.success(
+                postAnalyticsService.getNearbyLocationsPrice(request),
+                "Lấy dữ liệu giá lân cận thành công");
     }
 }

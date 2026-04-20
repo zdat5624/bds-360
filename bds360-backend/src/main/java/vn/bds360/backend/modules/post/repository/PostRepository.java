@@ -19,56 +19,122 @@ import vn.bds360.backend.modules.user.entity.User;
 
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
 
-        @Modifying
-        @Transactional
-        @Query("UPDATE Post p SET p.status = :newStatus WHERE p.expireDate < :now")
-        int updateExpiredPosts(@Param("newStatus") PostStatus newStatus, @Param("now") Instant now);
+    @Modifying
+    @Transactional
+    @Query("UPDATE Post p SET p.status = :newStatus WHERE p.expireDate < :now")
+    int updateExpiredPosts(@Param("newStatus") PostStatus newStatus, @Param("now") Instant now);
 
-        List<Post> findByUser(User user);
+    List<Post> findByUser(User user);
 
-        @Query("SELECT p FROM Post p WHERE p.user.email = :userEmail " +
-                        "AND (:status IS NULL OR p.status = :status) " +
-                        "AND (:type IS NULL OR p.type = :type) " +
-                        "AND (p.deletedByUser = false) " +
-                        "AND (:provinceCode IS NULL OR p.province.code = :provinceCode) " +
-                        "AND (:postId IS NULL OR p.id = :postId)")
-        Page<Post> findMyPosts(@Param("userEmail") String userEmail,
-                        @Param("status") PostStatus status,
-                        @Param("type") ListingType type,
-                        @Param("provinceCode") Long provinceCode,
-                        @Param("postId") Long postId,
-                        Pageable pageable);
+    @Query("SELECT p FROM Post p WHERE p.user.email = :userEmail " +
+            "AND (:status IS NULL OR p.status = :status) " +
+            "AND (:type IS NULL OR p.type = :type) " +
+            "AND (p.deletedByUser = false) " +
+            "AND (:provinceCode IS NULL OR p.province.code = :provinceCode) " +
+            "AND (:postId IS NULL OR p.id = :postId)")
+    Page<Post> findMyPosts(@Param("userEmail") String userEmail,
+            @Param("status") PostStatus status,
+            @Param("type") ListingType type,
+            @Param("provinceCode") Long provinceCode,
+            @Param("postId") Long postId,
+            Pageable pageable);
 
-        @Query("SELECT " +
-                        "p.latitude, " +
-                        "p.longitude, " +
-                        "p.id as postId, " +
-                        "p.vip.id as vipId, " +
-                        "p.price " +
-                        "FROM Post p " +
-                        "WHERE (:minPrice IS NULL OR p.price >= :minPrice) " +
-                        "AND (:maxPrice IS NULL OR p.price <= :maxPrice) " +
-                        "AND (:minArea IS NULL OR p.area >= :minArea) " +
-                        "AND (:maxArea IS NULL OR p.area <= :maxArea) " +
-                        "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
-                        "AND (:type IS NULL OR p.type = :type) " +
-                        "AND (:provinceCode IS NULL OR p.province.code = :provinceCode) " +
-                        "AND (:districtCode IS NULL OR p.district.code = :districtCode) " +
-                        "AND (:wardCode IS NULL OR p.ward.code = :wardCode) " +
-                        "AND p.status IN ('APPROVED', 'REVIEW_LATER') " +
-                        "AND p.latitude IS NOT NULL AND p.longitude IS NOT NULL")
-        List<Object[]> findPostsForMap(
-                        @Param("minPrice") Long minPrice,
-                        @Param("maxPrice") Long maxPrice,
-                        @Param("minArea") Double minArea,
-                        @Param("maxArea") Double maxArea,
-                        @Param("categoryId") Long categoryId,
-                        @Param("type") ListingType type,
-                        @Param("provinceCode") Long provinceCode,
-                        @Param("districtCode") Long districtCode,
-                        @Param("wardCode") Long wardCode);
+    @Query("SELECT " +
+            "p.latitude, " +
+            "p.longitude, " +
+            "p.id as postId, " +
+            "p.vip.id as vipId, " +
+            "p.price " +
+            "FROM Post p " +
+            "WHERE (:minPrice IS NULL OR p.price >= :minPrice) " +
+            "AND (:maxPrice IS NULL OR p.price <= :maxPrice) " +
+            "AND (:minArea IS NULL OR p.area >= :minArea) " +
+            "AND (:maxArea IS NULL OR p.area <= :maxArea) " +
+            "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
+            "AND (:type IS NULL OR p.type = :type) " +
+            "AND (:provinceCode IS NULL OR p.province.code = :provinceCode) " +
+            "AND (:districtCode IS NULL OR p.district.code = :districtCode) " +
+            "AND (:wardCode IS NULL OR p.ward.code = :wardCode) " +
+            "AND p.status IN ('APPROVED', 'REVIEW_LATER') " +
+            "AND p.latitude IS NOT NULL AND p.longitude IS NOT NULL")
+    List<Object[]> findPostsForMap(
+            @Param("minPrice") Long minPrice,
+            @Param("maxPrice") Long maxPrice,
+            @Param("minArea") Double minArea,
+            @Param("maxArea") Double maxArea,
+            @Param("categoryId") Long categoryId,
+            @Param("type") ListingType type,
+            @Param("provinceCode") Long provinceCode,
+            @Param("districtCode") Long districtCode,
+            @Param("wardCode") Long wardCode);
 
-        @Query("SELECT COUNT(p) FROM Post p WHERE p.status IN (:status1, :status2)")
-        Long countByStatusIn(PostStatus status1, PostStatus status2);
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.status IN (:status1, :status2)")
+    Long countByStatusIn(PostStatus status1, PostStatus status2);
+
+    @Query(value = "SELECT " +
+            "DATE_FORMAT(p.created_at, '%Y-%m') AS monthStr, " +
+            "MIN(p.price / p.area) AS minPrice, " +
+            "MAX(p.price / p.area) AS maxPrice, " +
+            "AVG(p.price / p.area) AS avgPrice " +
+            "FROM posts p " +
+            "WHERE p.type = :#{#type.name()} " +
+            "AND p.status IN ('APPROVED', 'REVIEW_LATER', 'EXPIRED') " +
+            "AND p.deleted_by_user = false " +
+            "AND p.created_at >= :startDate " +
+            "AND (:categoryId IS NULL OR p.category_id = :categoryId) " +
+            "AND (:provinceCode IS NULL OR p.province_code = :provinceCode) " +
+            "AND (:districtCode IS NULL OR p.district_code = :districtCode) " +
+            "AND (:wardCode IS NULL OR p.ward_code = :wardCode) " +
+            "GROUP BY monthStr " +
+            "ORDER BY monthStr ASC", nativeQuery = true)
+    List<Object[]> findMonthlyPriceStats(
+            @Param("type") ListingType type,
+            @Param("startDate") Instant startDate,
+            @Param("categoryId") Long categoryId,
+            @Param("provinceCode") Long provinceCode,
+            @Param("districtCode") Long districtCode,
+            @Param("wardCode") Long wardCode);
+
+    // 2. So sánh lân cận (Cấp Xã): 🌟 Chỉ lấy tin đang ACTIVE
+    @Query(value = "SELECT " +
+            "w.code AS locationCode, " +
+            "w.name AS locationName, " +
+            "AVG(p.price / p.area) AS avgPrice, " +
+            "COUNT(p.id) AS postCount " +
+            "FROM wards w " +
+            "JOIN posts p ON w.code = p.ward_code " +
+            "WHERE p.type = :#{#type.name()} " +
+            "AND w.district_code = :districtCode " +
+            "AND p.status IN ('APPROVED', 'REVIEW_LATER') " +
+            "AND p.deleted_by_user = false " +
+            "AND (:categoryId IS NULL OR p.category_id = :categoryId) " +
+            "GROUP BY w.code, w.name " +
+            "HAVING COUNT(p.id) > 0 " +
+            "ORDER BY postCount DESC", nativeQuery = true)
+    List<Object[]> findNearbyWardsPriceStats(
+            @Param("type") ListingType type,
+            @Param("districtCode") Long districtCode,
+            @Param("categoryId") Long categoryId);
+
+    // 3. So sánh lân cận (Cấp Huyện) - Dành cho Fallback
+    @Query(value = "SELECT " +
+            "d.code AS locationCode, " +
+            "d.name AS locationName, " +
+            "AVG(p.price / p.area) AS avgPrice, " +
+            "COUNT(p.id) AS postCount " +
+            "FROM districts d " +
+            "JOIN posts p ON d.code = p.district_code " +
+            "WHERE p.type = :#{#type.name()} " +
+            "AND d.province_code = :provinceCode " +
+            "AND p.status IN ('APPROVED', 'REVIEW_LATER') " +
+            "AND p.deleted_by_user = false " +
+            "AND (:categoryId IS NULL OR p.category_id = :categoryId) " +
+            "GROUP BY d.code, d.name " +
+            "HAVING COUNT(p.id) > 0 " +
+            "ORDER BY postCount DESC", nativeQuery = true)
+    List<Object[]> findNearbyDistrictsPriceStats(
+            @Param("type") ListingType type,
+            @Param("provinceCode") Long provinceCode,
+            @Param("categoryId") Long categoryId);
 
 }

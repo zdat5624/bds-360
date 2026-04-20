@@ -26,8 +26,11 @@ public class PostSpecification {
 				predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("area"), filter.getMinArea()));
 			if (filter.getMaxArea() != null)
 				predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("area"), filter.getMaxArea()));
-			if (filter.getStatus() != null)
-				predicate = cb.and(predicate, cb.equal(root.get("status"), filter.getStatus()));
+
+			if (filter.getStatuses() != null && !filter.getStatuses().isEmpty()) {
+				predicate = cb.and(predicate, root.get("status").in(filter.getStatuses()));
+			}
+
 			if (filter.getCategoryId() != null)
 				predicate = cb.and(predicate, cb.equal(root.get("category").get("id"), filter.getCategoryId()));
 			if (filter.getType() != null)
@@ -46,14 +49,23 @@ public class PostSpecification {
 			if (filter.getIsDeleteByUser() != null) {
 				predicate = cb.and(predicate, cb.equal(root.get("deletedByUser"), filter.getIsDeleteByUser()));
 			}
+			if (filter.getUserEmail() != null && !filter.getUserEmail().isEmpty()) {
+				Join<Post, User> userJoin = root.join("user");
+				predicate = cb.and(predicate, cb.equal(userJoin.get("email"), filter.getUserEmail()));
+			}
+
+			// 2. Logic tìm kiếm (ID hoặc Email - Giữ nguyên nhưng không bị ghi đè nữa)
 			if (filter.getSearch() != null && !filter.getSearch().trim().isEmpty()) {
 				Predicate searchPredicate;
 				try {
-					Long postId = Long.parseLong(filter.getSearch());
+					Long postId = Long.parseLong(filter.getSearch().trim());
 					searchPredicate = cb.equal(root.get("id"), postId);
 				} catch (NumberFormatException e) {
+					// Nếu không phải ID, tìm theo tiêu đề hoặc email (tùy bạn muốn)
 					Join<Post, User> userJoin = root.join("user");
-					searchPredicate = cb.equal(userJoin.get("email"), filter.getSearch());
+					searchPredicate = cb.or(
+							cb.like(cb.lower(root.get("title")), "%" + filter.getSearch().toLowerCase() + "%"),
+							cb.equal(userJoin.get("email"), filter.getSearch()));
 				}
 				predicate = cb.and(predicate, searchPredicate);
 			}
@@ -81,8 +93,10 @@ public class PostSpecification {
 				}
 			}
 
-			if (filter.getDirection() != null) {
-				predicate = cb.and(predicate, cb.equal(detailJoin.get("direction"), filter.getDirection()));
+			if (filter.getHouseDirection() != null) {
+				// Lưu ý: "houseDirection" bên dưới phải khớp với tên biến trong Entity
+				// ListingDetail
+				predicate = cb.and(predicate, cb.equal(detailJoin.get("houseDirection"), filter.getHouseDirection()));
 			}
 
 			if (filter.getBalconyDirection() != null) {

@@ -125,7 +125,7 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
                             </defs>
 
                             <CartesianGrid
-                                strokeDasharray="3 3"
+                                strokeDasharray="2 2"
                                 vertical={false}
                                 stroke="#F3F4F6"
                             />
@@ -134,8 +134,7 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
                                 dataKey="label"
                                 axisLine={false}
                                 tickLine={false}
-                                // 1. Xoay chữ
-                                tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                                tick={{ fill: '#9CA3AF', fontSize: 11 }}
                                 angle={-45}           // Xoay nghiêng 45 độ
                                 textAnchor="end"      // Gắn đuôi chữ vào đúng vị trí mốc dữ liệu
 
@@ -152,7 +151,7 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
                             <YAxis
                                 axisLine={false}
                                 tickLine={false}
-                                tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                                tick={{ fill: '#9CA3AF', fontSize: 12 }}
                                 allowDecimals={false}
                             />
 
@@ -178,8 +177,20 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
                                 strokeWidth={3}
                                 fillOpacity={1}
                                 fill="url(#colorViews)"
-                                dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: '#1677ff' }}
-                                activeDot={{ r: 6, strokeWidth: 0, fill: '#1677ff' }}
+                                dot={{
+                                    r: 2.5,
+                                    strokeWidth: 0.6,
+                                    fill: '#fff',
+                                    stroke: '#1677ff',
+                                    filter: 'drop-shadow(0 2px 4px rgba(22,119,255,0.3))'
+                                }}
+                                activeDot={{
+                                    r: 5,
+                                    fill: '#1677ff',
+                                    stroke: '#fff',
+                                    strokeWidth: 0.6,
+                                    filter: 'drop-shadow(0 4px 8px rgba(22,119,255,0.5))'
+                                }}
                                 animationDuration={1500}
                             />
                         </AreaChart>
@@ -189,3 +200,26 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
         </Card>
     );
 }
+
+const CustomDot = (props: any) => {
+    const { cx, cy, value } = props;
+
+    if (value === 0) return null; // ẩn nếu = 0 (tuỳ)
+
+    return (
+        <g>
+            {/* vòng ngoài */}
+            <circle cx={cx} cy={cy} r={6} fill="#1677ff" opacity={0.15} />
+
+            {/* dot chính */}
+            <circle
+                cx={cx}
+                cy={cy}
+                r={3}
+                fill="#1677ff"
+                stroke="#fff"
+                strokeWidth={2}
+            />
+        </g>
+    );
+};

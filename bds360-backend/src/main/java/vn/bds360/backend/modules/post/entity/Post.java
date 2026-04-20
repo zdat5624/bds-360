@@ -56,7 +56,7 @@ public class Post {
     @NotBlank(message = "Mô tả không được để trống")
     private String description;
 
-    private Boolean notifyOnView;
+    private Boolean notifyOnView = false;
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Loại tin đăng không được để trống")
@@ -134,7 +134,9 @@ public class Post {
             this.createdBy = SecurityService.getCurrentUserLogin().orElse("");
         }
 
-        this.createdAt = Instant.now();
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
     }
 
     @PreUpdate

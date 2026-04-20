@@ -119,7 +119,7 @@ export function DataTable<T extends object>({
                 className: onRowClick ? 'cursor-pointer' : '',
             })}
             onChange={handleChange}
-            scroll={scroll || (data && data.length > 0 ? { x: "max-content" } : undefined)}
+            scroll={scroll ? (data?.length > 0 ? scroll : undefined) : (data?.length > 0 ? { x: 'max-content' } : undefined)}
         />
     );
 }

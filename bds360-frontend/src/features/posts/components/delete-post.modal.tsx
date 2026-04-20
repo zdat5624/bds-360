@@ -58,7 +58,7 @@ export function DeletePostModal({
                         )}
                         {' '}không?
                     </span>
-                    <span className="text-sm">
+                    <span >
                         Tin đăng sẽ bị ẩn khỏi hệ thống và không thể khôi phục.
                     </span>
                 </div>

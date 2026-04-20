@@ -3,5 +3,7 @@ export * from './data.table';
 
 export { AppModal } from './app.modal';
 
+export * from './filter.button';
 export * from './search.input';
+
 

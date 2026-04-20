@@ -6,3 +6,8 @@
   overflow: hidden;
   box-shadow: none;
 }
+
+/* Tabs custom underline */
+.ant-tabs-nav-list {
+  border-bottom: 1px solid var(--tabs-border-color);
+}

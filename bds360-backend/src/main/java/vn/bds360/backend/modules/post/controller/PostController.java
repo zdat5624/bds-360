@@ -1,5 +1,8 @@
 package vn.bds360.backend.modules.post.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
 import vn.bds360.backend.common.dto.response.PageResponse;
+import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.dto.request.ForYouPostRequest;
 import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
@@ -69,8 +73,23 @@ public class PostController {
     @RequireLogin
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PostResponse>> getMyPosts(@CurrentUser User user, @Valid PostFilterRequest filter) {
-        filter.setSearch(user.getEmail()); // Ép buộc chỉ tìm tin của chính user này
+        filter.setUserEmail(user.getEmail());
         filter.setIsDeleteByUser(false);
+
+        if (filter.getStatuses() != null && !filter.getStatuses().isEmpty()) {
+            // Nếu trong danh sách lọc có APPROVED, thì thêm cả REVIEW_LATER (gộp làm 1 cho
+            // User)
+            if (filter.getStatuses().contains(PostStatus.APPROVED)) {
+                // Dùng ArrayList để có thể add thêm phần tử (tránh
+                // UnsupportedOperationException)
+                List<PostStatus> newStatuses = new ArrayList<>(filter.getStatuses());
+                if (!newStatuses.contains(PostStatus.REVIEW_LATER)) {
+                    newStatuses.add(PostStatus.REVIEW_LATER);
+                }
+                filter.setStatuses(newStatuses);
+            }
+        }
+
         return ApiResponse.success(postService.getFilteredPosts(filter));
     }
 

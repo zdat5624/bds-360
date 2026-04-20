@@ -23,7 +23,7 @@ const { RangePicker } = DatePicker;
 
 export default function UserTransactionsPage() {
     // --- HOOKS & THEME ---
-    const { colorSuccess, colorTextSecondary, colorText } = useAppTheme();
+    const { colorSuccess, colorTextSecondary, colorText, colorBorderSecondary } = useAppTheme();
     const { notification } = App.useApp();
     const router = useRouter();
     const pathname = usePathname();
@@ -221,14 +221,25 @@ export default function UserTransactionsPage() {
         <div className="w-full flex flex-col gap-4">
             {/* 1. KHU VỰC HEADER */}
             <div>
-                <div>
-                    <Title level={3} className="!m-0 flex items-center gap-2">
-                        <CreditCardOutlined />
-                        Lịch sử giao dịch
-                    </Title>
-                    <Text type="secondary" className="mt-1 block">
-                        Quản lý lịch sử nạp tiền và thanh toán phí đăng tin của bạn.
-                    </Text>
+                <div className="flex flex-wrap justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <Title level={3} className="!m-0 flex items-center gap-2">
+                            <CreditCardOutlined />
+                            Lịch sử giao dịch
+                        </Title>
+                        <Text type="secondary" className="mt-1 block">
+                            Quản lý lịch sử nạp tiền và thanh toán phí đăng tin của bạn.
+                        </Text>
+                    </div>
+                    <TopUpButton
+                        type="primary"
+                        icon={<SwapOutlined />}
+                        className="h-9 w-full sm:w-auto"
+
+                    >
+                        Nạp tiền
+                    </TopUpButton>
+
                 </div>
                 <Divider className="!mt-4 !mb-0" />
             </div>
@@ -245,7 +256,15 @@ export default function UserTransactionsPage() {
                         <Tabs
                             activeKey={filters.type || 'ALL'}
                             onChange={handleTabChange}
-                            className="[&_.ant-tabs-nav]:!mb-0"
+                            className="
+                            [&_.ant-tabs-nav]:!mb-0
+                            [&_.ant-tabs-nav::before]:hidden
+                            [&_.ant-tabs-nav-list]:border-b
+                        "
+                            style={{
+                                // 👇 inject màu dynamic từ theme
+                                ['--tabs-border-color' as any]: colorBorderSecondary
+                            }}
                             items={[
                                 { key: 'ALL', label: 'Tất cả' },
                                 ...TRANSACTION_TYPE_OPTIONS.map(opt => ({ key: opt.value, label: opt.label }))
@@ -278,15 +297,7 @@ export default function UserTransactionsPage() {
                     </div>
                 </div>
 
-                {/* 2.2 Bên phải: Nút Nạp Tiền */}
-                {/* Ở mobile thì dài ra (w-full), từ sm trở lên thì ôm gọn (sm:w-auto) */}
-                <TopUpButton
-                    type="primary"
-                    icon={<SwapOutlined />}
-                    className="w-full sm:w-auto h-9 sm:h-8 text-sm shrink-0"
-                >
-                    Nạp tiền
-                </TopUpButton>
+
             </div>
 
             {/* 3. KHU VỰC BẢNG DỮ LIỆU */}

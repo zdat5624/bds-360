@@ -18,7 +18,12 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import lombok.RequiredArgsConstructor;
+import vn.bds360.backend.common.exception.AppException;
+import vn.bds360.backend.common.exception.ErrorCode;
+import vn.bds360.backend.modules.post.dto.request.PriceHistoryRequest;
+import vn.bds360.backend.modules.post.dto.response.NearbyLocationPriceResponse;
 import vn.bds360.backend.modules.post.dto.response.PostViewChartResponse;
+import vn.bds360.backend.modules.post.dto.response.PriceHistoryResponse;
 import vn.bds360.backend.modules.post.entity.Post;
 import vn.bds360.backend.modules.post.entity.PostViewHistory;
 import vn.bds360.backend.modules.post.repository.PostRepository;
@@ -128,5 +133,138 @@ public class PostAnalyticsService {
         }
 
         return finalResult;
+    }
+
+    @Transactional(readOnly = true)
+    public PriceHistoryResponse getPriceHistoryData(PriceHistoryRequest request) {
+        YearMonth endMonth = YearMonth.now();
+        YearMonth startMonth = endMonth.minusMonths(request.getMonths() - 1);
+        Instant startInstant = startMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        // 1. Thử lấy dữ liệu chi tiết nhất có thể
+        List<Object[]> rawData = postRepository.findMonthlyPriceStats(
+                request.getType(), startInstant, request.getCategoryId(),
+                request.getProvinceCode(), request.getDistrictCode(), request.getWardCode());
+
+        String note = null;
+
+        // 2. LOGIC FALLBACK BIỂU ĐỒ
+        if (request.getWardCode() != null && rawData.size() < 2) {
+            rawData = postRepository.findMonthlyPriceStats(
+                    request.getType(), startInstant, request.getCategoryId(),
+                    request.getProvinceCode(), request.getDistrictCode(), null); // Bỏ Ward
+            note = "Dữ liệu tại khu vực này chưa đủ để thống kê. Biểu đồ đang hiển thị mức giá trung bình của toàn Quận/Huyện.";
+        } else if (request.getDistrictCode() != null && rawData.size() < 2) {
+            rawData = postRepository.findMonthlyPriceStats(
+                    request.getType(), startInstant, request.getCategoryId(),
+                    request.getProvinceCode(), null, null); // Bỏ District
+            note = "Dữ liệu tại khu vực này chưa đủ để thống kê. Biểu đồ đang hiển thị mức giá trung bình của toàn Tỉnh/Thành phố.";
+        }
+
+        // 3. Xử lý làm đầy (Fill) dữ liệu
+        Map<String, PriceHistoryResponse.PriceTrend> dataMap = rawData.stream().collect(Collectors.toMap(
+                row -> row[0].toString(),
+                row -> PriceHistoryResponse.PriceTrend.builder()
+                        .month(row[0].toString())
+                        .minPrice(((Number) row[1]).doubleValue())
+                        .maxPrice(((Number) row[2]).doubleValue())
+                        .avgPrice(((Number) row[3]).doubleValue())
+                        .build()));
+
+        List<PriceHistoryResponse.PriceTrend> trendList = new ArrayList<>();
+        Double peakPrice = 0.0;
+        String peakMonth = null;
+        Double firstAvailablePrice = null;
+        Double currentAvgPrice = null;
+
+        PriceHistoryResponse.PriceTrend lastKnownData = null;
+        YearMonth current = startMonth;
+
+        while (!current.isAfter(endMonth)) {
+            String monthStr = current.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            PriceHistoryResponse.PriceTrend monthData = dataMap.get(monthStr);
+
+            if (monthData == null) {
+                if (lastKnownData != null) {
+                    monthData = PriceHistoryResponse.PriceTrend.builder()
+                            .month(monthStr)
+                            .minPrice(lastKnownData.getMinPrice())
+                            .maxPrice(lastKnownData.getMaxPrice())
+                            .avgPrice(lastKnownData.getAvgPrice())
+                            .build();
+                } else {
+                    monthData = PriceHistoryResponse.PriceTrend.builder()
+                            .month(monthStr).minPrice(0.0).maxPrice(0.0).avgPrice(0.0).build();
+                }
+            } else {
+                lastKnownData = monthData;
+            }
+
+            if (monthData.getAvgPrice() > peakPrice) {
+                peakPrice = monthData.getAvgPrice();
+                peakMonth = monthStr;
+            }
+
+            if (firstAvailablePrice == null && monthData.getAvgPrice() > 0) {
+                firstAvailablePrice = monthData.getAvgPrice();
+            }
+            currentAvgPrice = monthData.getAvgPrice();
+
+            trendList.add(monthData);
+            current = current.plusMonths(1);
+        }
+
+        // 4. Tính % tăng giảm
+        Double changePercent = 0.0;
+        if (firstAvailablePrice != null && firstAvailablePrice > 0 && currentAvgPrice != null) {
+            changePercent = ((currentAvgPrice - firstAvailablePrice) / firstAvailablePrice) * 100;
+        }
+
+        Double dropFromPeakPercent = 0.0;
+        if (peakPrice > 0 && currentAvgPrice != null) {
+            dropFromPeakPercent = ((currentAvgPrice - peakPrice) / peakPrice) * 100;
+        }
+
+        PriceHistoryResponse.PriceSummary summary = PriceHistoryResponse.PriceSummary.builder()
+                .currentAvgPrice(currentAvgPrice)
+                .changePercent(Math.round(changePercent * 10.0) / 10.0)
+                .peakPrice(peakPrice)
+                .peakMonth(peakMonth)
+                .dropFromPeakPercent(Math.round(dropFromPeakPercent * 10.0) / 10.0)
+                .build();
+
+        return PriceHistoryResponse.builder()
+                .note(note)
+                .summary(summary)
+                .trend(trendList)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<NearbyLocationPriceResponse> getNearbyLocationsPrice(PriceHistoryRequest request) {
+        if (request.getDistrictCode() == null || request.getProvinceCode() == null) {
+            throw new AppException(ErrorCode.INVALID_ADDRESS_HIERARCHY);
+        }
+
+        List<Object[]> rawData = postRepository.findNearbyWardsPriceStats(
+                request.getType(), request.getDistrictCode(), request.getCategoryId());
+
+        String locType = "WARD";
+
+        // LOGIC FALLBACK SO SÁNH
+        if (rawData.size() < 2) {
+            rawData = postRepository.findNearbyDistrictsPriceStats(
+                    request.getType(), request.getProvinceCode(), request.getCategoryId());
+            locType = "DISTRICT";
+        }
+
+        final String finalLocType = locType;
+
+        return rawData.stream().map(row -> new NearbyLocationPriceResponse(
+                ((Number) row[0]).longValue(),
+                row[1].toString(),
+                ((Number) row[2]).doubleValue(),
+                ((Number) row[3]).longValue(),
+                finalLocType)).collect(Collectors.toList());
     }
 }

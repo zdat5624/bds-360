@@ -32,7 +32,7 @@ customFetch.interceptors.request.use(
         }
 
         // test
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
 
         return config;

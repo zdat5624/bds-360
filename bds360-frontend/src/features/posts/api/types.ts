@@ -52,6 +52,8 @@ export interface Post {
     createdAt: string;
     updatedAt?: string;
 
+    deletedByUser: boolean;
+
     streetAddress: string;
     latitude?: number;
     longitude?: number;
@@ -133,7 +135,7 @@ export interface PostFilterParams extends BaseFilterParams {
     maxPrice?: number;
     minArea?: number;
     maxArea?: number;
-    status?: PostStatus;
+    statuses?: PostStatus[];
     categoryId?: number;
     type?: ListingType;
     provinceCode?: number;
@@ -145,7 +147,7 @@ export interface PostFilterParams extends BaseFilterParams {
     isApprovedOnly?: boolean;
     bedrooms?: number;
     bathrooms?: number;
-    direction?: CompassDirection;
+    houseDirection?: CompassDirection;
     balconyDirection?: CompassDirection;
     legalStatus?: LegalStatus;
     furnishing?: Furnishing;

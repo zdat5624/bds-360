@@ -400,8 +400,9 @@ public class StartupRunner implements CommandLineRunner {
         Furnishing[] furnishings = Furnishing.values();
 
         List<Post> posts = new ArrayList<>();
+        int totalPost = 5000;
 
-        for (int i = 1; i <= 1000; i++) {
+        for (int i = 1; i <= totalPost; i++) {
             Post post = new Post();
             Category selectedCategory = categories.get(random.nextInt(categories.size()));
             Vip selectedVip = vips.get(random.nextInt(vips.size()));
@@ -823,57 +824,61 @@ public class StartupRunner implements CommandLineRunner {
                 post.setPrice((long) (roundedArea * pricePerM2));
             }
 
-            post.setView(random.nextInt(10000) * 1L);
+            // ========================================================
+            // 🌟 LOGIC MÔ PHỎNG DỮ LIỆU LỊCH SỬ VÀ TRẠNG THÁI (TIME TRAVEL)
+            // ========================================================
 
-            // Kiểm tra vipLevel để gán trạng thái và thời gian hiệu lực
-            if (selectedVip.getVipLevel() == 0) {
-                PostStatus status;
-                int rand = random.nextInt(100);
+            int timeRand = random.nextInt(100);
+            Instant fakeCreatedAt;
+            Instant fakeExpireDate;
 
-                if (rand < 30)
-                    status = PostStatus.APPROVED; // 30% Hiển thị
-                else if (rand < 45)
-                    status = PostStatus.PENDING; // 15% Đang chờ duyệt
-                else if (rand < 60)
-                    status = PostStatus.REVIEW_LATER; // 15% Cần xem xét thêm
-                else if (rand < 80)
-                    status = PostStatus.REJECTED; // 20% Bị từ chối khi duyệt
-                else if (rand < 90)
-                    status = PostStatus.BLOCKED; // 🌟 10% Bị khóa (Vi phạm/Bị report)
-                else
-                    status = PostStatus.EXPIRED; // 10% Hết hạn
+            // Mảng các lựa chọn gói thời gian (30, 60, 90 ngày)
+            int[] durationOptions = { 30, 60, 90 };
+            int durationDays = durationOptions[random.nextInt(durationOptions.length)];
 
-                post.setStatus(status);
+            if (timeRand < 90) {
+                // 90% BÀI ĐĂNG TRONG QUÁ KHỨ (Sẽ bị EXPIRED)
+                // Lùi về quá khứ từ 30 đến 1095 ngày (3 năm)
+                long randomDaysInPast = random.nextInt(1065) + 30; // 1065 + 30 = 1095
+                fakeCreatedAt = Instant.now().minus(randomDaysInPast, java.time.temporal.ChronoUnit.DAYS);
+                fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
 
-                long secondsIn1Month = 30L * 24 * 60 * 60;
-                long secondsIn3Months = 90L * 24 * 60 * 60;
-                long range = secondsIn3Months - secondsIn1Month;
-
-                if (status == PostStatus.EXPIRED) {
-                    long secondsInPast = (random.nextInt(30) + 1) * 24L * 60 * 60;
-                    post.setExpireDate(Instant.now().minusSeconds(secondsInPast));
-                } else {
-                    post.setExpireDate(
-                            Instant.now().plusSeconds(secondsIn1Month + (long) (random.nextDouble() * range)));
-                }
-
+                // Vì nó ở trong quá khứ nên chắc chắn sẽ hết hạn
+                post.setStatus(PostStatus.EXPIRED);
                 post.setNotifyOnView(false);
-            } else {
-                PostStatus selectedStatus = nonPendingStatuses.get(random.nextInt(nonPendingStatuses.size()));
-                post.setStatus(selectedStatus);
 
-                if (selectedStatus == PostStatus.EXPIRED) {
-                    long secondsInPast = random.nextInt(30) * 24 * 60 * 60 + 1;
-                    post.setExpireDate(Instant.now().minusSeconds(secondsInPast));
+            } else {
+                // 10% BÀI ĐĂNG HIỆN TẠI (Đang ACTIVE hoặc PENDING)
+                // Sinh trong vòng 29 ngày trở lại đây
+                long randomRecentDays = random.nextInt(30);
+                fakeCreatedAt = Instant.now().minus(randomRecentDays, java.time.temporal.ChronoUnit.DAYS);
+                fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
+
+                // Quyết định trạng thái cho bài đang Active
+                if (selectedVip.getVipLevel() == 0) {
+                    int statusRand = random.nextInt(100);
+                    if (statusRand < 40) {
+                        post.setStatus(PostStatus.APPROVED);
+                    } else if (statusRand < 60) {
+                        post.setStatus(PostStatus.PENDING);
+                    } else if (statusRand < 80) {
+                        post.setStatus(PostStatus.REVIEW_LATER);
+                    } else if (statusRand < 90) {
+                        post.setStatus(PostStatus.REJECTED);
+                    } else {
+                        post.setStatus(PostStatus.BLOCKED);
+                    }
+                    post.setNotifyOnView(false);
                 } else {
-                    long secondsIn1Month = 30L * 24 * 60 * 60;
-                    long secondsIn3Months = 90L * 24 * 60 * 60;
-                    long range = secondsIn3Months - secondsIn1Month;
-                    post.setExpireDate(
-                            Instant.now().plusSeconds(secondsIn1Month + (long) (random.nextDouble() * range)));
+                    // VIP thì luôn được duyệt
+                    post.setStatus(random.nextBoolean() ? PostStatus.APPROVED : PostStatus.REVIEW_LATER);
                     post.setNotifyOnView(true);
                 }
             }
+
+            // Gán thời gian đã được tính toán vào Post
+            post.setCreatedAt(fakeCreatedAt);
+            post.setExpireDate(fakeExpireDate);
 
             post.setDeletedByUser(false);
 
@@ -915,8 +920,6 @@ public class StartupRunner implements CommandLineRunner {
                 }
 
                 // 3. LOGIC GẮN FULL URL
-                // Nếu tên ảnh đã là http (ví dụ case default của bạn) thì giữ nguyên.
-                // Nếu không, cộng baseImageUrl với tên ảnh.
                 if (selectedImageName.startsWith("http")) {
                     image.setUrl(selectedImageName);
                 } else {
@@ -932,11 +935,24 @@ public class StartupRunner implements CommandLineRunner {
             post.setView((long) (random.nextInt(1000) + 100));
 
             posts.add(post);
+
+            // ========================================================
+            // 🌟 KỸ THUẬT BATCH INSERT (CHỐNG TRÀN RAM KHI TOTAL LỚN)
+            // ========================================================
+            if (i % 1000 == 0) {
+                postRepository.saveAll(posts);
+                posts.clear();
+                System.out.println(">>> Đã seed thành công " + i + " / " + totalPost + " bài đăng...");
+            }
         }
 
-        postRepository.saveAll(posts);
+        // Lưu những bài còn sót lại cuối cùng
+        if (!posts.isEmpty()) {
+            postRepository.saveAll(posts);
+            System.out.println(">>> Đã seed thành công " + totalPost + " / " + totalPost + " bài đăng...");
+        }
 
-        System.out.println(">>> INIT ADDRESS DATA TABLE 'posts' WITH IMAGES : SUCCESS");
+        System.out.println(">>> INIT ADDRESS DATA TABLE 'posts' WITH IMAGES AND TIME TRAVEL: SUCCESS");
     }
 
     private void initSampleInteractions() {

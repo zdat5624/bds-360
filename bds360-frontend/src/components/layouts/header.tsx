@@ -19,7 +19,7 @@ const { Header: AntdHeader } = Layout;
 const { Title, Text } = Typography;
 
 export function Header() {
-    const { colorPrimary, colorBgContainer, colorBorderSecondary, colorError, colorTextSecondary, colorBgTextHover, colorText } = useAppTheme();
+    const { colorPrimaryBg, colorPrimary, colorBgContainer, colorBorderSecondary, colorError, colorTextSecondary, colorBgTextHover, colorText } = useAppTheme();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -106,23 +106,80 @@ export function Header() {
                             />
                         </div>
                     ) : !isAuthenticated ? (
-                        <Space className="h-full">
-                            <Link href={APP_ROUTES.AUTH.LOGIN}>
-                                <Button type="default">Đăng nhập</Button>
-                            </Link>
-                            <Link href={APP_ROUTES.AUTH.REGISTER}>
-                                <Button type="primary">Đăng ký</Button>
-                            </Link>
+                        <Space size="large" align="center" className="h-full">
+                            <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
+                                <div
+                                    className="
+                group flex items-center gap-3 
+                px-2 py-1 pr-3
+                rounded-full 
+                border cursor-pointer 
+                transition-all duration-200
+            "
+                                    style={{
+                                        borderColor: 'transparent',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = colorPrimaryBg;
+                                        e.currentTarget.style.borderColor = colorBorderSecondary;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                        e.currentTarget.style.borderColor = 'transparent';
+                                    }}
+                                >
+                                    <Avatar
+                                        className="transition-transform duration-200 group-hover:scale-105"
+                                        src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`}
+                                    />
+
+                                    <div className="flex flex-col leading-tight">
+                                        <Text className="font-semibold text-sm">
+                                            {user?.name}
+                                        </Text>
+
+                                        <Text type="secondary" className="text-xs">
+                                            {user?.email}
+                                        </Text>
+                                    </div>
+                                </div>
+                            </Dropdown>
                         </Space>
                     ) : (
                         <Space size="large" align="center" className="h-full">
 
                             <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
-                                <div className="flex items-center gap-3 p-1 pr-3 rounded-full border border-transparent cursor-pointer transition-all hover:bg-slate-50">
+                                {/* <div className="flex items-center gap-3 p-1 pr-3 rounded-full border border-transparent cursor-pointer transition-all hover:bg-slate-50">
                                     <Avatar src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} />
                                     <div className="flex flex-col leading-tight">
                                         <Text className="font-semibold text-sm">{user?.name}</Text>
                                         <Text type="secondary" className="text-xs">{user?.email}</Text>
+                                    </div>
+                                </div> */}
+                                <div
+                                    className="group flex items-center gap-3 p-1 pr-3 rounded-full border border-transparent cursor-pointer transition-all hover:bg-slate-50"
+                                    style={{ ['--hover-color' as any]: colorPrimary }}
+                                >
+                                    <Avatar
+                                        className="transition-all group-hover:scale-105"
+                                        src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`}
+                                    />
+
+                                    <div className="flex flex-col leading-tight">
+                                        <Text
+                                            className="font-semibold text-sm transition-colors"
+                                            style={{ color: 'inherit' }}
+                                        >
+                                            {user?.name}
+                                        </Text>
+
+                                        <Text
+                                            className="text-xs transition-colors"
+                                            type="secondary"
+                                            style={{ color: 'inherit' }}
+                                        >
+                                            {user?.email}
+                                        </Text>
                                     </div>
                                 </div>
                             </Dropdown>
