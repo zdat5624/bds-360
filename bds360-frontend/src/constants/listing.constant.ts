@@ -6,7 +6,7 @@ export type ListingType = (typeof LISTING_TYPE_VALUES)[number];
 
 // Map hiển thị tiếng Việt
 export const LISTING_TYPE_LABEL: Record<ListingType, string> = {
-    SALE: 'Bán',
+    SALE: 'Mua bán',
     RENT: 'Cho thuê',
 };
 

@@ -13,9 +13,11 @@ export * from './components/post-detail.modal';
 export * from './components/post-view-statistics';
 export * from './components/property-map';
 
+export * from './components/hero-smart-filter-bar';
 export * from './components/map-selector';
 export * from './components/post-card';
 export * from './components/post-filter.modal';
+
 
 
 

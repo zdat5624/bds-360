@@ -41,18 +41,23 @@ bds360-frontend
 │  │  │  │     │  │  ├─ step-2-location.tsx
 │  │  │  │     │  │  ├─ step-3-details-media.tsx
 │  │  │  │     │  │  └─ step-4-checkout.tsx
-│  │  │  │     │  └─ page.tsx
+│  │  │  │     │  ├─ page.tsx
+│  │  │  │     │  └─ [id]
+│  │  │  │     │     └─ edit
+│  │  │  │     │        └─ page.tsx
 │  │  │  │     ├─ profile
 │  │  │  │     │  └─ page.tsx
 │  │  │  │     └─ vips
 │  │  │  │        └─ page.tsx
 │  │  │  ├─ (public)
+│  │  │  │  ├─ (listings)
+│  │  │  │  │  ├─ layout.tsx
+│  │  │  │  │  ├─ rent
+│  │  │  │  │  │  └─ page.tsx
+│  │  │  │  │  └─ sale
+│  │  │  │  │     └─ page.tsx
 │  │  │  │  ├─ layout.tsx
-│  │  │  │  ├─ page.tsx
-│  │  │  │  ├─ rent
-│  │  │  │  │  └─ page.tsx
-│  │  │  │  └─ sale
-│  │  │  │     └─ page.tsx
+│  │  │  │  └─ page.tsx
 │  │  │  └─ layout.tsx
 │  │  ├─ auth
 │  │  │  ├─ forgot-password
@@ -83,6 +88,9 @@ bds360-frontend
 │  │  │  ├─ index.ts
 │  │  │  ├─ table-action.dropdown.tsx
 │  │  │  └─ user-info.tsx
+│  │  ├─ icons
+│  │  │  ├─ custom-icons.tsx
+│  │  │  └─ index.ts
 │  │  ├─ index.ts
 │  │  └─ layouts
 │  │     ├─ footer.tsx
@@ -105,6 +113,7 @@ bds360-frontend
 │  │  ├─ menus.constant.tsx
 │  │  ├─ pagination.constant.ts
 │  │  ├─ role.constant.ts
+│  │  ├─ search-suggestions.ts
 │  │  └─ vip-packages.constant.ts
 │  ├─ features
 │  │  ├─ addresses
@@ -163,18 +172,25 @@ bds360-frontend
 │  │  │  │  ├─ posts.queries.ts
 │  │  │  │  └─ types.ts
 │  │  │  ├─ components
+│  │  │  │  ├─ compass-selector.tsx
 │  │  │  │  ├─ delete-post.modal.tsx
+│  │  │  │  ├─ filter-modal.tsx
+│  │  │  │  ├─ filter-tags.tsx
+│  │  │  │  ├─ hero-smart-filter-bar.tsx
 │  │  │  │  ├─ map-dot-marker.tsx
 │  │  │  │  ├─ map-selector.tsx
+│  │  │  │  ├─ post-card.tsx
 │  │  │  │  ├─ post-detail.modal.tsx
 │  │  │  │  ├─ post-filter.modal.tsx
 │  │  │  │  ├─ post-view-statistics.tsx
 │  │  │  │  ├─ price-marker.tsx
 │  │  │  │  ├─ property-map.tsx
+│  │  │  │  ├─ smart-filter-bar.tsx
 │  │  │  │  └─ vip-marker.tsx
 │  │  │  ├─ index.ts
 │  │  │  ├─ posts.constant.ts
-│  │  │  └─ posts.schema.ts
+│  │  │  ├─ posts.schema.ts
+│  │  │  └─ posts.util.ts
 │  │  ├─ statistics
 │  │  │  ├─ api
 │  │  │  │  ├─ statistics.queries.ts
@@ -227,7 +243,8 @@ bds360-frontend
 │  │  └─ socket.provider.tsx
 │  ├─ stores
 │  │  ├─ auth.store.ts
-│  │  └─ index.ts
+│  │  ├─ index.ts
+│  │  └─ ui.store.ts
 │  ├─ styles
 │  │  └─ antd-overrides.css
 │  ├─ types

@@ -29,7 +29,7 @@ export function AppModal({
     return (
         <Modal
             title={
-                <Title level={4}>
+                <Title level={4}  >
                     {title}
                 </Title>
             }
