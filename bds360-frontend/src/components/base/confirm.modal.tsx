@@ -2,11 +2,14 @@
 'use client';
 
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { ExclamationCircleFilled } from '@ant-design/icons';
+import { ExclamationCircleFilled, InfoCircleFilled } from '@ant-design/icons';
 import { Modal, Typography } from 'antd';
 import { ReactNode } from 'react';
 
 const { Text } = Typography;
+
+//  Định nghĩa các loại Confirm
+export type ConfirmType = 'warning' | 'danger' | 'info';
 
 interface ConfirmModalProps {
     isOpen: boolean;
@@ -16,7 +19,7 @@ interface ConfirmModalProps {
     content?: ReactNode;
     okText?: string;
     cancelText?: string;
-    isDanger?: boolean;
+    type?: ConfirmType; //  Thay thế isDanger bằng type
     isLoading?: boolean;
 }
 
@@ -28,10 +31,38 @@ export function ConfirmModal({
     content,
     okText = 'Xác nhận',
     cancelText = 'Hủy',
-    isDanger = false,
+    type = 'warning', // Mặc định vẫn là cảnh báo (vàng)
     isLoading = false,
 }: ConfirmModalProps) {
-    const { colorError, colorWarning, colorTextSecondary } = useAppTheme();
+    // Lấy màu từ theme để đồng bộ toàn app
+    const { colorError, colorWarning, colorInfo, colorTextSecondary } = useAppTheme();
+
+    //  Hàm helper để render Icon và Màu sắc tương ứng theo type
+    const getModalConfig = () => {
+        switch (type) {
+            case 'danger':
+                return {
+                    icon: <ExclamationCircleFilled />,
+                    color: colorError,
+                    okDanger: true,
+                };
+            case 'info':
+                return {
+                    icon: <InfoCircleFilled />,
+                    color: colorInfo, // Hoặc colorPrimary tùy hệ thống màu của bạn
+                    okDanger: false,
+                };
+            case 'warning':
+            default:
+                return {
+                    icon: <ExclamationCircleFilled />,
+                    color: colorWarning,
+                    okDanger: false,
+                };
+        }
+    };
+
+    const config = getModalConfig();
 
     return (
         <Modal
@@ -41,7 +72,7 @@ export function ConfirmModal({
             okText={okText}
             cancelText={cancelText}
             confirmLoading={isLoading}
-            okButtonProps={{ danger: isDanger }}
+            okButtonProps={{ danger: config.okDanger }} // Tự động set màu đỏ cho nút OK nếu là danger
             cancelButtonProps={{ disabled: isLoading }}
             centered
             width={400}
@@ -49,15 +80,18 @@ export function ConfirmModal({
             closable={!isLoading}
             destroyOnHidden
         >
-            {/* 👇 Cấu trúc Layout Mới: Icon trái, Text phải */}
             <div className="flex items-start gap-4 pt-4 pb-2">
-                <ExclamationCircleFilled
+                {/*  Render Icon linh hoạt */}
+                <span
                     className="mt-1"
                     style={{
-                        fontSize: 16, // Chỉnh nhỏ lại cho phù hợp layout ngang
-                        color: isDanger ? colorError : colorWarning,
+                        fontSize: 20, // Tăng nhẹ size icon lên 20 nhìn sẽ cân đối hơn với Title
+                        color: config.color,
                     }}
-                />
+                >
+                    {config.icon}
+                </span>
+
                 <div className="flex-1 text-left">
                     <h3 className="text-base font-bold m-0 mb-1">
                         {title}

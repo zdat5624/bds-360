@@ -19,8 +19,17 @@
   .ant-btn-primary {
     @apply bg-blue-600 !important; /* Dùng màu xanh chuẩn của dự án hoặc Tailwind */
   }
+
 }
 
+
+@layer utilities {
+  .hide-scroll-arrows::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
 /* SCROLL */
 
 /* Chrome, Edge, Safari */

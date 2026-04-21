@@ -144,7 +144,7 @@ export function FloatingNotificationButton() {
                         key={`shake-${currentCount}`}
                         className={`relative ${shouldShake ? 'animate-shake' : ''}`}
                     >
-                        {/* 🌟 VÒNG SÁNG PULSE RADAR (Nằm dưới cùng) 🌟 */}
+                        {/*  VÒNG SÁNG PULSE RADAR (Nằm dưới cùng)  */}
                         {isPulsing && (
                             <div
                                 className="absolute inset-1 rounded-full animate-ping opacity-75"

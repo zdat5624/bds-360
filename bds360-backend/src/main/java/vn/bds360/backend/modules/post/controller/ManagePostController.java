@@ -39,7 +39,7 @@ public class ManagePostController { // 🌟 Đổi tên class
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PostResponse>> getAdminPosts(@Valid PostFilterRequest filter) {
-        return ApiResponse.success(postService.getFilteredPosts(filter));
+        return ApiResponse.success(postService.getManagePosts(filter));
     }
 
     @PutMapping("/status")

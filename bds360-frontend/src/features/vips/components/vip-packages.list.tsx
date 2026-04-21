@@ -11,7 +11,7 @@ import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 import { Button, Card, Col, Row, Skeleton, Tag, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 export function VipPackagesList() {
     const {
@@ -19,7 +19,6 @@ export function VipPackagesList() {
         colorError,
         colorTextSecondary,
         colorBorderSecondary,
-        colorPrimary,
         colorTextLightSolid
     } = useAppTheme();
 
@@ -39,8 +38,7 @@ export function VipPackagesList() {
     };
 
     /**
-     * Lấy giá tiền từ API dựa trên ID trong constant
-     * Giả định: pkg.id 1 -> level 0, pkg.id 2 -> level 1, pkg.id 3 -> level 2
+     * Lấy giá tiền từ API dựa trên ID
      */
     const getRealPrice = (pkgId: number, defaultPriceText: string) => {
         if (!vipsData) return defaultPriceText;
@@ -72,7 +70,8 @@ export function VipPackagesList() {
                         <Card
                             className="h-full flex flex-col relative transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-xl border-2"
                             style={{
-                                borderColor: pkg.isPopular ? colorPrimary : colorBorderSecondary,
+                                // Nổi bật viền của gói Popular bằng màu đặc trưng của nó
+                                borderColor: pkg.isPopular ? pkg.themeColor : colorBorderSecondary,
                             }}
                             styles={{
                                 body: {
@@ -85,9 +84,9 @@ export function VipPackagesList() {
                         >
                             {pkg.isPopular && (
                                 <div
-                                    className="absolute top-0 right-0 text-[11px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg uppercase tracking-wider z-10"
+                                    className="absolute top-0 right-0 text-[11px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg uppercase tracking-wider z-10 shadow-sm"
                                     style={{
-                                        background: colorPrimary,
+                                        background: pkg.themeColor, // Gán màu động
                                         color: colorTextLightSolid
                                     }}
                                 >
@@ -99,8 +98,8 @@ export function VipPackagesList() {
                                 <Tag color={pkg.tagColor} className="text-sm font-semibold mb-3 border-none px-3 py-1">
                                     {pkg.name}
                                 </Tag>
-                                <Title level={3} style={{ margin: 0, marginTop: 4 }}>
-                                    {getRealPrice(pkg.id, pkg.price)}
+                                <Title level={3} style={{ margin: 0, marginTop: 4, color: pkg.id !== 1 ? pkg.themeColor : undefined }}>
+                                    {getRealPrice(pkg.id, pkg.defaultPrice)}
                                 </Title>
                             </div>
 
@@ -123,12 +122,20 @@ export function VipPackagesList() {
                             </ul>
 
                             <Button
-                                // Gói tiêu chuẩn (id: 1) dùng kiểu default, các gói VIP dùng primary
                                 type={pkg.id === 1 ? 'default' : 'primary'}
                                 size="large"
                                 block
                                 onClick={() => handleSelectPackage(pkg.id)}
-                                className="font-semibold shadow-none h-11"
+                                className="font-semibold h-11"
+                                style={
+                                    pkg.id !== 1
+                                        ? {
+                                            backgroundColor: pkg.themeColor,
+                                            borderColor: pkg.themeColor,
+                                            boxShadow: `0 2px 0 ${pkg.themeColor}33` // Tạo bóng mờ đổ theo màu của VIP
+                                        }
+                                        : {}
+                                }
                             >
                                 {pkg.buttonText}
                             </Button>

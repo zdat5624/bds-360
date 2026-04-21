@@ -40,27 +40,22 @@ export const formatDateTime = (
     return formatDate(date, DATE_FORMAT.FULL_TIME);
 };
 
-/**
- * 3.1 Tính thời gian tương đối (Cách đây bao lâu)
- * @example getRelativeTime('2024-03-14') => '1 ngày trước'
- */
-export const getRelativeTime = (
-    date?: string | Date | number | null
-): string => {
-    if (!date) return '';
-    const parsedDate = dayjs(date);
-    return parsedDate.isValid() ? parsedDate.fromNow() : '';
-};
+
 
 /**
- * 3.2 Tính thời gian tương đối thông minh (Smart Relative Time)
- * Dưới 60s: Vừa xong (hoặc x giây trước)
- * Dưới 60p: x phút trước
- * Dưới 24h: x giờ trước
- * Qua 24h: Hiển thị ngày tháng chuẩn (VD: 15/03/2024)
+ * 3. Tính thời gian tương đối thông minh (Smart Relative Time)
+ * @param date - Thời gian đầu vào
+ * @param fallbackFormat - Format ngày tháng nếu vượt quá thời gian hiển thị tương đối (Mặc định: DEFAULT)
+ * @param maxRelativeDays - Số ngày tối đa để hiển thị "x ngày trước". Vượt qua số này sẽ dùng fallbackFormat. (Mặc định: 0 - nghĩa là qua 24h đổi luôn sang ngày chuẩn)
+ * * @example
+ * getSmartRelativeTime(date) => "2 giờ trước" hoặc "15/03/2024"
+ * getSmartRelativeTime(date, DATE_FORMAT.FULL_TIME) => "2 giờ trước" hoặc "14:30 15/03/2024"
+ * getSmartRelativeTime(date, DATE_FORMAT.DEFAULT, 7) => "5 ngày trước" (nếu chưa qua 7 ngày)
  */
 export const getSmartRelativeTime = (
-    date?: string | Date | number | null
+    date?: string | Date | number | null,
+    fallbackFormat: string = DATE_FORMAT.FULL_TIME,
+    maxRelativeDays: number = 0
 ): string => {
     if (!date) return '--';
 
@@ -68,27 +63,34 @@ export const getSmartRelativeTime = (
     if (!parsedDate.isValid()) return '--';
 
     const now = dayjs();
-
-    // Tính toán khoảng cách thời gian
     const diffInSeconds = now.diff(parsedDate, 'second');
     const diffInMinutes = now.diff(parsedDate, 'minute');
     const diffInHours = now.diff(parsedDate, 'hour');
+    const diffInDays = now.diff(parsedDate, 'day');
 
-    // Tùy chỉnh text hiển thị theo ý muốn
+    // 1. Dưới 1 phút
     if (diffInSeconds < 60) {
-        return `${diffInSeconds} giây trước`; // Hoặc bạn có thể dùng: return `${diffInSeconds} giây trước`;
+        return `${Math.max(0, diffInSeconds)} giây trước`; // Dùng Math.max để tránh số âm nếu giờ local bị lệch vài ms
     }
 
+    // 2. Dưới 1 giờ
     if (diffInMinutes < 60) {
         return `${diffInMinutes} phút trước`;
     }
 
+    // 3. Dưới 24 giờ
     if (diffInHours < 24) {
         return `${diffInHours} giờ trước`;
     }
 
-    // Nếu đã qua 24h, trả về ngày tháng chuẩn (Ví dụ: 15/03/2024)
-    return parsedDate.format(DATE_FORMAT.DEFAULT);
+    // 4. Cho phép hiển thị "x ngày trước" nếu nằm trong khoảng maxRelativeDays
+    if (maxRelativeDays > 0 && diffInDays <= maxRelativeDays) {
+        return `${diffInDays} ngày trước`;
+        // Hoặc dùng: return parsedDate.fromNow(); nếu bạn muốn tin tưởng 100% vào plugin relativeTime
+    }
+
+    // 5. Nếu đã quá giới hạn tương đối, trả về ngày tháng tuyệt đối
+    return parsedDate.format(fallbackFormat);
 };
 
 

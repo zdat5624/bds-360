@@ -51,11 +51,11 @@ export function DeleteNotificationsAction({
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 isLoading={isPending}
-                isDanger={true} // ✅ Bật cờ danger lên true cho Modal xoá
                 title={title}
                 content={content || `Bạn có chắc chắn muốn xóa vĩnh viễn ${ids.length} thông báo đã chọn?`}
                 okText="Xóa ngay"
                 cancelText="Hủy"
+                type='danger'
             />
         </>
     );

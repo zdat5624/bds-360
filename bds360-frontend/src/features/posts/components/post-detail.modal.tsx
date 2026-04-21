@@ -4,20 +4,21 @@
 import { AppModal } from '@/components/base/app.modal';
 import { VIP_PACKAGES } from '@/constants';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatDateTime, formatPostPrice } from '@/utils';
+import { formatDateTime } from '@/utils';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Divider, Image, Skeleton, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useGetPostById } from '../api/posts.queries';
 import {
-    COMPASS_DIRECTION_LABEL, // 🌟 Import label pháp lý
-    FURNISHING_LABEL // 🌟 Import label nội thất
-    , // 🌟 Import label hướng
+    COMPASS_DIRECTION_LABEL, //  Import label pháp lý
+    FURNISHING_LABEL //  Import label nội thất
+    , //  Import label hướng
     LEGAL_STATUS_LABEL,
     POST_STATUS_COLOR,
     POST_STATUS_LABEL,
     USER_POST_STATUS_DISPLAY
 } from '../posts.constant';
+import { formatPostPrice, getFullAddress } from '../posts.util';
 import { PostViewStatistics } from './post-view-statistics';
 import { PropertyMap } from './property-map';
 
@@ -139,7 +140,7 @@ export function PostDetailModal({ isOpen, postId, onClose }: PostDetailModalProp
 
                             <Descriptions.Item label="Trạng thái">
                                 {(() => {
-                                    // 🌟 ÁP DỤNG LOGIC DISPLAY STATUS GỘP
+                                    //  ÁP DỤNG LOGIC DISPLAY STATUS GỘP
                                     const displayKey = USER_POST_STATUS_DISPLAY[post.status];
                                     return (
                                         <Tag color={POST_STATUS_COLOR[displayKey]} variant="filled" className="!mr-0">
@@ -153,9 +154,9 @@ export function PostDetailModal({ isOpen, postId, onClose }: PostDetailModalProp
                             <Descriptions.Item label="Ngày đăng">{formatDateTime(post.createdAt)}</Descriptions.Item>
                             <Descriptions.Item label="Lượt xem">{post.view.toLocaleString()} lượt</Descriptions.Item>
 
-                            <Descriptions.Item label="Địa chỉ" span={2}>{post.streetAddress}</Descriptions.Item>
+                            <Descriptions.Item label="Địa chỉ" span={2}>{getFullAddress(post)}</Descriptions.Item>
 
-                            {/* 🌟 HIỂN THỊ CHI TIẾT BỔ SUNG (LISTING DETAIL) */}
+                            {/*  HIỂN THỊ CHI TIẾT BỔ SUNG (LISTING DETAIL) */}
                             {post.listingDetail?.bedrooms !== undefined && (
                                 <Descriptions.Item label="Phòng ngủ">{post.listingDetail.bedrooms} PN</Descriptions.Item>
                             )}

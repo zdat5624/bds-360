@@ -44,7 +44,7 @@ export const VERIFICATIONS_QUERY_KEYS = {
     lists: () => [...VERIFICATIONS_QUERY_KEYS.all, 'list'] as const,
     list: (filters: VerificationFilterParams) => [...VERIFICATIONS_QUERY_KEYS.lists(), filters] as const,
 
-    // 🌟 ĐÃ ĐƯA VỀ ĐÚNG CHỖ NÀY:
+    //  ĐÃ ĐƯA VỀ ĐÚNG CHỖ NÀY:
     history: (filters: BaseFilterParams) => [...VERIFICATIONS_QUERY_KEYS.all, 'my-history', filters] as const,
 };
 

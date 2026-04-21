@@ -17,12 +17,12 @@ const deletePost = async (id: number): Promise<void> => {
     return customFetch.delete(`/posts/${id}`);
 };
 
-// 🌟 Sửa đổi: Đổi /admin thành /manage cho đồng bộ với Backend mới
+//  Sửa đổi: Đổi /admin thành /manage cho đồng bộ với Backend mới
 const deleteAdminPost = async (id: number): Promise<void> => {
     return customFetch.delete(`/manage/posts/${id}`);
 };
 
-// 🌟 Sửa đổi: Đổi /admin thành /manage cho đồng bộ với Backend mới
+//  Sửa đổi: Đổi /admin thành /manage cho đồng bộ với Backend mới
 const updatePostStatus = async (payload: UpdatePostStatusPayload): Promise<Post> => {
     return customFetch.put('/manage/posts/status', payload);
 };

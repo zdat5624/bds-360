@@ -1,12 +1,14 @@
-// @/components/composite/map-selector.tsx
 'use client';
 
 import "mapbox-gl/dist/mapbox-gl.css";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Map, { MapRef, MapboxEvent, Marker, NavigationControl } from "react-map-gl";
+import Map, { MapRef, MapboxEvent, Marker, NavigationControl, ViewStateChangeEvent } from "react-map-gl";
 // @ts-ignore - plugin này thường không có type definition sẵn
 import { envConfig } from "@/config";
+import { useAppTheme } from "@/hooks";
 import MapboxLanguage from "@mapbox/mapbox-gl-language";
+import { Button } from "antd";
+import Image from "next/image";
 
 interface Coordinates {
     latitude: number;
@@ -27,67 +29,75 @@ interface ViewportState {
     zoom: number;
 }
 
-const MapSelector: React.FC<MapSelectorProps> = ({
+export const MapSelector: React.FC<MapSelectorProps> = ({
     latitude,
     longitude,
     onChange,
     isUserModified,
     setIsUserModified
 }) => {
+    const { colorPrimary, colorTextLightSolid } = useAppTheme();
+
+    const handleViewGoogleMap = () => {
+        //  FIX lỗi cú pháp URL Google Maps cũ
+        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${viewport.latitude},${viewport.longitude}`;
+        window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
+    };
+
     const defaultZoom = 15;
     const mapRef = useRef<MapRef>(null);
 
-    // Tọa độ mặc định (VD: TP.HCM) nếu không có props truyền vào
+    //  THÊM STATE: Theo dõi xem map đã thực hiện cú "bay" đầu tiên khi load dữ liệu Edit chưa
+    const [hasInitialFlown, setHasInitialFlown] = useState(false);
+
     const [viewport, setViewport] = useState<ViewportState>({
         latitude: latitude || 10.775844,
         longitude: longitude || 106.701756,
         zoom: defaultZoom,
     });
 
-    // Đồng bộ tọa độ từ props vào map khi props thay đổi (nhưng user chưa tương tác tay)
+    // Đồng bộ tọa độ vào Map
     useEffect(() => {
-        if (latitude && longitude && !isUserModified && !isNaN(latitude) && !isNaN(longitude)) {
-            setViewport((prev) => ({
-                ...prev,
-                latitude,
-                longitude,
-                zoom: defaultZoom,
-            }));
+        if (latitude && longitude && !isNaN(latitude) && !isNaN(longitude)) {
 
-            if (mapRef.current) {
-                mapRef.current.flyTo({
-                    center: [longitude, latitude],
+            //  LOGIC MỚI: 
+            // 1. Nếu là lần đầu tiên có tọa độ (hasInitialFlown = false) -> Luôn bay tới (Dành cho Edit)
+            // 2. Hoặc nếu User không tự tay sửa (!isUserModified) -> Bay tới (Dành cho auto Geocode)
+            if (!hasInitialFlown || !isUserModified) {
+                setViewport((prev) => ({
+                    ...prev,
+                    latitude,
+                    longitude,
                     zoom: defaultZoom,
-                    duration: 1000, // Tăng duration để mượt hơn
-                });
+                }));
+
+                if (mapRef.current) {
+                    mapRef.current.flyTo({
+                        center: [longitude, latitude],
+                        zoom: defaultZoom,
+                        duration: 1000,
+                    });
+                }
+
+                // Đánh dấu là đã bay xong lần đầu
+                setHasInitialFlown(true);
             }
         }
-    }, [latitude, longitude, isUserModified]);
+    }, [latitude, longitude, isUserModified, hasInitialFlown]);
 
-    // Xử lý khi Map di chuyển (kéo thả bản đồ)
-    const handleMove = useCallback(() => {
-        if (mapRef.current) {
-            const center = mapRef.current.getCenter();
+    const handleMove = useCallback((evt: ViewStateChangeEvent) => {
+        setViewport(evt.viewState);
+
+        // evt.originalEvent có nghĩa là TAY người dùng thực sự kéo/zoom bản đồ
+        if (evt.originalEvent) {
             const newCoordinates: Coordinates = {
-                latitude: center.lat,
-                longitude: center.lng,
+                latitude: evt.viewState.latitude,
+                longitude: evt.viewState.longitude,
             };
-
-            setViewport((prev) => ({
-                ...prev,
-                ...newCoordinates,
-            }));
-
             onChange(newCoordinates);
             setIsUserModified(true);
         }
     }, [onChange, setIsUserModified]);
-
-    const handleConfirm = () => {
-        // Fix lỗi template string từ code cũ
-        const googleMapsUrl = `https://www.google.com/maps?q=${viewport.latitude},${viewport.longitude}`;
-        window.open(googleMapsUrl, "_blank");
-    };
 
     const handleMapLoad = (event: MapboxEvent) => {
         const map = event.target;
@@ -95,12 +105,8 @@ const MapSelector: React.FC<MapSelectorProps> = ({
             defaultLanguage: 'vi',
         });
         map.addControl(language);
-        // Thiết lập ngôn ngữ hiển thị là Tiếng Việt
         map.setStyle(language.setLanguage(map.getStyle(), 'vi'));
     };
-
-    // Helper để xử lý style responsive đơn giản
-    const isMobile = typeof window !== 'undefined' ? window.innerWidth <= 768 : false;
 
     return (
         <div className="w-full">
@@ -117,7 +123,6 @@ const MapSelector: React.FC<MapSelectorProps> = ({
                     minZoom={3}
                     maxZoom={20}
                 >
-                    {/* Marker luôn nằm ở tâm của Viewport */}
                     <Marker latitude={viewport.latitude} longitude={viewport.longitude} anchor="bottom">
                         <svg
                             width="40"
@@ -135,45 +140,32 @@ const MapSelector: React.FC<MapSelectorProps> = ({
                     <NavigationControl position="bottom-right" />
                 </Map>
 
-                <button
-                    type="button"
-                    onClick={handleConfirm}
-                    title="Bấm vào để mở Google Map ứng với vị trí trên bản đồ"
-                    style={{
-                        position: "absolute",
-                        bottom: "1.5rem",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        padding: isMobile ? "0.4rem 0.8rem" : "0.6rem 1.2rem",
-                        backgroundColor: "#1677ff", // Màu primary của AntD
-                        color: "white",
-                        border: "none",
-                        borderRadius: "25px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontWeight: "bold",
-                        fontSize: isMobile ? "12px" : "14px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        transition: "all 0.3s ease",
-                        zIndex: 10,
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    <img
-                        src="/Google_Maps_icon_(2020).svg.png"
-                        alt="Google Maps"
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+                    <Button
+                        type="primary"
+                        shape="round"
+                        size="middle"
+                        onClick={handleViewGoogleMap}
                         style={{
-                            width: isMobile ? "14px" : "18px",
-                            height: isMobile ? "14px" : "18px",
+                            backgroundColor: colorPrimary,
+                            color: colorTextLightSolid,
+                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
                         }}
-                    />
-                    Xem trên Google Map
-                </button>
+                        className="flex items-center gap-2 px-4 !py-4 font-semibold"
+                    >
+                        <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                            <Image
+                                src="/google-maps.png"
+                                alt="Google Maps"
+                                fill
+                                sizes="(max-width: 768px) 16px, 20px"
+                                className="object-contain"
+                            />
+                        </div>
+                        <span className="text-xs sm:text-sm">Xem trên Google Maps</span>
+                    </Button>
+                </div>
             </div>
         </div>
     );
 };
-
-export default MapSelector;

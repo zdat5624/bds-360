@@ -35,6 +35,9 @@ public class PostCreateRequest {
 
     private Long vipId;
 
+    private Double latitude;
+    private Double longitude;
+
     @NotNull(message = "Phải có ít nhất 1 ảnh")
     private List<String> imageUrls;
 

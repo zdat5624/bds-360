@@ -4,7 +4,7 @@ import { DataTable, FilterButton, TableState } from '@/components/base';
 import { TableActionDropdown } from '@/components/composite';
 import { APP_ROUTES } from '@/config/routes';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatCurrency, formatDateTime, formatPostPrice } from '@/utils';
+import { DATE_FORMAT, formatCurrency, getSmartRelativeTime } from '@/utils';
 import {
     DeleteOutlined,
     EditOutlined,
@@ -20,6 +20,8 @@ import { useMemo, useState } from 'react';
 // Import từ module features/posts
 import {
     DeletePostModal,
+    formatPostPrice,
+    getFullAddress,
     Post,
     PostDetailModal,
     PostFilterModal,
@@ -92,7 +94,7 @@ export default function UserPostsPage() {
         let statuses: PostStatus[] | undefined = undefined;
 
         if (key !== 'ALL') {
-            // 🌟 TỰ XỬ LÝ LOGIC GỘP TẠI PAGE: APPROVED bao gồm cả REVIEW_LATER
+            //  TỰ XỬ LÝ LOGIC GỘP TẠI PAGE: APPROVED bao gồm cả REVIEW_LATER
             if (key === 'APPROVED') {
                 statuses = ['APPROVED', 'REVIEW_LATER'];
             } else {
@@ -150,9 +152,9 @@ export default function UserPostsPage() {
             width: '35%',
             render: (title: string, record: Post) => (
                 <div className="flex flex-col gap-0.5">
-                    <Text strong className="line-clamp-1 break-words">{title}</Text>
-                    <Text type="secondary" className="text-xs">
-                        {record.districtName}, {record.provinceName}
+                    <Text strong className="!line-clamp-1 !break-words">{title}</Text>
+                    <Text type="secondary" className="text-xs !line-clamp-1 !break-words ">
+                        {getFullAddress(record)}
                     </Text>
                 </div>
             ),
@@ -191,7 +193,7 @@ export default function UserPostsPage() {
             align: 'center',
             width: 140,
             render: (status: PostStatus) => {
-                // 🌟 TẬN DỤNG CONSTANT ĐỂ HIỂN THỊ: REVIEW_LATER -> APPROVED
+                //  TẬN DỤNG CONSTANT ĐỂ HIỂN THỊ: REVIEW_LATER -> APPROVED
                 const displayKey = USER_POST_STATUS_DISPLAY[status];
                 return (
                     <Tag color={POST_STATUS_COLOR[displayKey]} variant="filled">
@@ -207,7 +209,7 @@ export default function UserPostsPage() {
             align: 'right',
             width: 160,
             sorter: true,
-            render: (date: string) => formatDateTime(date),
+            render: (date: string) => getSmartRelativeTime(date, DATE_FORMAT.FULL_TIME),
         },
         {
             title: '',
@@ -309,6 +311,7 @@ export default function UserPostsPage() {
                 onChangeState={handleTableStateChange}
                 rowKey="id"
                 onRowClick={(record) => setDetailModal({ isOpen: true, postId: record.id })}
+                scroll={{ x: 800 }}
             />
 
             {/* 4. MODALS */}

@@ -73,15 +73,9 @@ public class PostController {
     @RequireLogin
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PostResponse>> getMyPosts(@CurrentUser User user, @Valid PostFilterRequest filter) {
-        filter.setUserEmail(user.getEmail());
-        filter.setIsDeleteByUser(false);
 
         if (filter.getStatuses() != null && !filter.getStatuses().isEmpty()) {
-            // Nếu trong danh sách lọc có APPROVED, thì thêm cả REVIEW_LATER (gộp làm 1 cho
-            // User)
             if (filter.getStatuses().contains(PostStatus.APPROVED)) {
-                // Dùng ArrayList để có thể add thêm phần tử (tránh
-                // UnsupportedOperationException)
                 List<PostStatus> newStatuses = new ArrayList<>(filter.getStatuses());
                 if (!newStatuses.contains(PostStatus.REVIEW_LATER)) {
                     newStatuses.add(PostStatus.REVIEW_LATER);
@@ -90,7 +84,8 @@ public class PostController {
             }
         }
 
-        return ApiResponse.success(postService.getFilteredPosts(filter));
+        // 🌟 GỌI HÀM RIÊNG CHO MY POSTS
+        return ApiResponse.success(postService.getMyPosts(user, filter));
     }
 
     // ==========================================
@@ -100,9 +95,8 @@ public class PostController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PostResponse>> getPublicPosts(@Valid PostFilterRequest filter) {
-        filter.setIsApprovedOnly(true); // Public chỉ được xem tin đã duyệt
-        filter.setIsDeleteByUser(false);
-        return ApiResponse.success(postService.getFilteredPosts(filter), "Lấy danh sách tin đăng thành công");
+        // 🌟 GỌI HÀM RIÊNG CHO PUBLIC POSTS
+        return ApiResponse.success(postService.getPublicPosts(filter), "Lấy danh sách tin đăng thành công");
     }
 
     @GetMapping("/{id}")

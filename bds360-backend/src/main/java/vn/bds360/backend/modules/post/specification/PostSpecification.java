@@ -1,4 +1,8 @@
+// File: @/modules/post/specification/PostSpecification.java
 package vn.bds360.backend.modules.post.specification;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -54,27 +58,54 @@ public class PostSpecification {
 				predicate = cb.and(predicate, cb.equal(userJoin.get("email"), filter.getUserEmail()));
 			}
 
-			// 2. Logic tìm kiếm (ID hoặc Email - Giữ nguyên nhưng không bị ghi đè nữa)
-			if (filter.getSearch() != null && !filter.getSearch().trim().isEmpty()) {
-				Predicate searchPredicate;
-				try {
-					Long postId = Long.parseLong(filter.getSearch().trim());
-					searchPredicate = cb.equal(root.get("id"), postId);
-				} catch (NumberFormatException e) {
-					// Nếu không phải ID, tìm theo tiêu đề hoặc email (tùy bạn muốn)
-					Join<Post, User> userJoin = root.join("user");
-					searchPredicate = cb.or(
-							cb.like(cb.lower(root.get("title")), "%" + filter.getSearch().toLowerCase() + "%"),
-							cb.equal(userJoin.get("email"), filter.getSearch()));
-				}
-				predicate = cb.and(predicate, searchPredicate);
-			}
+			// 🌟 2. LOGIC TÌM KIẾM ĐỘNG DỰA TRÊN `searchBy`
+			if (filter.getSearch() != null && !filter.getSearch().trim().isEmpty() && filter.getSearchBy() != null
+					&& !filter.getSearchBy().isEmpty()) {
+				String keyword = filter.getSearch().trim();
+				List<Predicate> searchPredicates = new ArrayList<>();
 
+				for (String field : filter.getSearchBy()) {
+					switch (field.toLowerCase()) {
+						case "id":
+							try {
+								Long postId = Long.parseLong(keyword);
+								searchPredicates.add(cb.equal(root.get("id"), postId));
+							} catch (NumberFormatException e) {
+								// Bỏ qua nếu người dùng truyền chuỗi chữ vào lúc đang searchBy = id
+							}
+							break;
+
+						case "title":
+							searchPredicates
+									.add(cb.like(cb.lower(root.get("title")), "%" + keyword.toLowerCase() + "%"));
+							break;
+
+						// 🌟 BỔ SUNG TÌM KIẾM THEO MIÊU TẢ (DESCRIPTION)
+						case "description":
+							searchPredicates
+									.add(cb.like(cb.lower(root.get("description")), "%" + keyword.toLowerCase() + "%"));
+							break;
+
+						case "email":
+							Join<Post, User> userJoinForSearch = root.join("user", JoinType.LEFT);
+							searchPredicates.add(cb.like(cb.lower(userJoinForSearch.get("email")),
+									"%" + keyword.toLowerCase() + "%"));
+							break;
+
+						default:
+							break;
+					}
+				}
+
+				// Nối các điều kiện tìm kiếm bằng OR (vd: id = 5 OR title LIKE '%abc%' OR
+				// description LIKE '%abc%')
+				if (!searchPredicates.isEmpty()) {
+					predicate = cb.and(predicate, cb.or(searchPredicates.toArray(new Predicate[0])));
+				}
+			}
 			// ==========================================
 			// LỌC BẢNG PHỤ (LISTING_DETAIL)
 			// ==========================================
-			// Dùng LEFT JOIN để lỡ bài post không có detail (như đất nền) thì vẫn không bị
-			// lỗi rớt data
 			Join<Post, ListingDetail> detailJoin = root.join("listingDetail", JoinType.LEFT);
 
 			if (filter.getBedrooms() != null) {
@@ -94,8 +125,6 @@ public class PostSpecification {
 			}
 
 			if (filter.getHouseDirection() != null) {
-				// Lưu ý: "houseDirection" bên dưới phải khớp với tên biến trong Entity
-				// ListingDetail
 				predicate = cb.and(predicate, cb.equal(detailJoin.get("houseDirection"), filter.getHouseDirection()));
 			}
 

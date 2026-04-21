@@ -43,9 +43,9 @@ export function DeletePostModal({
             onClose={onClose}
             onConfirm={handleConfirm}
             isLoading={isPending}
-            isDanger={true} // Bật cờ danger để nút Confirm có màu đỏ cảnh báo
             title="Xác nhận xóa tin đăng"
             okText="Xóa tin"
+            type='danger'
             cancelText="Hủy"
             content={
                 <div className="flex flex-col gap-1">

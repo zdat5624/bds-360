@@ -2,8 +2,8 @@
 'use client';
 
 import { ListingType } from '@/constants';
-import { formatPostPrice } from '@/utils/number.util';
 import React, { useState } from 'react';
+import { formatPostPrice } from '../posts.util';
 
 interface PriceMarkerProps {
     price: number;

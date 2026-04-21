@@ -15,7 +15,7 @@ export interface PostAuthor {
     name: string;
     email: string;
     phone: string;
-    avatar?: string;
+    avatar?: string; // Full url
 }
 
 export interface PostVip {
@@ -108,7 +108,7 @@ export interface PostUpdatePayload {
     price: number;
     area: number;
 
-    // 🌟 SỬA LẠI THÀNH CÁC TRƯỜNG PHẲNG (FLAT) GIỐNG CREATE PAYLOAD
+    //  SỬA LẠI THÀNH CÁC TRƯỜNG PHẲNG (FLAT) GIỐNG CREATE PAYLOAD
     categoryId: number;
     provinceCode: number;
     districtCode: number;
@@ -117,7 +117,7 @@ export interface PostUpdatePayload {
     latitude?: number;
     longitude?: number;
 
-    // 🌟 SỬA LẠI ẢNH THÀNH MẢNG STRING
+    //  SỬA LẠI ẢNH THÀNH MẢNG STRING
     imageUrls: string[];
 
     listingDetail?: ListingDetailPayload;
@@ -142,7 +142,11 @@ export interface PostFilterParams extends BaseFilterParams {
     districtCode?: number;
     wardCode?: number;
     vipId?: number;
+
     search?: string;
+    //  THÊM TRƯỜNG NÀY ĐỂ ĐỒNG BỘ VỚI BACKEND
+    searchBy?: string[];
+
     isDeleteByUser?: boolean;
     isApprovedOnly?: boolean;
     bedrooms?: number;

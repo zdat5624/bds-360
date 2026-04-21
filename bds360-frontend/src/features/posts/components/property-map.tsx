@@ -34,7 +34,7 @@ export function PropertyMap({
     });
 
     const handleViewGoogleMap = () => {
-        // Fix lại URL Google Maps cho đúng định dạng
+        //  FIX: URL chuẩn
         const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
         window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
     };
@@ -77,7 +77,7 @@ export function PropertyMap({
                     {/* Bọc thêm một div relative ở ngoài để chứa cả Icon và hiệu ứng Pulse */}
                     <div className="relative flex items-center justify-center">
 
-                        {/* 🌟 VÒNG SÁNG PULSE 🌟 
+                        {/*  VÒNG SÁNG PULSE  
                         - animate-ping: Tạo hiệu ứng tỏa ra
                         - absolute inset-1: Kích thước nhỏ hơn khung bao một chút để lúc nhịp đập trông tự nhiên
                         - bg-red-500: Tông xuyệt tông với màu đỏ của SVG (có thể đổi sang colorPrimary tùy ý)

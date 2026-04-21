@@ -888,7 +888,7 @@ public class StartupRunner implements CommandLineRunner {
             post.setCreatedBy(user.getEmail());
             post.setCategory(selectedCategory);
             post.setVip(selectedVip);
-            post.setStreetAddress(fullAddress);
+            post.setStreetAddress(detailAddress);
 
             // 1. Lấy Backend URL từ file cấu hình (application.yml)
             String backendUrl = appProperties.getUrl().getBackend();

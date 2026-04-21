@@ -109,7 +109,10 @@ public class PostService {
         validateAndSetAddress(post);
 
         // 4. Geocoding
-        handleGeocoding(post);
+        if (post.getLatitude() == null || post.getLongitude() == null) {
+            handleGeocoding(post);
+            System.out.println(">> Handle Geocoding");
+        }
 
         // 5. Lưu Post
         Post savedPost = postRepository.save(post);
@@ -232,6 +235,11 @@ public class PostService {
     }
 
     private void handleGeocoding(Post post) {
+        // Nếu đã có tọa độ rồi thì thoát luôn, không hỏi Mapbox nữa
+        if (post.getLatitude() != null && post.getLongitude() != null) {
+            return;
+        }
+
         if (post.getStreetAddress() == null || post.getProvince() == null)
             return;
 
@@ -323,12 +331,82 @@ public class PostService {
         return postMapper.toResponse(post);
     }
 
-    // Dùng chung 1 hàm cho việc lấy danh sách bài đăng
-    public PageResponse<PostResponse> getFilteredPosts(PostFilterRequest filter) {
+    // =========================================================
+    // 1. HÀM CHO TRANG CỦA KHÁCH (PUBLIC) - ƯU TIÊN VIP
+    // =========================================================
+    public PageResponse<PostResponse> getPublicPosts(PostFilterRequest filter) {
+        filter.setIsApprovedOnly(true);
+        filter.setIsDeleteByUser(false);
+
         var spec = PostSpecification.filterBy(filter);
-        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(),
-                Sort.by(filter.getSortDirection(), filter.getSortBy()));
+
+        // Gọi Helper: Ưu tiên VIP = true
+        Sort sort = buildSortStrategy(filter, true);
+
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
         var page = postRepository.findAll(spec, pageable);
+
+        return PageResponse.of(page.map(postMapper::toResponse));
+    }
+
+    // =========================================================
+    // 2. HÀM CHO TRANG QUẢN LÝ CỦA USER (MY POSTS) - SORT BÌNH THƯỜNG
+    // =========================================================
+    public PageResponse<PostResponse> getMyPosts(User user, PostFilterRequest filter) {
+        filter.setUserEmail(user.getEmail());
+        filter.setIsDeleteByUser(false);
+
+        var spec = PostSpecification.filterBy(filter);
+
+        // Gọi Helper: Ưu tiên VIP = false
+        Sort sort = buildSortStrategy(filter, false);
+
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
+        var page = postRepository.findAll(spec, pageable);
+
+        return PageResponse.of(page.map(postMapper::toResponse));
+    }
+
+    // =========================================================
+    // 🌟 HELPER METHOD TẠO CHIẾN LƯỢC SORT DÙNG CHUNG
+    // =========================================================
+    private Sort buildSortStrategy(PostFilterRequest filter, boolean prioritizeVip) {
+        // 1. Xác định trường cần sort và hướng sort (mặc định là createdAt giảm dần)
+        String sortBy = (filter.getSortBy() != null && !filter.getSortBy().trim().isEmpty())
+                ? filter.getSortBy()
+                : "createdAt";
+        Sort.Direction direction = filter.getSortDirection() != null
+                ? filter.getSortDirection()
+                : Sort.Direction.DESC;
+
+        Sort.Order baseOrder = new Sort.Order(direction, sortBy);
+
+        // 2. Nếu có yêu cầu ưu tiên VIP, gắn Sort VIP lên đầu tiên
+        if (prioritizeVip) {
+            Sort.Order vipOrder = Sort.Order.desc("vip.vipLevel");
+            return Sort.by(vipOrder, baseOrder);
+        }
+
+        // 3. Ngược lại, trả về sort bình thường
+        return Sort.by(baseOrder);
+    }
+
+    // =========================================================
+    // 3. HÀM CHO TRANG QUẢN TRỊ (ADMIN/MOD) - KHÔNG BỊ RÀNG BUỘC TRẠNG THÁI
+    // =========================================================
+    public PageResponse<PostResponse> getManagePosts(PostFilterRequest filter) {
+        // KHÔNG gán cứng isApprovedOnly hay isDeleteByUser
+        // Admin hoàn toàn tự do filter dựa vào query params gửi lên từ Frontend
+
+        var spec = PostSpecification.filterBy(filter);
+
+        // Gọi Helper: Ưu tiên VIP = false (Admin cần xem theo thời gian thực để duyệt
+        // bài)
+        Sort sort = buildSortStrategy(filter, false);
+
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
+        var page = postRepository.findAll(spec, pageable);
+
         return PageResponse.of(page.map(postMapper::toResponse));
     }
 

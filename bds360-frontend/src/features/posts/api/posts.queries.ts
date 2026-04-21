@@ -8,7 +8,7 @@ import { Post, PostFilterParams, PostViewChartResponse, SavedPostResponse } from
 export const POSTS_QUERY_KEYS = {
     all: ['posts'] as const,
     lists: () => [...POSTS_QUERY_KEYS.all, 'list'] as const,
-    // 🌟 Scope 'admin' giờ dùng chung cho cả role MODERATOR trong logic code
+    //  Scope 'admin' giờ dùng chung cho cả role MODERATOR trong logic code
     list: (scope: 'public' | 'admin' | 'my' | 'saved', filters: PostFilterParams | BaseFilterParams) =>
         [...POSTS_QUERY_KEYS.lists(), scope, filters] as const,
     details: () => [...POSTS_QUERY_KEYS.all, 'detail'] as const,
@@ -20,7 +20,7 @@ export const POSTS_QUERY_KEYS = {
 
 const getPosts = async (scope: 'public' | 'admin' | 'my', filters: PostFilterParams): Promise<PageResponse<Post>> => {
     let endpoint = '/posts';
-    // 🌟 Sửa đổi: Đổi đường dẫn API từ /admin thành /manage
+    //  Sửa đổi: Đổi đường dẫn API từ /admin thành /manage
     if (scope === 'admin') endpoint = '/manage/posts';
     if (scope === 'my') endpoint = '/posts/my-posts';
 

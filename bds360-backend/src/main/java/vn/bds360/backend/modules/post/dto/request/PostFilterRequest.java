@@ -1,5 +1,7 @@
+// File: @/modules/post/dto/request/PostFilterRequest.java
 package vn.bds360.backend.modules.post.dto.request;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -24,19 +26,21 @@ public class PostFilterRequest extends BaseFilterRequest {
     private Long districtCode;
     private Long wardCode;
     private Long vipId;
-    private String search; // Tìm theo postId hoặc email
-    private Boolean isDeleteByUser = false;
-    private Boolean isApprovedOnly = false; // Dùng cho Public API (chỉ lấy tin đã duyệt)
+    private String search;
 
-    private Integer bedrooms; // Truyền 1, 2, 3, 4, 5
-    private Integer bathrooms; // Truyền 1, 2, 3, 4, 5
+    // 🌟 THÊM TRƯỜNG NÀY (Mặc định tìm theo ID)
+    private List<String> searchBy = new ArrayList<>(List.of("id"));
+
+    private Boolean isDeleteByUser = false;
+    private Boolean isApprovedOnly = false;
+
+    private Integer bedrooms;
+    private Integer bathrooms;
     private CompassDirection houseDirection;
     private CompassDirection balconyDirection;
     private LegalStatus legalStatus;
     private Furnishing furnishing;
 
     private List<PostStatus> statuses;
-
     private String userEmail;
-
 }
