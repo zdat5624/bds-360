@@ -6,9 +6,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
@@ -363,598 +368,605 @@ public class StartupRunner implements CommandLineRunner {
 
     }
 
-    private void initSamplePosts() {
-        // Danh sách tên đường
-        List<String> streetNames = Arrays.asList(
-                "A1", "A2", "A5", "A8", "A12", "A18", "A25", "A30", "A35", "A40",
-                "A45", "A50", "B1", "B3", "B7", "B10", "B15", "B20", "B28", "B32",
-                "B38", "B45", "B50", "C2", "C4", "C6", "C9", "C12", "C16", "C22",
-                "C27", "C33", "C39", "C45", "C50", "D1", "D5", "D8", "D10", "D15",
-                "D20", "D25", "D30", "D36", "D42", "D50", "E3", "E7", "E12", "E18",
-                "E24", "E29", "E35", "E40", "E50", "F2", "F8", "F15", "F21", "F30",
-                "F38", "F45", "G1", "G5", "G10", "G15", "G20", "G25", "G30", "G35",
-                "G40", "G50", "H2", "H7", "H12", "H18", "H24", "H30", "H36", "H45",
-                "I1", "I5", "I10", "I15", "I20", "I25", "I30", "I40", "J2", "J8",
-                "J15", "J21", "J30", "J40", "K3", "K9", "K18", "K27", "K36", "K45");
+    // ====================================================================
+    // 🌟 1. CÁC HẰNG SỐ DỮ LIỆU (Đưa lên cấp độ Class)
+    // ====================================================================
+    private static final List<String> STREET_NAMES = Arrays.asList(
+            "A1", "A2", "A5", "A8", "A12", "A18", "A25", "A30", "A35", "A40",
+            "A45", "A50", "B1", "B3", "B7", "B10", "B15", "B20", "B28", "B32",
+            "B38", "B45", "B50", "C2", "C4", "C6", "C9", "C12", "C16", "C22",
+            "C27", "C33", "C39", "C45", "C50", "D1", "D5", "D8", "D10", "D15",
+            "D20", "D25", "D30", "D36", "D42", "D50", "E3", "E7", "E12", "E18",
+            "E24", "E29", "E35", "E40", "E50", "F2", "F8", "F15", "F21", "F30",
+            "F38", "F45", "G1", "G5", "G10", "G15", "G20", "G25", "G30", "G35",
+            "G40", "G50", "H2", "H7", "H12", "H18", "H24", "H30", "H36", "H45",
+            "I1", "I5", "I10", "I15", "I20", "I25", "I30", "I40", "J2", "J8",
+            "J15", "J21", "J30", "J40", "K3", "K9", "K18", "K27", "K36", "K45");
 
+    private static final String GENERAL_DESCRIPTION = "\n\n**Thông tin bổ sung**:\n" +
+            "- Vị trí đắc địa: Nằm trong khu vực phát triển sôi động, xung quanh có đầy đủ tiện ích như trường học quốc tế, bệnh viện đa khoa, siêu thị lớn, công viên xanh mát và các trung tâm thương mại hiện đại.\n"
+            +
+            "- Giao thông thuận tiện: Gần các trục đường chính và tuyến giao thông huyết mạch, dễ dàng di chuyển đến trung tâm thành phố hoặc các khu vực lân cận trong thời gian ngắn.\n"
+            +
+            "- Tiện ích đa dạng: Cư dân được hưởng các tiện ích cao cấp như hồ bơi, phòng gym, khu vui chơi trẻ em, không gian BBQ ngoài trời, và hệ thống an ninh 24/7 đảm bảo sự an toàn tuyệt đối.\n"
+            +
+            "- Hỗ trợ toàn diện: Đội ngũ tư vấn chuyên nghiệp sẵn sàng hỗ trợ từ A-Z, bao gồm xem nhà miễn phí, tư vấn pháp lý nhanh chóng, và đàm phán giá tốt nhất để bạn có được giao dịch hoàn hảo.\n"
+            +
+            "- Cam kết chất lượng: Chúng tôi cung cấp thông tin minh bạch, chính xác, đảm bảo mọi chi tiết về bất động sản đều được kiểm tra kỹ lưỡng trước khi giới thiệu đến bạn.\n"
+            +
+            "- Cơ hội không thể bỏ lỡ: Hãy liên hệ ngay hôm nay để được tư vấn chi tiết, đặt lịch xem nhà thực tế, và nhận ưu đãi đặc biệt dành riêng cho khách hàng sớm nhất!";
+
+    private void initSamplePosts() {
         if (postRepository.count() > 0) {
             System.out.println(">>> SKIP! INIT ADDRESS DATA TABLE posts: ALREADY HAVE DATA ... ");
             return;
         }
-        Random random = new Random();
 
-        // Lấy danh sách dữ liệu từ các bảng khác
+        // Đọc 1 lần từ Database lên RAM
         List<User> users = userRepository.findAll();
         List<Category> categories = categoryRepository.findAll();
         List<Province> provinces = provinceRepository.findAll();
         List<Vip> vips = vipRepository.findAll();
 
-        List<PostStatus> nonPendingStatuses = new ArrayList<>(Arrays.asList(
-                PostStatus.REVIEW_LATER,
-                PostStatus.APPROVED,
-                PostStatus.REJECTED,
-                PostStatus.EXPIRED, PostStatus.BLOCKED));
-        // Chuẩn bị dữ liệu Enum ngẫu nhiên
         CompassDirection[] orientations = CompassDirection.values();
         LegalStatus[] legalStatuses = LegalStatus.values();
         Furnishing[] furnishings = Furnishing.values();
 
-        List<Post> posts = new ArrayList<>();
+        String backendUrl = appProperties.getUrl().getBackend();
+        if (backendUrl == null || backendUrl.isEmpty()) {
+            backendUrl = "http://localhost:8080";
+        }
+        String baseImageUrl = backendUrl + "/uploads/";
+
         int totalPost = 5000;
+        int batchSize = 1000;
+        int numberOfThreads = totalPost / batchSize; // Sẽ tạo 5 luồng
 
-        for (int i = 1; i <= totalPost; i++) {
-            Post post = new Post();
-            Category selectedCategory = categories.get(random.nextInt(categories.size()));
-            Vip selectedVip = vips.get(random.nextInt(vips.size()));
+        // ⚡ Dùng ConcurrentHashMap để Thread-Safe khi các luồng cùng ghi/đọc Cache
+        Map<Long, List<District>> districtCache = new ConcurrentHashMap<>();
+        Map<Long, List<Ward>> wardCache = new ConcurrentHashMap<>();
+        Map<String, double[]> geocodeCache = new ConcurrentHashMap<>();
 
-            double rawArea = 50 + random.nextDouble() * 2000;
-            double roundedArea = Math.round(rawArea * 10.0) / 10.0;
-            post.setArea(roundedArea);
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        System.out.println(">>> Bắt đầu tạo " + totalPost + " bài đăng bằng " + numberOfThreads + " luồng...");
 
-            // Gán địa chỉ trước switch-case
-            Province selectedProvince = provinces.get(random.nextInt(provinces.size()));
-            post.setProvince(selectedProvince);
-            List<District> districtsInProvince = districtRepository.findByProvinceCode(selectedProvince.getCode());
-            District selectedDistrict = null;
-            Ward selectedWard = null;
-            if (!districtsInProvince.isEmpty()) {
-                selectedDistrict = districtsInProvince.get(random.nextInt(districtsInProvince.size()));
-                post.setDistrict(selectedDistrict);
-                List<Ward> wardsInDistrict = wardRepository.findByDistrictCode(selectedDistrict.getCode());
-                if (!wardsInDistrict.isEmpty()) {
-                    selectedWard = wardsInDistrict.get(random.nextInt(wardsInDistrict.size()));
-                    post.setWard(selectedWard);
-                }
-            }
-            String detailAddress = "";
+        for (int t = 0; t < numberOfThreads; t++) {
+            final int threadIndex = t;
 
-            // Tạo chuỗi địa chỉ đầy đủ
-            String fullAddress = detailAddress + (selectedWard != null ? selectedWard.getName() : "") +
-                    (selectedDistrict != null ? ", " + selectedDistrict.getName() : "") +
-                    ", " + selectedProvince.getName();
+            executorService.submit(() -> {
+                Random random = new Random(); // Thread-safe Random
+                List<Post> posts = new ArrayList<>();
 
-            Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(fullAddress);
-            if (latLng.isPresent()) {
-                double[] coords = latLng.get();
-                double baseLongitude = coords[0];
-                double baseLatitude = coords[1];
+                int clusterSize = 0;
+                int currentClusterCount = 0;
+                Category currentClusterCategory = null;
+                Province currentClusterProvince = null;
+                District currentClusterDistrict = null;
+                Ward currentClusterWard = null;
 
-                // Tạo tọa độ ngẫu nhiên trong bán kính 1000 mét
-                Random randomPoint = new Random();
-                double radiusInMeters = 1000.0;
-                double radiusInDegrees = radiusInMeters / 111_000.0; // Chuyển đổi mét sang độ (~111km/độ)
+                for (int i = 1; i <= batchSize; i++) {
+                    Post post = new Post();
 
-                // Tạo offset ngẫu nhiên trong bán kính
-                double u = randomPoint.nextDouble();
-                double v = randomPoint.nextDouble();
-                double w = radiusInDegrees * Math.sqrt(u);
-                double t = 2 * Math.PI * v;
-                double x = w * Math.cos(t); // Offset kinh độ
-                double y = w * Math.sin(t); // Offset vĩ độ
+                    // 1. LOGIC CLUSTER SEEDING
+                    if (currentClusterCount >= clusterSize) {
+                        clusterSize = 50 + random.nextInt(101);
+                        currentClusterCount = 0;
 
-                // Điều chỉnh kinh độ dựa trên vĩ độ (cos(latitude) để chính xác hơn)
-                double newLongitude = baseLongitude + x / Math.cos(Math.toRadians(baseLatitude));
-                double newLatitude = baseLatitude + y;
+                        currentClusterCategory = categories.get(random.nextInt(categories.size()));
+                        currentClusterProvince = provinces.get(random.nextInt(provinces.size()));
 
-                // Gán tọa độ ngẫu nhiên cho tin đăng
-                post.setLongitude(newLongitude);
-                post.setLatitude(newLatitude);
-            }
+                        // Đọc District từ Cache
+                        Long provCode = currentClusterProvince.getCode();
+                        List<District> districtsInProvince = districtCache.computeIfAbsent(
+                                provCode, k -> districtRepository.findByProvinceCode(k));
 
-            String houseNumber = "Số " + (random.nextInt(999) + 1); // Số 1-999
-            String street = streetNames.get(random.nextInt(streetNames.size()));
-            detailAddress = houseNumber + " Đường " + street;
+                        currentClusterDistrict = null;
+                        currentClusterWard = null;
 
-            // Tạo chuỗi địa chỉ đầy đủ
-            fullAddress = detailAddress + ", " + (selectedWard != null ? selectedWard.getName() : "") +
-                    (selectedDistrict != null ? ", " + selectedDistrict.getName() : "") +
-                    ", " + selectedProvince.getName();
-            // --- LOGIC TẠO LISTING DETAIL ---
-            ListingDetail detail = new ListingDetail();
+                        if (!districtsInProvince.isEmpty()) {
+                            currentClusterDistrict = districtsInProvince
+                                    .get(random.nextInt(districtsInProvince.size()));
 
-            // Logic đổ dữ liệu thông minh dựa trên Category
-            String catName = selectedCategory.getName();
-            boolean isLand = catName.contains("Bán đất") || catName.contains("kho, nhà xưởng");
+                            // Đọc Ward từ Cache
+                            Long distCode = currentClusterDistrict.getCode();
+                            List<Ward> wardsInDistrict = wardCache.computeIfAbsent(
+                                    distCode, k -> wardRepository.findByDistrictCode(k));
 
-            if (!isLand) {
-                // Nếu là nhà/căn hộ thì mới có phòng ngủ, phòng tắm, nội thất
-                detail.setBedrooms(random.nextInt(5) + 1); // 1-5 phòng
-                detail.setBathrooms(random.nextInt(3) + 1); // 1-3 phòng
-                detail.setFurnishing(furnishings[random.nextInt(furnishings.length)]);
-            }
-
-            // Hướng và pháp lý thì loại nào cũng có thể có
-            detail.setHouseDirection(orientations[random.nextInt(orientations.length)]);
-            detail.setBalconyDirection(orientations[random.nextInt(orientations.length)]);
-            detail.setLegalStatus(legalStatuses[random.nextInt(legalStatuses.length)]);
-
-            // QUAN TRỌNG: Thiết lập quan hệ 2 chiều
-            detail.setPost(post);
-            post.setListingDetail(detail);
-            String title = "";
-            String description = "";
-            List<String> sampleImageUrls = new ArrayList<>();
-
-            switch (selectedCategory.getName()) {
-                case "Cho thuê căn hộ chung cư":
-                    title = String.format("Cho Thuê Căn Hộ Chung Cư 2 Phòng Ngủ %s m2 Gần Trung Tâm", roundedArea);
-                    description = String.format(
-                            "Cho thuê căn hộ chung cư cao cấp, diện tích %s m2, gồm 2 phòng ngủ rộng rãi và 1 phòng khách thoáng mát. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chungcucaocap (1).jpg",
-                            "chungcucaocap (2).jpg", "chungcucaocap (3).jpg", "chungcucaocap (4).jpg",
-                            "chungcucaocap (5).jpg", "chungcucaocap (6).jpg", "canhochungcu (1).jpg",
-                            "canhochungcu (2).jpg", "canhochungcu (3).jpg", "canhochungcu (4).jpg",
-                            "canhochungcu (5).jpg", "canhochungcu (6).jpg", "canhochungcu (7).jpg",
-                            "canhochungcu (8).jpg", "canhochungcu (9).jpg", "canhochungcu (10).jpg",
-                            "canhochungcu (11).jpg");
-                    break;
-                case "Cho thuê chung cư mini, căn hộ dịch vụ":
-                    title = String.format("Cho Thuê Chung Cư Mini %s m2 Gần Trường Đại Học", roundedArea);
-                    description = String.format(
-                            "Cho thuê chung cư mini tiện nghi, diện tích %s m2, gồm 1 phòng ngủ ấm cúng. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chungcu (1).jpg",
-                            "chungcu (2).jpg", "chungcu (3).jpg", "chungcu (4).jpg", "chungcu (5).jpg",
-                            "chungcu (6).jpg", "canhochungcumini (1).jpg", "canhochungcumini (2).jpg",
-                            "canhochungcumini (3).jpg", "canhochungcumini (4).jpg", "canhochungcumini (5).jpg",
-                            "canhochungcumini (6).jpg", "canhochungcumini (7).jpg", "canhochungcumini (8).jpg",
-                            "canhochungcumini (9).jpg", "canhochungcumini (10).jpg", "canhochungcumini (11).jpg",
-                            "canhochungcumini (12).jpg", "canhochungcumini (13).jpg", "canhochungcumini (14).jpg");
-                    break;
-                case "Cho thuê nhà riêng":
-                    title = String.format("Cho Thuê Nhà Riêng 3 Tầng %s m2 Có Gara Ô Tô", roundedArea);
-                    description = String.format(
-                            "Nhà riêng cho thuê, 3 tầng khang trang, diện tích %s m2, gồm 4 phòng ngủ rộng rãi. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuenharieng (1).jpg", "chothuenharieng (2).jpg", "chothuenharieng (3).jpg",
-                            "chothuenharieng (4).jpg", "chothuenharieng (5).jpg", "chothuenharieng (6).jpg",
-                            "chothuenharieng (7).jpg", "banthuenharieng (1).jpg", "banthuenharieng (2).jpg",
-                            "banthuenharieng (3).jpg", "banthuenharieng (4).jpg", "banthuenharieng (5).jpg",
-                            "banthuenharieng (6).jpg",
-                            "banthuenharieng (7).jpg", "banthuenharieng (8).jpg", "banthuenharieng (9).jpg",
-                            "banthuenharieng (10).jpg");
-                    break;
-                case "Cho thuê nhà biệt thự, liền kề":
-                    title = String.format("Cho Thuê Biệt Thự Liền Kề %s m2 Có Hồ Bơi Riêng", roundedArea);
-                    description = String.format(
-                            "Cho thuê biệt thự liền kề đẳng cấp, diện tích %s m2, thiết kế sang trọng. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "bietthulienke (1).jpg", "bietthulienke (2).jpg", "bietthulienke (3).jpg",
-                            "bietthulienke (4).jpg", "bietthulienke (5).jpg", "bietthulienke (6).jpg",
-                            "bietthulienke (7).jpg", "bietthulienke (8).jpg", "bietthulienke (9).jpg");
-                    break;
-                case "Cho thuê nhà mặt phố":
-                    title = String.format("Cho Thuê Nhà Mặt Phố %s m2 Vị Trí Kinh Doanh Đắc Địa", roundedArea);
-                    description = String.format(
-                            "Nhà mặt phố cho thuê, diện tích %s m2, 2 tầng rộng rãi. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuenhamatpho (1).jpg", "chothuenhamatpho (2).jpg", "chothuenhamatpho (3).jpg",
-                            "chothuenhamatpho (4).jpg", "chothuenhamatpho (5).jpg", "chothuenhamatpho (6).jpg",
-                            "chothuenhamatpho (7).jpg", "chothuenhamatpho (8).jpg", "chothuenhamatpho (9).jpg");
-                    break;
-                case "Cho thuê shophouse, nhà phố thương mại":
-                    title = String.format("Cho Thuê Shophouse %s m2 Mặt Tiền Rộng Khu Đô Thị Mới", roundedArea);
-                    description = String.format(
-                            "Cho thuê shophouse hiện đại, diện tích %s m2, thiết kế 3 tầng tối ưu. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothueshophouse (1).jpg", "chothueshophouse (2).jpg", "chothueshophouse (3).jpg",
-                            "chothueshophouse (4).jpg", "chothueshophouse (5).jpg", "chothueshophouse (6).jpg",
-                            "chothueshophouse (7).jpg", "chothueshophouse (8).jpg");
-                    break;
-                case "Cho thuê nhà trọ, phòng trọ":
-                    title = String.format("Cho Thuê Phòng Trọ %s m2 Sạch Sẽ Gần Trường Đại Học", roundedArea);
-                    description = String.format(
-                            "Phòng trọ cho thuê sạch sẽ, diện tích %s m2, thiết kế gọn gàng. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "nhatrophongtro (1).jpg", "nhatrophongtro (2).jpg", "nhatrophongtro (3).jpg",
-                            "nhatrophongtro (4).jpg", "nhatrophongtro (5).jpg", "nhatrophongtro (6).jpg",
-                            "nhatrophongtro (7).jpg", "nhatrophongtro (8).jpg");
-                    break;
-                case "Cho thuê văn phòng":
-                    title = String.format("Cho Thuê Văn Phòng %s m2 Hiện Đại Tại Trung Tâm", roundedArea);
-                    description = String.format(
-                            "Văn phòng cho thuê chuyên nghiệp, diện tích %s m2, không gian mở hiện đại. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuevanphong (1).jpg", "chothuevanphong (2).jpg", "chothuevanphong (3).jpg",
-                            "chothuevanphong (4).jpg", "chothuevanphong (5).jpg", "chothuevanphong (6).jpg",
-                            "chothuevanphong (7).jpg", "chothuevanphong (8).jpg");
-                    break;
-                case "Cho thuê, sang nhượng cửa hàng, ki ốt":
-                    title = String.format("Cho Thuê hoặc Sang Nhượng Cửa Hàng %s m2 Đang Kinh Doanh", roundedArea);
-                    description = String.format(
-                            "Cho thuê hoặc sang nhượng cửa hàng, diện tích %s m2, mặt tiền rộng 4m. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuecuahankiot (1).jpg", "chothuecuahankiot (2).jpg", "chothuecuahankiot (3).jpg",
-                            "chothuecuahankiot (4).jpg", "chothuecuahankiot (5).jpg", "chothuecuahankiot (6).jpg",
-                            "chothuecuahankiot (7).jpg", "chothuecuahankiot (8).jpg", "chothuecuahankiot (9).jpg");
-                    break;
-                case "Cho thuê kho, nhà xưởng, đất":
-                    title = String.format("Cho Thuê Kho Bãi %s m2 Gần Khu Công Nghiệp", roundedArea);
-                    description = String.format(
-                            "Cho thuê kho bãi rộng rãi, diện tích %s m2, kết cấu khung thép chắc chắn. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuenhakhonhaxuong (1).jpg", "chothuenhakhonhaxuong (2).jpg",
-                            "chothuenhakhonhaxuong (3).jpg", "chothuenhakhonhaxuong (4).jpg",
-                            "chothuenhakhonhaxuong (5).jpg", "chothuenhakhonhaxuong (6).jpg",
-                            "chothuenhakhonhaxuong (7).jpg", "chothuenhakhonhaxuong (8).jpg");
-                    break;
-                case "Cho thuê loại bất động sản khác":
-                    title = String.format("Cho Thuê Mặt Bằng Đa Năng %s m2 Linh Hoạt Sử Dụng", roundedArea);
-                    description = String.format(
-                            "Cho thuê mặt bằng đa năng, diện tích %s m2, vị trí linh hoạt. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "batdongsankhac (1).jpg", "batdongsankhac (2).jpg", "batdongsankhac (3).jpg",
-                            "batdongsankhac (4).jpg", "batdongsankhac (5).jpg");
-                    break;
-
-                case "Bán căn hộ chung cư":
-                    title = String.format("Bán Căn Hộ Chung Cư 3 Phòng Ngủ %s m2 View Công Viên", roundedArea);
-                    description = String.format(
-                            "Bán căn hộ chung cư cao cấp, diện tích %s m2, gồm 3 phòng ngủ rộng rãi. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chungcucaocap (1).jpg",
-                            "chungcucaocap (2).jpg", "chungcucaocap (3).jpg", "chungcucaocap (4).jpg",
-                            "chungcucaocap (5).jpg", "chungcucaocap (6).jpg", "canhochungcu (1).jpg",
-                            "canhochungcu (2).jpg", "canhochungcu (3).jpg", "canhochungcu (4).jpg",
-                            "canhochungcu (5).jpg", "canhochungcu (6).jpg", "canhochungcu (7).jpg",
-                            "canhochungcu (8).jpg", "canhochungcu (9).jpg", "canhochungcu (10).jpg",
-                            "canhochungcu (11).jpg");
-                    break;
-                case "Bán chung cư mini, căn hộ dịch vụ":
-                    title = String.format("Bán Chung Cư Mini %s m2 Đang Cho Thuê Ổn Định", roundedArea);
-                    description = String.format(
-                            "Bán chung cư mini sinh lời cao, diện tích %s m2, gồm 1 phòng ngủ khép kín. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chungcu (1).jpg",
-                            "chungcu (2).jpg", "chungcu (3).jpg", "chungcu (4).jpg", "chungcu (5).jpg",
-                            "chungcu (6).jpg", "canhochungcumini (1).jpg", "canhochungcumini (2).jpg",
-                            "canhochungcumini (3).jpg", "canhochungcumini (4).jpg", "canhochungcumini (5).jpg",
-                            "canhochungcumini (6).jpg", "canhochungcumini (7).jpg", "canhochungcumini (8).jpg",
-                            "canhochungcumini (9).jpg", "canhochungcumini (10).jpg", "canhochungcumini (11).jpg",
-                            "canhochungcumini (12).jpg", "canhochungcumini (13).jpg", "canhochungcumini (14).jpg");
-                    break;
-                case "Bán nhà riêng":
-                    title = String.format("Bán Nhà Riêng 4 Tầng %s m2 Hẻm Xe Hơi Yên Tĩnh", roundedArea);
-                    description = String.format(
-                            "Bán nhà riêng 4 tầng kiên cố, diện tích %s m2, gồm 3 phòng ngủ rộng. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuenharieng (1).jpg", "chothuenharieng (2).jpg", "chothuenharieng (3).jpg",
-                            "chothuenharieng (4).jpg", "chothuenharieng (5).jpg", "chothuenharieng (6).jpg",
-                            "chothuenharieng (7).jpg", "banthuenharieng (1).jpg", "banthuenharieng (2).jpg",
-                            "banthuenharieng (3).jpg", "banthuenharieng (4).jpg", "banthuenharieng (5).jpg",
-                            "banthuenharieng (6).jpg",
-                            "banthuenharieng (7).jpg", "banthuenharieng (8).jpg", "banthuenharieng (9).jpg",
-                            "banthuenharieng (10).jpg");
-                    break;
-                case "Bán nhà biệt thự, liền kề":
-                    title = String.format("Bán Biệt Thự Liền Kề %s m2 5 Phòng Ngủ Sang Trọng", roundedArea);
-                    description = String.format(
-                            "Bán biệt thự liền kề đẳng cấp, diện tích %s m2, thiết kế 4 tầng. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "bietthulienke (1).jpg", "bietthulienke (2).jpg", "bietthulienke (3).jpg",
-                            "bietthulienke (4).jpg", "bietthulienke (5).jpg", "bietthulienke (6).jpg",
-                            "bietthulienke (7).jpg", "bietthulienke (8).jpg", "bietthulienke (9).jpg");
-                    break;
-                case "Bán nhà mặt phố":
-                    title = String.format("Bán Nhà Mặt Phố 3 Tầng %s m2 Vị Trí Kinh Doanh Vàng", roundedArea);
-                    description = String.format(
-                            "Bán nhà mặt phố 3 tầng, diện tích %s m2, mặt tiền 5m lý tưởng. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuenhamatpho (1).jpg", "chothuenhamatpho (2).jpg", "chothuenhamatpho (3).jpg",
-                            "chothuenhamatpho (4).jpg", "chothuenhamatpho (5).jpg", "chothuenhamatpho (6).jpg",
-                            "chothuenhamatpho (7).jpg", "chothuenhamatpho (8).jpg", "chothuenhamatpho (9).jpg");
-                    break;
-                case "Bán shophouse, nhà phố thương mại":
-                    title = String.format("Bán Shophouse 4 Tầng %s m2 Khu Thương Mại Sầm Uất", roundedArea);
-                    description = String.format(
-                            "Bán shophouse hiện đại, diện tích %s m2, 4 tầng tối ưu. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothueshophouse (1).jpg", "chothueshophouse (2).jpg", "chothueshophouse (3).jpg",
-                            "chothueshophouse (4).jpg", "chothueshophouse (5).jpg", "chothueshophouse (6).jpg",
-                            "chothueshophouse (7).jpg", "chothueshophouse (8).jpg");
-                    break;
-                case "Bán đất nền dự án":
-                    title = String.format("Bán Đất Nền Dự Án %s m2 Hạ Tầng Hoàn Thiện", roundedArea);
-                    description = String.format(
-                            "Bán đất nền dự án vị trí đẹp, diện tích %s m2, nằm trong khu đô thị mới. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "bandatnenduan (1).jpg",
-                            "bandatnenduan (2).jpg",
-                            "bandatnenduan (3).jpg",
-                            "bandatnenduan (4).jpg",
-                            "bandatnenduan (5).jpg",
-                            "bandatnenduan (6).jpg",
-                            "bandatnenduan (7).jpg",
-                            "bandatnenduan (8).jpg",
-                            "bandatnenduan (9).jpg",
-                            "bandatnenduan (10).jpg");
-                    break;
-                case "Bán đất":
-                    title = String.format("Bán Lô Đất %s m2 Mặt Tiền Đường Lớn Gần Trung Tâm", roundedArea);
-                    description = String.format(
-                            "Bán lô đất đẹp, diện tích %s m2, mặt tiền đường lớn 10m. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "bandat (1).jpg",
-                            "bandat (2).jpg",
-                            "bandat (3).jpg",
-                            "bandat (4).jpg",
-                            "bandat (5).jpg",
-                            "bandat (6).jpg",
-                            "bandat (7).jpg",
-                            "bandat (8).jpg",
-                            "bandat (9).jpg",
-                            "bandat (10).jpg",
-                            "bandat (11).jpg",
-                            "bandat (12).jpg",
-                            "bandat (13).jpg");
-                    break;
-                case "Bán trang trại, khu nghỉ dưỡng":
-                    title = String.format("Bán Trang Trại Nghỉ Dưỡng %s m2 Có Ao Cá và Vườn Cây", roundedArea);
-                    description = String.format(
-                            "Bán trang trại nghỉ dưỡng, diện tích %s m2, gồm nhà nghỉ 2 tầng. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "bantrangtrainghiduong (1).jpg",
-                            "bantrangtrainghiduong (2).jpg",
-                            "bantrangtrainghiduong (3).jpg",
-                            "bantrangtrainghiduong (4).jpg",
-                            "bantrangtrainghiduong (5).jpg",
-                            "bantrangtrainghiduong (6).jpg",
-                            "bantrangtrainghiduong (7).jpg",
-                            "bantrangtrainghiduong (8).jpg",
-                            "bantrangtrainghiduong (9).jpg",
-                            "bantrangtrainghiduong (10).jpg",
-                            "bantrangtrainghiduong (11).jpg",
-                            "bantrangtrainghiduong (12).jpg");
-                    break;
-                case "Bán condotel":
-                    title = String.format("Bán Condotel %s m2 View Biển Đẳng Cấp 5 Sao", roundedArea);
-                    description = String.format(
-                            "Bán condotel view biển đẳng cấp, diện tích %s m2, gồm 2 phòng ngủ. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "condotel (1).jpg",
-                            "condotel (2).jpg",
-                            "condotel (3).jpg",
-                            "condotel (4).jpg",
-                            "condotel (5).jpg",
-                            "condotel (6).jpg",
-                            "condotel (7).jpg",
-                            "condotel (8).jpg");
-                    break;
-                case "Bán kho, nhà xưởng":
-                    title = String.format("Bán Nhà Xưởng %s m2 Gần Khu Công Nghiệp Có Điện 3 Pha", roundedArea);
-                    description = String.format(
-                            "Bán nhà xưởng kiên cố, diện tích %s m2, khung thép chắc chắn. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "chothuenhakhonhaxuong (1).jpg", "chothuenhakhonhaxuong (2).jpg",
-                            "chothuenhakhonhaxuong (3).jpg", "chothuenhakhonhaxuong (4).jpg",
-                            "chothuenhakhonhaxuong (5).jpg", "chothuenhakhonhaxuong (6).jpg",
-                            "chothuenhakhonhaxuong (7).jpg", "chothuenhakhonhaxuong (8).jpg");
-                    break;
-                case "Bán loại bất động sản khác":
-                    title = String.format("Bán Tài Sản Đặc Biệt %s m2 Vị Trí Độc Đáo Đa Năng", roundedArea);
-                    description = String.format(
-                            "Bán tài sản đặc biệt, diện tích %s m2, vị trí độc đáo. Địa chỉ: %s.",
-                            roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "batdongsankhac (1).jpg", "batdongsankhac (2).jpg", "batdongsankhac (3).jpg",
-                            "batdongsankhac (4).jpg", "batdongsankhac (5).jpg");
-                    break;
-                default:
-                    title = String.format("Tin Đăng Mẫu %d - %s m2", i, roundedArea);
-                    description = String.format(
-                            "Mô tả mặc định cho tin đăng mẫu %d, diện tích %s m2. Địa chỉ: %s.",
-                            i, roundedArea, fullAddress);
-                    sampleImageUrls = Arrays.asList(
-                            "https://example.com/images/default1.jpg",
-                            "https://example.com/images/default2.jpg");
-                    break;
-            }
-            String generalDescription = "\n\n**Thông tin bổ sung**:\n" +
-                    "- Vị trí đắc địa: Nằm trong khu vực phát triển sôi động, xung quanh có đầy đủ tiện ích như trường học quốc tế, bệnh viện đa khoa, siêu thị lớn, công viên xanh mát và các trung tâm thương mại hiện đại.\n"
-                    +
-                    "- Giao thông thuận tiện: Gần các trục đường chính và tuyến giao thông huyết mạch, dễ dàng di chuyển đến trung tâm thành phố hoặc các khu vực lân cận trong thời gian ngắn.\n"
-                    +
-                    "- Tiện ích đa dạng: Cư dân được hưởng các tiện ích cao cấp như hồ bơi, phòng gym, khu vui chơi trẻ em, không gian BBQ ngoài trời, và hệ thống an ninh 24/7 đảm bảo sự an toàn tuyệt đối.\n"
-                    +
-                    "- Hỗ trợ toàn diện: Đội ngũ tư vấn chuyên nghiệp sẵn sàng hỗ trợ từ A-Z, bao gồm xem nhà miễn phí, tư vấn pháp lý nhanh chóng, và đàm phán giá tốt nhất để bạn có được giao dịch hoàn hảo.\n"
-                    +
-                    "- Cam kết chất lượng: Chúng tôi cung cấp thông tin minh bạch, chính xác, đảm bảo mọi chi tiết về bất động sản đều được kiểm tra kỹ lưỡng trước khi giới thiệu đến bạn.\n"
-                    +
-                    "- Cơ hội không thể bỏ lỡ: Hãy liên hệ ngay hôm nay để được tư vấn chi tiết, đặt lịch xem nhà thực tế, và nhận ưu đãi đặc biệt dành riêng cho khách hàng sớm nhất!";
-            description = description + generalDescription;
-            post.setTitle(title);
-            post.setDescription(description);
-
-            post.setType(selectedCategory.getType());
-
-            // Gán giá dựa trên loại tin đăng (RENT hoặc SALE)
-            if (selectedCategory.getType() == ListingType.RENT) {
-                long minRentPrice = 1_700_000L;
-                long maxRentPrice = 40_000_000L;
-                long rentPriceRange = maxRentPrice - minRentPrice;
-                post.setPrice(minRentPrice + (long) (random.nextDouble() * rentPriceRange));
-            } else if (selectedCategory.getType() == ListingType.SALE) {
-                long minPricePerM2 = 100_000L;
-                long maxPricePerM2 = 10_000_000L;
-                long pricePerM2Range = maxPricePerM2 - minPricePerM2;
-                long pricePerM2 = minPricePerM2 + (long) (random.nextDouble() * pricePerM2Range);
-                post.setPrice((long) (roundedArea * pricePerM2));
-            }
-
-            // ========================================================
-            // 🌟 LOGIC MÔ PHỎNG DỮ LIỆU LỊCH SỬ VÀ TRẠNG THÁI (TIME TRAVEL)
-            // ========================================================
-
-            int timeRand = random.nextInt(100);
-            Instant fakeCreatedAt;
-            Instant fakeExpireDate;
-
-            // Mảng các lựa chọn gói thời gian (30, 60, 90 ngày)
-            int[] durationOptions = { 30, 60, 90 };
-            int durationDays = durationOptions[random.nextInt(durationOptions.length)];
-
-            if (timeRand < 90) {
-                // 90% BÀI ĐĂNG TRONG QUÁ KHỨ (Sẽ bị EXPIRED)
-                // Lùi về quá khứ từ 30 đến 1095 ngày (3 năm)
-                long randomDaysInPast = random.nextInt(1065) + 30; // 1065 + 30 = 1095
-                fakeCreatedAt = Instant.now().minus(randomDaysInPast, java.time.temporal.ChronoUnit.DAYS);
-                fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
-
-                // Vì nó ở trong quá khứ nên chắc chắn sẽ hết hạn
-                post.setStatus(PostStatus.EXPIRED);
-                post.setNotifyOnView(false);
-
-            } else {
-                // 10% BÀI ĐĂNG HIỆN TẠI (Đang ACTIVE hoặc PENDING)
-                // Sinh trong vòng 29 ngày trở lại đây
-                long randomRecentDays = random.nextInt(30);
-                fakeCreatedAt = Instant.now().minus(randomRecentDays, java.time.temporal.ChronoUnit.DAYS);
-                fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
-
-                // Quyết định trạng thái cho bài đang Active
-                if (selectedVip.getVipLevel() == 0) {
-                    int statusRand = random.nextInt(100);
-                    if (statusRand < 40) {
-                        post.setStatus(PostStatus.APPROVED);
-                    } else if (statusRand < 60) {
-                        post.setStatus(PostStatus.PENDING);
-                    } else if (statusRand < 80) {
-                        post.setStatus(PostStatus.REVIEW_LATER);
-                    } else if (statusRand < 90) {
-                        post.setStatus(PostStatus.REJECTED);
-                    } else {
-                        post.setStatus(PostStatus.BLOCKED);
+                            if (!wardsInDistrict.isEmpty()) {
+                                currentClusterWard = wardsInDistrict.get(random.nextInt(wardsInDistrict.size()));
+                            }
+                        }
                     }
-                    post.setNotifyOnView(false);
-                } else {
-                    // VIP thì luôn được duyệt
-                    post.setStatus(random.nextBoolean() ? PostStatus.APPROVED : PostStatus.REVIEW_LATER);
-                    post.setNotifyOnView(true);
+                    currentClusterCount++;
+
+                    Category selectedCategory = currentClusterCategory;
+                    Province selectedProvince = currentClusterProvince;
+                    District selectedDistrict = currentClusterDistrict;
+                    Ward selectedWard = currentClusterWard;
+                    Vip selectedVip = vips.get(random.nextInt(vips.size()));
+
+                    // 2. XỬ LÝ DIỆN TÍCH & ĐỊA CHỈ
+                    double rawArea = 50 + random.nextDouble() * 2000;
+                    double roundedArea = Math.round(rawArea * 10.0) / 10.0;
+                    post.setArea(roundedArea);
+
+                    post.setProvince(selectedProvince);
+                    if (selectedDistrict != null)
+                        post.setDistrict(selectedDistrict);
+                    if (selectedWard != null)
+                        post.setWard(selectedWard);
+
+                    String houseNumber = "Số " + (random.nextInt(999) + 1);
+                    String street = STREET_NAMES.get(random.nextInt(STREET_NAMES.size()));
+                    String detailAddress = houseNumber + " Đường " + street;
+
+                    String fullAddress = detailAddress + ", " + (selectedWard != null ? selectedWard.getName() : "") +
+                            (selectedDistrict != null ? ", " + selectedDistrict.getName() : "") +
+                            ", " + selectedProvince.getName();
+
+                    // 3. XỬ LÝ TỌA ĐỘ MAPBOX VỚI CACHE
+                    // Chuỗi address chỉ tới Phường/Huyện/Tỉnh để query Mapbox hiệu quả và dễ trúng
+                    // cache
+                    String geocodeAddress = (selectedWard != null ? selectedWard.getName() + ", " : "") +
+                            (selectedDistrict != null ? selectedDistrict.getName() + ", " : "") +
+                            selectedProvince.getName();
+
+                    double[] coords = geocodeCache.get(geocodeAddress);
+
+                    if (coords == null) {
+                        // Nếu chưa có trong RAM, gọi API Mapbox
+                        Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(geocodeAddress);
+                        if (latLng.isPresent()) {
+                            coords = latLng.get();
+                            geocodeCache.put(geocodeAddress, coords); // Lưu vào RAM
+                        }
+                    }
+
+                    if (coords != null) {
+                        double baseLongitude = coords[0];
+                        double baseLatitude = coords[1];
+
+                        double radiusInMeters = 1000.0;
+                        double radiusInDegrees = radiusInMeters / 111_000.0;
+                        double u = random.nextDouble();
+                        double v = random.nextDouble();
+                        double w = radiusInDegrees * Math.sqrt(u);
+                        double theta = 2 * Math.PI * v;
+                        double x = w * Math.cos(theta);
+                        double y = w * Math.sin(theta);
+
+                        post.setLongitude(baseLongitude + x / Math.cos(Math.toRadians(baseLatitude)));
+                        post.setLatitude(baseLatitude + y);
+                    }
+
+                    // 4. XỬ LÝ LISTING DETAIL
+                    ListingDetail detail = new ListingDetail();
+                    String catName = selectedCategory.getName();
+                    boolean isLand = catName.contains("Bán đất") || catName.contains("kho, nhà xưởng");
+
+                    if (!isLand) {
+                        detail.setBedrooms(random.nextInt(5) + 1);
+                        detail.setBathrooms(random.nextInt(3) + 1);
+                        detail.setFurnishing(furnishings[random.nextInt(furnishings.length)]);
+                    }
+
+                    detail.setHouseDirection(orientations[random.nextInt(orientations.length)]);
+                    detail.setBalconyDirection(orientations[random.nextInt(orientations.length)]);
+                    detail.setLegalStatus(legalStatuses[random.nextInt(legalStatuses.length)]);
+                    detail.setPost(post);
+                    post.setListingDetail(detail);
+
+                    post.setType(selectedCategory.getType());
+
+                    // 5. GỌI HÀM HELPER ĐIỀN TIÊU ĐỀ, MÔ TẢ, HÌNH ẢNH
+                    int globalIndex = (threadIndex * batchSize) + i;
+                    populateContentAndImages(post, selectedCategory.getName(), roundedArea, fullAddress, random,
+                            baseImageUrl, globalIndex);
+
+                    // 6. XỬ LÝ GIÁ TIỀN
+                    if (selectedCategory.getType() == ListingType.RENT) {
+                        long minRentPrice = 1_700_000L;
+                        long maxRentPrice = 40_000_000L;
+                        post.setPrice(minRentPrice + (long) (random.nextDouble() * (maxRentPrice - minRentPrice)));
+                    } else if (selectedCategory.getType() == ListingType.SALE) {
+                        long minPricePerM2 = 100_000L;
+                        long maxPricePerM2 = 10_000_000L;
+                        long pricePerM2 = minPricePerM2
+                                + (long) (random.nextDouble() * (maxPricePerM2 - minPricePerM2));
+                        post.setPrice((long) (roundedArea * pricePerM2));
+                    }
+
+                    // 7. XỬ LÝ TIME TRAVEL
+                    int timeRand = random.nextInt(100);
+                    Instant fakeCreatedAt;
+                    Instant fakeExpireDate;
+                    int[] durationOptions = { 30, 60, 90 };
+                    int durationDays = durationOptions[random.nextInt(durationOptions.length)];
+
+                    if (timeRand < 90) {
+                        long randomDaysInPast = random.nextInt(1065) + 30;
+                        fakeCreatedAt = Instant.now().minus(randomDaysInPast, java.time.temporal.ChronoUnit.DAYS);
+                        fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
+                        post.setStatus(PostStatus.EXPIRED);
+                        post.setNotifyOnView(false);
+                    } else {
+                        long randomRecentDays = random.nextInt(30);
+                        fakeCreatedAt = Instant.now().minus(randomRecentDays, java.time.temporal.ChronoUnit.DAYS);
+                        fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
+
+                        if (selectedVip.getVipLevel() == 0) {
+                            int statusRand = random.nextInt(100);
+                            if (statusRand < 40)
+                                post.setStatus(PostStatus.APPROVED);
+                            else if (statusRand < 60)
+                                post.setStatus(PostStatus.PENDING);
+                            else if (statusRand < 80)
+                                post.setStatus(PostStatus.REVIEW_LATER);
+                            else if (statusRand < 90)
+                                post.setStatus(PostStatus.REJECTED);
+                            else
+                                post.setStatus(PostStatus.BLOCKED);
+                            post.setNotifyOnView(false);
+                        } else {
+                            post.setStatus(random.nextBoolean() ? PostStatus.APPROVED : PostStatus.REVIEW_LATER);
+                            post.setNotifyOnView(true);
+                        }
+                    }
+
+                    post.setCreatedAt(fakeCreatedAt);
+                    post.setExpireDate(fakeExpireDate);
+                    post.setDeletedByUser(false);
+
+                    // 8. LIÊN KẾT ENTITY
+                    User user = users.get(random.nextInt(users.size()));
+                    post.setUser(user);
+                    post.setCreatedBy(user.getEmail());
+                    post.setCategory(selectedCategory);
+                    post.setVip(selectedVip);
+                    post.setStreetAddress(detailAddress);
+                    post.setView((long) (random.nextInt(1000) + 100));
+
+                    posts.add(post);
                 }
-            }
 
-            // Gán thời gian đã được tính toán vào Post
-            post.setCreatedAt(fakeCreatedAt);
-            post.setExpireDate(fakeExpireDate);
-
-            post.setDeletedByUser(false);
-
-            // Liên kết với các entity khác
-            User user = users.get(random.nextInt(users.size()));
-            post.setUser(user);
-            post.setCreatedBy(user.getEmail());
-            post.setCategory(selectedCategory);
-            post.setVip(selectedVip);
-            post.setStreetAddress(detailAddress);
-
-            // 1. Lấy Backend URL từ file cấu hình (application.yml)
-            String backendUrl = appProperties.getUrl().getBackend();
-            // Đề phòng trường hợp quên config, set giá trị mặc định an toàn
-            if (backendUrl == null || backendUrl.isEmpty()) {
-                backendUrl = "http://localhost:8080";
-            }
-
-            // 2. Định nghĩa thư mục chứa ảnh (Thay đổi "/images/" theo đường dẫn thực tế
-            // của bạn)
-            String baseImageUrl = backendUrl + "/uploads/";
-
-            // Tạo danh sách ảnh mẫu (ít nhất 4 ảnh)
-            List<Image> images = new ArrayList<>();
-            int maxImages = Math.min(sampleImageUrls.size(), 12);
-            int numberOfImages = random.nextInt(maxImages - 3) + 4; // Từ 4 đến maxImages
-            List<String> availableImageUrls = new ArrayList<>(sampleImageUrls);
-
-            for (int j = 0; j < numberOfImages; j++) {
-                Image image = new Image();
-                String selectedImageName = "";
-
-                // Chọn tên ảnh ngẫu nhiên
-                if (!availableImageUrls.isEmpty()) {
-                    int randomIndex = random.nextInt(availableImageUrls.size());
-                    selectedImageName = availableImageUrls.remove(randomIndex);
-                } else {
-                    selectedImageName = sampleImageUrls.get(random.nextInt(sampleImageUrls.size()));
+                // 9. BATCH INSERT XUỐNG DB (An toàn trong đa luồng)
+                synchronized (postRepository) {
+                    postRepository.saveAll(posts);
                 }
-
-                // 3. LOGIC GẮN FULL URL
-                if (selectedImageName.startsWith("http")) {
-                    image.setUrl(selectedImageName);
-                } else {
-                    image.setUrl(baseImageUrl + selectedImageName);
-                }
-
-                image.setOrderIndex(j);
-                image.setPost(post);
-                images.add(image);
-            }
-            post.setImages(images);
-
-            post.setView((long) (random.nextInt(1000) + 100));
-
-            posts.add(post);
-
-            // ========================================================
-            // 🌟 KỸ THUẬT BATCH INSERT (CHỐNG TRÀN RAM KHI TOTAL LỚN)
-            // ========================================================
-            if (i % 1000 == 0) {
-                postRepository.saveAll(posts);
-                posts.clear();
-                System.out.println(">>> Đã seed thành công " + i + " / " + totalPost + " bài đăng...");
-            }
+                System.out.println(">>> Luồng " + Thread.currentThread().getName() + " đã seed thành công " + batchSize
+                        + " bài đăng.");
+            });
         }
 
-        // Lưu những bài còn sót lại cuối cùng
-        if (!posts.isEmpty()) {
-            postRepository.saveAll(posts);
-            System.out.println(">>> Đã seed thành công " + totalPost + " / " + totalPost + " bài đăng...");
+        // 10. CHỜ CÁC LUỒNG CHẠY XONG
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(15, TimeUnit.MINUTES)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
         }
 
-        System.out.println(">>> INIT ADDRESS DATA TABLE 'posts' WITH IMAGES AND TIME TRAVEL: SUCCESS");
+        System.out.println(">>> INIT ADDRESS DATA TABLE 'posts' WITH MULTI-THREADING, CACHE AND MAPBOX: SUCCESS");
     }
 
+    // ====================================================================
+    // 🌟 3. HÀM HELPER ĐIỀN NỘI DUNG VÀ HÌNH ẢNH (Tách từ switch-case)
+    // ====================================================================
+    private void populateContentAndImages(Post post, String categoryName, double roundedArea, String fullAddress,
+            Random random, String baseImageUrl, int loopIndex) {
+        String title = "";
+        String description = "";
+        List<String> sampleImageUrls = new ArrayList<>();
+
+        switch (categoryName) {
+            case "Cho thuê căn hộ chung cư":
+                title = String.format("Cho Thuê Căn Hộ Chung Cư 2 Phòng Ngủ %s m2 Gần Trung Tâm", roundedArea);
+                description = String.format(
+                        "Cho thuê căn hộ chung cư cao cấp, diện tích %s m2, gồm 2 phòng ngủ rộng rãi và 1 phòng khách thoáng mát. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chungcucaocap (1).jpg",
+                        "chungcucaocap (2).jpg", "chungcucaocap (3).jpg", "chungcucaocap (4).jpg",
+                        "chungcucaocap (5).jpg", "chungcucaocap (6).jpg", "canhochungcu (1).jpg",
+                        "canhochungcu (2).jpg", "canhochungcu (3).jpg", "canhochungcu (4).jpg",
+                        "canhochungcu (5).jpg", "canhochungcu (6).jpg", "canhochungcu (7).jpg",
+                        "canhochungcu (8).jpg", "canhochungcu (9).jpg", "canhochungcu (10).jpg",
+                        "canhochungcu (11).jpg");
+                break;
+            case "Cho thuê chung cư mini, căn hộ dịch vụ":
+                title = String.format("Cho Thuê Chung Cư Mini %s m2 Gần Trường Đại Học", roundedArea);
+                description = String.format(
+                        "Cho thuê chung cư mini tiện nghi, diện tích %s m2, gồm 1 phòng ngủ ấm cúng. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chungcu (1).jpg",
+                        "chungcu (2).jpg", "chungcu (3).jpg", "chungcu (4).jpg", "chungcu (5).jpg",
+                        "chungcu (6).jpg", "canhochungcumini (1).jpg", "canhochungcumini (2).jpg",
+                        "canhochungcumini (3).jpg", "canhochungcumini (4).jpg", "canhochungcumini (5).jpg",
+                        "canhochungcumini (6).jpg", "canhochungcumini (7).jpg", "canhochungcumini (8).jpg",
+                        "canhochungcumini (9).jpg", "canhochungcumini (10).jpg", "canhochungcumini (11).jpg",
+                        "canhochungcumini (12).jpg", "canhochungcumini (13).jpg", "canhochungcumini (14).jpg");
+                break;
+            case "Cho thuê nhà riêng":
+                title = String.format("Cho Thuê Nhà Riêng 3 Tầng %s m2 Có Gara Ô Tô", roundedArea);
+                description = String.format(
+                        "Nhà riêng cho thuê, 3 tầng khang trang, diện tích %s m2, gồm 4 phòng ngủ rộng rãi. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuenharieng (1).jpg", "chothuenharieng (2).jpg", "chothuenharieng (3).jpg",
+                        "chothuenharieng (4).jpg", "chothuenharieng (5).jpg", "chothuenharieng (6).jpg",
+                        "chothuenharieng (7).jpg", "banthuenharieng (1).jpg", "banthuenharieng (2).jpg",
+                        "banthuenharieng (3).jpg", "banthuenharieng (4).jpg", "banthuenharieng (5).jpg",
+                        "banthuenharieng (6).jpg",
+                        "banthuenharieng (7).jpg", "banthuenharieng (8).jpg", "banthuenharieng (9).jpg",
+                        "banthuenharieng (10).jpg");
+                break;
+            case "Cho thuê nhà biệt thự, liền kề":
+                title = String.format("Cho Thuê Biệt Thự Liền Kề %s m2 Có Hồ Bơi Riêng", roundedArea);
+                description = String.format(
+                        "Cho thuê biệt thự liền kề đẳng cấp, diện tích %s m2, thiết kế sang trọng. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "bietthulienke (1).jpg", "bietthulienke (2).jpg", "bietthulienke (3).jpg",
+                        "bietthulienke (4).jpg", "bietthulienke (5).jpg", "bietthulienke (6).jpg",
+                        "bietthulienke (7).jpg", "bietthulienke (8).jpg", "bietthulienke (9).jpg");
+                break;
+            case "Cho thuê nhà mặt phố":
+                title = String.format("Cho Thuê Nhà Mặt Phố %s m2 Vị Trí Kinh Doanh Đắc Địa", roundedArea);
+                description = String.format(
+                        "Nhà mặt phố cho thuê, diện tích %s m2, 2 tầng rộng rãi. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuenhamatpho (1).jpg", "chothuenhamatpho (2).jpg", "chothuenhamatpho (3).jpg",
+                        "chothuenhamatpho (4).jpg", "chothuenhamatpho (5).jpg", "chothuenhamatpho (6).jpg",
+                        "chothuenhamatpho (7).jpg", "chothuenhamatpho (8).jpg", "chothuenhamatpho (9).jpg");
+                break;
+            case "Cho thuê shophouse, nhà phố thương mại":
+                title = String.format("Cho Thuê Shophouse %s m2 Mặt Tiền Rộng Khu Đô Thị Mới", roundedArea);
+                description = String.format(
+                        "Cho thuê shophouse hiện đại, diện tích %s m2, thiết kế 3 tầng tối ưu. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothueshophouse (1).jpg", "chothueshophouse (2).jpg", "chothueshophouse (3).jpg",
+                        "chothueshophouse (4).jpg", "chothueshophouse (5).jpg", "chothueshophouse (6).jpg",
+                        "chothueshophouse (7).jpg", "chothueshophouse (8).jpg");
+                break;
+            case "Cho thuê nhà trọ, phòng trọ":
+                title = String.format("Cho Thuê Phòng Trọ %s m2 Sạch Sẽ Gần Trường Đại Học", roundedArea);
+                description = String.format(
+                        "Phòng trọ cho thuê sạch sẽ, diện tích %s m2, thiết kế gọn gàng. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "nhatrophongtro (1).jpg", "nhatrophongtro (2).jpg", "nhatrophongtro (3).jpg",
+                        "nhatrophongtro (4).jpg", "nhatrophongtro (5).jpg", "nhatrophongtro (6).jpg",
+                        "nhatrophongtro (7).jpg", "nhatrophongtro (8).jpg");
+                break;
+            case "Cho thuê văn phòng":
+                title = String.format("Cho Thuê Văn Phòng %s m2 Hiện Đại Tại Trung Tâm", roundedArea);
+                description = String.format(
+                        "Văn phòng cho thuê chuyên nghiệp, diện tích %s m2, không gian mở hiện đại. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuevanphong (1).jpg", "chothuevanphong (2).jpg", "chothuevanphong (3).jpg",
+                        "chothuevanphong (4).jpg", "chothuevanphong (5).jpg", "chothuevanphong (6).jpg",
+                        "chothuevanphong (7).jpg", "chothuevanphong (8).jpg");
+                break;
+            case "Cho thuê, sang nhượng cửa hàng, ki ốt":
+                title = String.format("Cho Thuê hoặc Sang Nhượng Cửa Hàng %s m2 Đang Kinh Doanh", roundedArea);
+                description = String.format(
+                        "Cho thuê hoặc sang nhượng cửa hàng, diện tích %s m2, mặt tiền rộng 4m. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuecuahankiot (1).jpg", "chothuecuahankiot (2).jpg", "chothuecuahankiot (3).jpg",
+                        "chothuecuahankiot (4).jpg", "chothuecuahankiot (5).jpg", "chothuecuahankiot (6).jpg",
+                        "chothuecuahankiot (7).jpg", "chothuecuahankiot (8).jpg", "chothuecuahankiot (9).jpg");
+                break;
+            case "Cho thuê kho, nhà xưởng, đất":
+                title = String.format("Cho Thuê Kho Bãi %s m2 Gần Khu Công Nghiệp", roundedArea);
+                description = String.format(
+                        "Cho thuê kho bãi rộng rãi, diện tích %s m2, kết cấu khung thép chắc chắn. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuenhakhonhaxuong (1).jpg", "chothuenhakhonhaxuong (2).jpg",
+                        "chothuenhakhonhaxuong (3).jpg", "chothuenhakhonhaxuong (4).jpg",
+                        "chothuenhakhonhaxuong (5).jpg", "chothuenhakhonhaxuong (6).jpg",
+                        "chothuenhakhonhaxuong (7).jpg", "chothuenhakhonhaxuong (8).jpg");
+                break;
+            case "Cho thuê loại bất động sản khác":
+                title = String.format("Cho Thuê Mặt Bằng Đa Năng %s m2 Linh Hoạt Sử Dụng", roundedArea);
+                description = String.format(
+                        "Cho thuê mặt bằng đa năng, diện tích %s m2, vị trí linh hoạt. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "batdongsankhac (1).jpg", "batdongsankhac (2).jpg", "batdongsankhac (3).jpg",
+                        "batdongsankhac (4).jpg", "batdongsankhac (5).jpg");
+                break;
+
+            case "Bán căn hộ chung cư":
+                title = String.format("Bán Căn Hộ Chung Cư 3 Phòng Ngủ %s m2 View Công Viên", roundedArea);
+                description = String.format(
+                        "Bán căn hộ chung cư cao cấp, diện tích %s m2, gồm 3 phòng ngủ rộng rãi. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chungcucaocap (1).jpg",
+                        "chungcucaocap (2).jpg", "chungcucaocap (3).jpg", "chungcucaocap (4).jpg",
+                        "chungcucaocap (5).jpg", "chungcucaocap (6).jpg", "canhochungcu (1).jpg",
+                        "canhochungcu (2).jpg", "canhochungcu (3).jpg", "canhochungcu (4).jpg",
+                        "canhochungcu (5).jpg", "canhochungcu (6).jpg", "canhochungcu (7).jpg",
+                        "canhochungcu (8).jpg", "canhochungcu (9).jpg", "canhochungcu (10).jpg",
+                        "canhochungcu (11).jpg");
+                break;
+            case "Bán chung cư mini, căn hộ dịch vụ":
+                title = String.format("Bán Chung Cư Mini %s m2 Đang Cho Thuê Ổn Định", roundedArea);
+                description = String.format(
+                        "Bán chung cư mini sinh lời cao, diện tích %s m2, gồm 1 phòng ngủ khép kín. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chungcu (1).jpg",
+                        "chungcu (2).jpg", "chungcu (3).jpg", "chungcu (4).jpg", "chungcu (5).jpg",
+                        "chungcu (6).jpg", "canhochungcumini (1).jpg", "canhochungcumini (2).jpg",
+                        "canhochungcumini (3).jpg", "canhochungcumini (4).jpg", "canhochungcumini (5).jpg",
+                        "canhochungcumini (6).jpg", "canhochungcumini (7).jpg", "canhochungcumini (8).jpg",
+                        "canhochungcumini (9).jpg", "canhochungcumini (10).jpg", "canhochungcumini (11).jpg",
+                        "canhochungcumini (12).jpg", "canhochungcumini (13).jpg", "canhochungcumini (14).jpg");
+                break;
+            case "Bán nhà riêng":
+                title = String.format("Bán Nhà Riêng 4 Tầng %s m2 Hẻm Xe Hơi Yên Tĩnh", roundedArea);
+                description = String.format(
+                        "Bán nhà riêng 4 tầng kiên cố, diện tích %s m2, gồm 3 phòng ngủ rộng. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuenharieng (1).jpg", "chothuenharieng (2).jpg", "chothuenharieng (3).jpg",
+                        "chothuenharieng (4).jpg", "chothuenharieng (5).jpg", "chothuenharieng (6).jpg",
+                        "chothuenharieng (7).jpg", "banthuenharieng (1).jpg", "banthuenharieng (2).jpg",
+                        "banthuenharieng (3).jpg", "banthuenharieng (4).jpg", "banthuenharieng (5).jpg",
+                        "banthuenharieng (6).jpg",
+                        "banthuenharieng (7).jpg", "banthuenharieng (8).jpg", "banthuenharieng (9).jpg",
+                        "banthuenharieng (10).jpg");
+                break;
+            case "Bán nhà biệt thự, liền kề":
+                title = String.format("Bán Biệt Thự Liền Kề %s m2 5 Phòng Ngủ Sang Trọng", roundedArea);
+                description = String.format(
+                        "Bán biệt thự liền kề đẳng cấp, diện tích %s m2, thiết kế 4 tầng. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "bietthulienke (1).jpg", "bietthulienke (2).jpg", "bietthulienke (3).jpg",
+                        "bietthulienke (4).jpg", "bietthulienke (5).jpg", "bietthulienke (6).jpg",
+                        "bietthulienke (7).jpg", "bietthulienke (8).jpg", "bietthulienke (9).jpg");
+                break;
+            case "Bán nhà mặt phố":
+                title = String.format("Bán Nhà Mặt Phố 3 Tầng %s m2 Vị Trí Kinh Doanh Vàng", roundedArea);
+                description = String.format(
+                        "Bán nhà mặt phố 3 tầng, diện tích %s m2, mặt tiền 5m lý tưởng. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuenhamatpho (1).jpg", "chothuenhamatpho (2).jpg", "chothuenhamatpho (3).jpg",
+                        "chothuenhamatpho (4).jpg", "chothuenhamatpho (5).jpg", "chothuenhamatpho (6).jpg",
+                        "chothuenhamatpho (7).jpg", "chothuenhamatpho (8).jpg", "chothuenhamatpho (9).jpg");
+                break;
+            case "Bán shophouse, nhà phố thương mại":
+                title = String.format("Bán Shophouse 4 Tầng %s m2 Khu Thương Mại Sầm Uất", roundedArea);
+                description = String.format(
+                        "Bán shophouse hiện đại, diện tích %s m2, 4 tầng tối ưu. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothueshophouse (1).jpg", "chothueshophouse (2).jpg", "chothueshophouse (3).jpg",
+                        "chothueshophouse (4).jpg", "chothueshophouse (5).jpg", "chothueshophouse (6).jpg",
+                        "chothueshophouse (7).jpg", "chothueshophouse (8).jpg");
+                break;
+            case "Bán đất nền dự án":
+                title = String.format("Bán Đất Nền Dự Án %s m2 Hạ Tầng Hoàn Thiện", roundedArea);
+                description = String.format(
+                        "Bán đất nền dự án vị trí đẹp, diện tích %s m2, nằm trong khu đô thị mới. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "bandatnenduan (1).jpg", "bandatnenduan (2).jpg", "bandatnenduan (3).jpg",
+                        "bandatnenduan (4).jpg", "bandatnenduan (5).jpg", "bandatnenduan (6).jpg",
+                        "bandatnenduan (7).jpg", "bandatnenduan (8).jpg", "bandatnenduan (9).jpg",
+                        "bandatnenduan (10).jpg");
+                break;
+            case "Bán đất":
+                title = String.format("Bán Lô Đất %s m2 Mặt Tiền Đường Lớn Gần Trung Tâm", roundedArea);
+                description = String.format(
+                        "Bán lô đất đẹp, diện tích %s m2, mặt tiền đường lớn 10m. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "bandat (1).jpg", "bandat (2).jpg", "bandat (3).jpg", "bandat (4).jpg",
+                        "bandat (5).jpg", "bandat (6).jpg", "bandat (7).jpg", "bandat (8).jpg",
+                        "bandat (9).jpg", "bandat (10).jpg", "bandat (11).jpg", "bandat (12).jpg",
+                        "bandat (13).jpg");
+                break;
+            case "Bán trang trại, khu nghỉ dưỡng":
+                title = String.format("Bán Trang Trại Nghỉ Dưỡng %s m2 Có Ao Cá và Vườn Cây", roundedArea);
+                description = String.format(
+                        "Bán trang trại nghỉ dưỡng, diện tích %s m2, gồm nhà nghỉ 2 tầng. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "bantrangtrainghiduong (1).jpg", "bantrangtrainghiduong (2).jpg",
+                        "bantrangtrainghiduong (3).jpg", "bantrangtrainghiduong (4).jpg",
+                        "bantrangtrainghiduong (5).jpg", "bantrangtrainghiduong (6).jpg",
+                        "bantrangtrainghiduong (7).jpg", "bantrangtrainghiduong (8).jpg",
+                        "bantrangtrainghiduong (9).jpg", "bantrangtrainghiduong (10).jpg",
+                        "bantrangtrainghiduong (11).jpg", "bantrangtrainghiduong (12).jpg");
+                break;
+            case "Bán condotel":
+                title = String.format("Bán Condotel %s m2 View Biển Đẳng Cấp 5 Sao", roundedArea);
+                description = String.format(
+                        "Bán condotel view biển đẳng cấp, diện tích %s m2, gồm 2 phòng ngủ. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "condotel (1).jpg", "condotel (2).jpg", "condotel (3).jpg", "condotel (4).jpg",
+                        "condotel (5).jpg", "condotel (6).jpg", "condotel (7).jpg", "condotel (8).jpg");
+                break;
+            case "Bán kho, nhà xưởng":
+                title = String.format("Bán Nhà Xưởng %s m2 Gần Khu Công Nghiệp Có Điện 3 Pha", roundedArea);
+                description = String.format(
+                        "Bán nhà xưởng kiên cố, diện tích %s m2, khung thép chắc chắn. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "chothuenhakhonhaxuong (1).jpg", "chothuenhakhonhaxuong (2).jpg",
+                        "chothuenhakhonhaxuong (3).jpg", "chothuenhakhonhaxuong (4).jpg",
+                        "chothuenhakhonhaxuong (5).jpg", "chothuenhakhonhaxuong (6).jpg",
+                        "chothuenhakhonhaxuong (7).jpg", "chothuenhakhonhaxuong (8).jpg");
+                break;
+            case "Bán loại bất động sản khác":
+                title = String.format("Bán Tài Sản Đặc Biệt %s m2 Vị Trí Độc Đáo Đa Năng", roundedArea);
+                description = String.format(
+                        "Bán tài sản đặc biệt, diện tích %s m2, vị trí độc đáo. Địa chỉ: %s.",
+                        roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "batdongsankhac (1).jpg", "batdongsankhac (2).jpg", "batdongsankhac (3).jpg",
+                        "batdongsankhac (4).jpg", "batdongsankhac (5).jpg");
+                break;
+            default:
+                title = String.format("Tin Đăng Mẫu %d - %s m2", loopIndex, roundedArea);
+                description = String.format(
+                        "Mô tả mặc định cho tin đăng mẫu %d, diện tích %s m2. Địa chỉ: %s.",
+                        loopIndex, roundedArea, fullAddress);
+                sampleImageUrls = Arrays.asList(
+                        "https://example.com/images/default1.jpg",
+                        "https://example.com/images/default2.jpg");
+                break;
+        }
+
+        description = description + GENERAL_DESCRIPTION;
+        post.setTitle(title);
+        post.setDescription(description);
+
+        List<Image> images = new ArrayList<>();
+        int maxImages = Math.min(sampleImageUrls.size(), 12);
+        int numberOfImages = random.nextInt(maxImages - 3) + 4; // Từ 4 đến maxImages
+        List<String> availableImageUrls = new ArrayList<>(sampleImageUrls);
+
+        for (int j = 0; j < numberOfImages; j++) {
+            Image image = new Image();
+            String selectedImageName = "";
+
+            if (!availableImageUrls.isEmpty()) {
+                int randomIndex = random.nextInt(availableImageUrls.size());
+                selectedImageName = availableImageUrls.remove(randomIndex);
+            } else {
+                selectedImageName = sampleImageUrls.get(random.nextInt(sampleImageUrls.size()));
+            }
+
+            if (selectedImageName.startsWith("http")) {
+                image.setUrl(selectedImageName);
+            } else {
+                image.setUrl(baseImageUrl + selectedImageName);
+            }
+
+            image.setOrderIndex(j);
+            image.setPost(post);
+            images.add(image);
+        }
+        post.setImages(images);
+    }
+
+    // ====================================================================
+    // 🌟 SEED DATA TƯƠNG TÁC (MULTI-THREADING)
+    // ====================================================================
     private void initSampleInteractions() {
         if (postViewHistoryRepository.count() > 0 || savedPostRepository.count() > 0) {
             System.out.println(">>> SKIP! INTERACTION DATA ALREADY EXISTS...");
@@ -963,75 +975,132 @@ public class StartupRunner implements CommandLineRunner {
 
         List<Post> allPosts = postRepository.findAll();
         List<User> allUsers = userRepository.findAll();
-        Random random = new Random();
         Instant now = Instant.now();
-
-        List<PostViewHistory> viewHistories = new ArrayList<>();
-        List<SavedPost> savedPosts = new ArrayList<>();
 
         System.out.println(">>> SEEDING INTERACTIONS: This may take a moment...");
 
-        // 1. SEED LƯỢT XEM (PostViewHistory)
-        // Phân bổ lượt xem trong 90 ngày gần nhất để biểu đồ trông thật hơn
-        for (Post post : allPosts) {
-            // Mỗi bài đăng có từ 50 đến 300 lượt xem lịch sử
-            int viewsToGenerate = random.nextInt(251) + 50;
+        // Khởi tạo ThreadPool (Sử dụng số luồng tùy theo số core CPU của máy)
+        int numThreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
-            for (int j = 0; j < viewsToGenerate; j++) {
-                // Ngẫu nhiên thời gian xem trong 90 ngày qua
-                long randomSecondsAgo = (long) random.nextInt(90 * 24 * 60 * 60);
-                Instant viewedAt = now.minusSeconds(randomSecondsAgo);
+        // ==========================================================
+        // 1. SEED LƯỢT XEM (Chia nhỏ danh sách Post cho các luồng)
+        // ==========================================================
+        int postBatchSize = (int) Math.ceil((double) allPosts.size() / numThreads);
 
-                // 70% là khách (User null), 30% là User đăng nhập
-                User viewer = (random.nextInt(100) < 30) ? allUsers.get(random.nextInt(allUsers.size())) : null;
+        for (int i = 0; i < allPosts.size(); i += postBatchSize) {
+            int start = i;
+            int end = Math.min(i + postBatchSize, allPosts.size());
+            List<Post> postChunk = allPosts.subList(start, end);
 
-                PostViewHistory history = PostViewHistory.builder()
-                        .post(post)
-                        .user(viewer)
-                        .ipAddress("192.168.1." + random.nextInt(255))
-                        .viewedAt(viewedAt) // Nhớ cho phép set thủ công trong Entity
-                        .build();
-                viewHistories.add(history);
+            executor.submit(() -> {
+                Random random = new Random(); // Thread-safe Random
+                List<PostViewHistory> viewHistories = new ArrayList<>();
 
-                // Lưu theo batch để tránh tràn bộ nhớ nếu số lượng quá lớn
-                if (viewHistories.size() >= 5000) {
-                    postViewHistoryRepository.saveAll(viewHistories);
-                    viewHistories.clear();
+                for (Post post : postChunk) {
+                    // Mỗi bài đăng có từ 50 đến 300 lượt xem lịch sử
+                    int viewsToGenerate = random.nextInt(251) + 50;
+
+                    for (int j = 0; j < viewsToGenerate; j++) {
+                        // Ngẫu nhiên thời gian xem trong 90 ngày qua
+                        long randomSecondsAgo = (long) random.nextInt(90 * 24 * 60 * 60);
+                        Instant viewedAt = now.minusSeconds(randomSecondsAgo);
+
+                        // 70% là khách (User null), 30% là User đăng nhập
+                        User viewer = (random.nextInt(100) < 30) ? allUsers.get(random.nextInt(allUsers.size())) : null;
+
+                        PostViewHistory history = PostViewHistory.builder()
+                                .post(post)
+                                .user(viewer)
+                                .ipAddress("192.168.1." + random.nextInt(255))
+                                .viewedAt(viewedAt)
+                                .build();
+                        viewHistories.add(history);
+
+                        // Lưu theo batch để tránh tràn bộ nhớ
+                        if (viewHistories.size() >= 5000) {
+                            synchronized (postViewHistoryRepository) {
+                                postViewHistoryRepository.saveAll(viewHistories);
+                            }
+                            viewHistories.clear();
+                        }
+                    }
                 }
+                // Lưu nốt phần còn lại của luồng
+                if (!viewHistories.isEmpty()) {
+                    synchronized (postViewHistoryRepository) {
+                        postViewHistoryRepository.saveAll(viewHistories);
+                    }
+                }
+            });
+        }
+
+        // ==========================================================
+        // 2. SEED TIN ĐÃ LƯU (Chia nhỏ danh sách User cho các luồng)
+        // ==========================================================
+        if (!allUsers.isEmpty()) {
+            int userBatchSize = (int) Math.ceil((double) allUsers.size() / numThreads);
+
+            for (int i = 0; i < allUsers.size(); i += userBatchSize) {
+                int start = i;
+                int end = Math.min(i + userBatchSize, allUsers.size());
+                List<User> userChunk = allUsers.subList(start, end);
+
+                executor.submit(() -> {
+                    Random random = new Random();
+                    List<SavedPost> savedPosts = new ArrayList<>();
+
+                    for (User user : userChunk) {
+                        int postsToSave = random.nextInt(16) + 5;
+                        // Sử dụng Set để tránh trùng lặp post_id
+                        Set<Long> savedPostIds = new HashSet<>();
+
+                        for (int k = 0; k < postsToSave; k++) {
+                            Post targetPost = allPosts.get(random.nextInt(allPosts.size()));
+
+                            if (!savedPostIds.contains(targetPost.getId())) {
+                                long randomSecondsAgo = (long) random.nextInt(30 * 24 * 60 * 60); // Lưu trong 30 ngày
+                                                                                                  // qua
+
+                                SavedPost saved = SavedPost.builder()
+                                        .user(user)
+                                        .post(targetPost)
+                                        .savedAt(now.minusSeconds(randomSecondsAgo))
+                                        .build();
+
+                                savedPosts.add(saved);
+                                savedPostIds.add(targetPost.getId());
+                            }
+
+                            if (savedPosts.size() >= 1000) {
+                                synchronized (savedPostRepository) {
+                                    savedPostRepository.saveAll(savedPosts);
+                                }
+                                savedPosts.clear();
+                            }
+                        }
+                    }
+                    if (!savedPosts.isEmpty()) {
+                        synchronized (savedPostRepository) {
+                            savedPostRepository.saveAll(savedPosts);
+                        }
+                    }
+                });
             }
         }
-        postViewHistoryRepository.saveAll(viewHistories); // Lưu nốt phần còn lại
 
-        // 2. SEED TIN ĐÃ LƯU (SavedPost)
-        // Mỗi User sẽ lưu ngẫu nhiên từ 5 đến 20 bài đăng
-        for (User user : allUsers) {
-            int postsToSave = random.nextInt(16) + 5;
-            // Sử dụng Set để tránh trùng lặp post_id cho cùng 1 user (Unique Constraint)
-            Set<Long> savedPostIds = new HashSet<>();
-
-            for (int k = 0; k < postsToSave; k++) {
-                Post targetPost = allPosts.get(random.nextInt(allPosts.size()));
-
-                if (!savedPostIds.contains(targetPost.getId())) {
-                    long randomSecondsAgo = (long) random.nextInt(30 * 24 * 60 * 60); // Lưu trong 30 ngày qua
-
-                    SavedPost saved = SavedPost.builder()
-                            .user(user)
-                            .post(targetPost)
-                            .savedAt(now.minusSeconds(randomSecondsAgo))
-                            .build();
-
-                    savedPosts.add(saved);
-                    savedPostIds.add(targetPost.getId());
-                }
-
-                if (savedPosts.size() >= 1000) {
-                    savedPostRepository.saveAll(savedPosts);
-                    savedPosts.clear();
-                }
+        // ==========================================================
+        // 3. CHỜ CÁC LUỒNG HOÀN THÀNH
+        // ==========================================================
+        executor.shutdown();
+        try {
+            // Cho phép chờ tối đa 15 phút, nếu quá giờ sẽ ép dừng
+            if (!executor.awaitTermination(15, TimeUnit.MINUTES)) {
+                executor.shutdownNow();
             }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
         }
-        savedPostRepository.saveAll(savedPosts);
 
         System.out.println(">>> SEEDING INTERACTIONS: SUCCESSFUL!");
     }
@@ -1042,92 +1111,134 @@ public class StartupRunner implements CommandLineRunner {
             return;
         }
 
-        Random random = new Random();
         List<User> users = userRepository.findAll();
-        List<Transaction> transactions = new ArrayList<>();
         List<TransactionStatus> statuses = Arrays.asList(TransactionStatus.PENDING, TransactionStatus.SUCCESS,
                 TransactionStatus.FAILED);
 
-        // Tạo 200 giao dịch mẫu
-        // Tạo 1000 giao dịch mẫu
-        for (int i = 1; i <= 2000; i++) {
-            Transaction transaction = new Transaction();
+        int totalTransactions = 2000;
 
-            // Gán user ngẫu nhiên
-            User selectedUser = users.get(random.nextInt(users.size()));
-            transaction.setUser(selectedUser);
+        // Tự động điều chỉnh số lượng luồng dựa trên sức mạnh CPU
+        int numThreads = Runtime.getRuntime().availableProcessors();
+        int batchSize = (int) Math.ceil((double) totalTransactions / numThreads);
 
-            // Lấy danh sách Post của user này
-            List<Post> userPosts = postRepository.findByUser(selectedUser);
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
-            // Quyết định loại giao dịch: nạp tiền (50%) hoặc thanh toán phí đăng tin (50%)
-            boolean isDeposit = random.nextBoolean();
-            long amount;
-            String description = "";
+        // ⚡ TỐI ƯU: Cache danh sách Post của User để triệt tiêu N+1 Query
+        Map<Long, List<Post>> userPostCache = new ConcurrentHashMap<>();
 
-            // 👇 FIX 1: Đảm bảo txnId là duy nhất tuyệt đối bằng cách ghép thêm biến i
-            String txnId = VnPayUtil.getRandomNumber(8) + "_" + i;
+        System.out.println(">>> Bắt đầu tạo " + totalTransactions + " giao dịch bằng " + numThreads + " luồng...");
 
-            if (isDeposit || userPosts.isEmpty()) { // Nếu không có Post hoặc là giao dịch nạp tiền
-                // Giao dịch nạp tiền
-                long minAmount = 50_000L;
-                long maxAmount = 10_000_000L;
-                long amountRange = maxAmount - minAmount;
-                amount = minAmount + (long) (random.nextDouble() * amountRange); // Số tiền dương
+        for (int t = 0; t < numThreads; t++) {
+            // Xác định điểm bắt đầu và kết thúc của biến i cho từng luồng
+            final int start = t * batchSize + 1;
+            final int end = Math.min((t + 1) * batchSize, totalTransactions);
 
-                TransactionStatus selectedStatus = statuses.get(random.nextInt(statuses.size()));
-                transaction.setStatus(selectedStatus);
+            executor.submit(() -> {
+                Random random = new Random(); // Khởi tạo Random độc lập cho mỗi luồng
+                List<Transaction> transactions = new ArrayList<>();
 
-                // 👇 FIX 2: Set loại giao dịch là Nạp tiền
-                transaction.setType(TransactionType.DEPOSIT);
+                for (int i = start; i <= end; i++) {
+                    Transaction transaction = new Transaction();
 
-                switch (selectedStatus) {
-                    case PENDING:
-                        description = "Giao dịch nạp tiền đang chờ thanh toán";
-                        break;
-                    case SUCCESS:
-                        description = "Giao dịch nạp tiền thành công";
-                        break;
-                    case FAILED:
-                        description = "Giao dịch nạp tiền thất bại";
-                        break;
+                    // Gán user ngẫu nhiên
+                    User selectedUser = users.get(random.nextInt(users.size()));
+                    transaction.setUser(selectedUser);
+
+                    // ⚡ TỐI ƯU: Gọi Database qua Cache
+                    List<Post> userPosts = userPostCache.computeIfAbsent(
+                            selectedUser.getId(),
+                            userId -> postRepository.findByUser(selectedUser));
+
+                    // Quyết định loại giao dịch: nạp tiền (50%) hoặc thanh toán phí đăng tin (50%)
+                    boolean isDeposit = random.nextBoolean();
+                    long amount;
+                    String description = "";
+
+                    // 👇 FIX 1: Đảm bảo txnId là duy nhất tuyệt đối bằng cách ghép thêm biến i (Giữ
+                    // nguyên logic gốc)
+                    String txnId = VnPayUtil.getRandomNumber(8) + "_" + i;
+
+                    if (isDeposit || userPosts.isEmpty()) { // Nếu không có Post hoặc là giao dịch nạp tiền
+                        // Giao dịch nạp tiền
+                        long minAmount = 50_000L;
+                        long maxAmount = 10_000_000L;
+                        long amountRange = maxAmount - minAmount;
+                        amount = minAmount + (long) (random.nextDouble() * amountRange); // Số tiền dương
+
+                        TransactionStatus selectedStatus = statuses.get(random.nextInt(statuses.size()));
+                        transaction.setStatus(selectedStatus);
+
+                        // 👇 FIX 2: Set loại giao dịch là Nạp tiền
+                        transaction.setType(TransactionType.DEPOSIT);
+
+                        switch (selectedStatus) {
+                            case PENDING:
+                                description = "Giao dịch nạp tiền đang chờ thanh toán";
+                                break;
+                            case SUCCESS:
+                                description = "Giao dịch nạp tiền thành công";
+                                break;
+                            case FAILED:
+                                description = "Giao dịch nạp tiền thất bại";
+                                break;
+                        }
+                        transaction.setPaymentLink("https://payment.example.com/txn/" + txnId);
+                    } else {
+                        // Giao dịch thanh toán phí đăng tin
+                        Post selectedPost = userPosts.get(random.nextInt(userPosts.size()));
+                        long minCost = 10_000L;
+                        long maxCost = 1_000_000L;
+                        long costRange = maxCost - minCost;
+                        amount = -(minCost + (long) (random.nextDouble() * costRange));
+
+                        transaction.setStatus(TransactionStatus.SUCCESS);
+
+                        // 👇 FIX 2: Set loại giao dịch là Thanh toán (Trừ tiền)
+                        transaction.setType(TransactionType.PAYMENT);
+
+                        description = "Thanh toán phí đăng tin mã " + selectedPost.getId() + " thành công";
+                        transaction.setPaymentLink(null);
+                        txnId = null; // Thanh toán nội bộ thì không có mã VNPAY
+                    }
+
+                    transaction.setAmount(amount);
+                    transaction.setDescription(description);
+                    transaction.setTxnId(txnId);
+
+                    // Thời gian tạo (ngẫu nhiên từ 1 năm trước đến hiện tại)
+                    long secondsIn1Year = 365L * 24 * 60 * 60;
+                    long randomSeconds = (long) (random.nextDouble() * secondsIn1Year);
+                    transaction.setCreatedAt(Instant.now().minusSeconds(randomSeconds));
+
+                    // Thời gian cập nhật (nếu SUCCESS hoặc FAILED thì có updatedAt)
+                    if (transaction.getStatus() != TransactionStatus.PENDING) {
+                        transaction.setUpdatedAt(transaction.getCreatedAt().plusSeconds(random.nextInt(3600 / 4)));
+                    }
+
+                    transactions.add(transaction);
                 }
-                transaction.setPaymentLink("https://payment.example.com/txn/" + txnId);
-            } else {
-                // Giao dịch thanh toán phí đăng tin
-                Post selectedPost = userPosts.get(random.nextInt(userPosts.size()));
-                long minCost = 10_000L;
-                long maxCost = 1_000_000L;
-                long costRange = maxCost - minCost;
-                amount = -(minCost + (long) (random.nextDouble() * costRange));
 
-                transaction.setStatus(TransactionStatus.SUCCESS);
-
-                // 👇 FIX 2: Set loại giao dịch là Thanh toán (Trừ tiền)
-                transaction.setType(TransactionType.PAYMENT);
-
-                description = "Thanh toán phí đăng tin mã " + selectedPost.getId() + " thành công";
-                transaction.setPaymentLink(null);
-                txnId = null; // Thanh toán nội bộ thì không có mã VNPAY
-            }
-
-            transaction.setAmount(amount);
-            transaction.setDescription(description);
-            transaction.setTxnId(txnId);
-
-            // Thời gian tạo (ngẫu nhiên từ 1 năm trước đến hiện tại)
-            long secondsIn1Year = 365L * 24 * 60 * 60;
-            long randomSeconds = (long) (random.nextDouble() * secondsIn1Year);
-            transaction.setCreatedAt(Instant.now().minusSeconds(randomSeconds));
-
-            // Thời gian cập nhật (nếu SUCCESS hoặc FAILED thì có updatedAt)
-            if (transaction.getStatus() != TransactionStatus.PENDING) {
-                transaction.setUpdatedAt(transaction.getCreatedAt().plusSeconds(random.nextInt(3600 / 4)));
-            }
-
-            transactions.add(transaction);
+                // Ghi xuống DB an toàn giữa nhiều luồng
+                if (!transactions.isEmpty()) {
+                    synchronized (transactionRepository) {
+                        transactionRepository.saveAll(transactions);
+                    }
+                    System.out.println(">>> Luồng " + Thread.currentThread().getName() + " đã tạo xong từ giao dịch "
+                            + start + " đến " + end);
+                }
+            });
         }
-        transactionRepository.saveAll(transactions);
+
+        // Chờ các luồng hoàn thành
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+        }
+
         System.out.println(">>> INIT DATA TABLE 'transactions' WITH DEPOSIT AND POST FEE: SUCCESS");
     }
 
@@ -1137,122 +1248,162 @@ public class StartupRunner implements CommandLineRunner {
             return;
         }
 
-        Random random = new Random();
+        // 1. Đọc dữ liệu gốc một lần duy nhất lên RAM để các luồng dùng chung (Chỉ đọc,
+        // không ghi nên an toàn tuyệt đối)
         List<User> users = userRepository.findAll();
         List<Post> posts = postRepository.findAll();
         List<Transaction> transactions = transactionRepository.findAll();
-        List<Notification> notifications = new ArrayList<>();
 
-        // Tăng giới hạn số random (0 đến 7) vì giờ ta có 8 case
-        for (int i = 1; i <= 1000; i++) {
-            Notification notification = new Notification();
+        int totalNotifications = 1000;
 
-            User selectedUser = users.get(random.nextInt(users.size()));
-            notification.setUser(selectedUser);
+        // 2. Cấu hình luồng
+        int numThreads = Runtime.getRuntime().availableProcessors();
+        int batchSize = (int) Math.ceil((double) totalNotifications / numThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
-            int notificationTypeIndex = random.nextInt(8); // 👈 Cập nhật lên 8
-            String message = "";
-            NotificationType type;
+        System.out.println(">>> Bắt đầu tạo " + totalNotifications + " thông báo bằng " + numThreads + " luồng...");
 
-            switch (notificationTypeIndex) {
-                case 0: // POST: Người dùng xem tin đăng
-                    if (posts.isEmpty())
-                        continue;
-                    Post viewedPost = posts.get(random.nextInt(posts.size()));
-                    User viewer = users.get(random.nextInt(users.size()));
-                    message = String.format("Người dùng '%s - %s' đã xem số điện thoại của tin đăng mã '%d' của bạn.",
-                            viewer.getName(), viewer.getPhone(), viewedPost.getId());
-                    type = NotificationType.POST;
-                    notification.setUser(viewedPost.getUser());
-                    break;
+        for (int t = 0; t < numThreads; t++) {
+            // Tính toán index bắt đầu và kết thúc cho luồng hiện tại
+            final int start = t * batchSize + 1;
+            final int end = Math.min((t + 1) * batchSize, totalNotifications);
 
-                case 1: // POST: Tin đăng được chấp nhận
-                    if (posts.isEmpty())
-                        continue;
-                    Post approvedPost = posts.get(random.nextInt(posts.size()));
-                    message = String.format("Tin đăng mã '%d' của bạn đã được kiểm duyệt viên chấp nhận.",
-                            approvedPost.getId());
-                    type = NotificationType.POST;
-                    notification.setUser(approvedPost.getUser());
-                    break;
+            executor.submit(() -> {
+                Random random = new Random(); // ⚡ Khởi tạo Random bên trong Thread để tránh tranh chấp (Thread-safe)
+                List<Notification> localNotifications = new ArrayList<>();
 
-                case 2: // POST: Tin đăng bị từ chối
-                    if (posts.isEmpty())
-                        continue;
-                    Post rejectedPost = posts.get(random.nextInt(posts.size()));
-                    message = String.format("Tin đăng mã '%d' của bạn đã bị từ chối do vi phạm điều khoản.",
-                            rejectedPost.getId());
-                    type = NotificationType.POST;
-                    notification.setUser(rejectedPost.getUser());
-                    break;
+                for (int i = start; i <= end; i++) {
+                    Notification notification = new Notification();
 
-                case 3: // TRANSACTION: Nạp tiền thành công
-                    if (transactions.isEmpty())
-                        continue;
-                    Transaction depositTx = transactions.stream()
-                            .filter(t -> t.getStatus() == TransactionStatus.SUCCESS && t.getAmount() > 0)
-                            .findAny()
-                            .orElse(null);
-                    if (depositTx == null)
-                        continue;
-                    message = String.format("Giao dịch thành công. Tài khoản của bạn được cộng %,d VNĐ.",
-                            depositTx.getAmount());
-                    type = NotificationType.TRANSACTION;
-                    notification.setUser(depositTx.getUser());
-                    break;
+                    User selectedUser = users.get(random.nextInt(users.size()));
+                    notification.setUser(selectedUser);
 
-                case 4: // TRANSACTION: Trừ tiền (Đẩy tin/Mua VIP)
-                    if (transactions.isEmpty())
-                        continue;
-                    Transaction paymentTx = transactions.stream()
-                            .filter(t -> t.getStatus() == TransactionStatus.SUCCESS && t.getAmount() < 0)
-                            .findAny()
-                            .orElse(null);
-                    if (paymentTx == null)
-                        continue;
-                    message = String.format("Thanh toán thành công. Tài khoản của bạn bị trừ %,d VNĐ cho dịch vụ %s.",
-                            Math.abs(paymentTx.getAmount()), paymentTx.getDescription());
-                    type = NotificationType.TRANSACTION;
-                    notification.setUser(paymentTx.getUser());
-                    break;
+                    int notificationTypeIndex = random.nextInt(8); // 👈 Giữ nguyên 8 case
+                    String message = "";
+                    NotificationType type;
 
-                case 5: // SYSTEM_ALERT: Cảnh báo sắp hết hạn VIP
-                    message = "Gói VIP của bạn sẽ hết hạn trong vòng 3 ngày tới. Vui lòng gia hạn để duy trì quyền lợi.";
-                    type = NotificationType.SYSTEM_ALERT;
-                    break;
+                    switch (notificationTypeIndex) {
+                        case 0: // POST: Người dùng xem tin đăng
+                            if (posts.isEmpty())
+                                continue;
+                            Post viewedPost = posts.get(random.nextInt(posts.size()));
+                            User viewer = users.get(random.nextInt(users.size()));
+                            message = String.format(
+                                    "Người dùng '%s - %s' đã xem số điện thoại của tin đăng mã '%d' của bạn.",
+                                    viewer.getName(), viewer.getPhone(), viewedPost.getId());
+                            type = NotificationType.POST;
+                            notification.setUser(viewedPost.getUser());
+                            break;
 
-                case 6: // SYSTEM_ALERT: Bảo trì hệ thống / Khuyến mãi
-                    message = "Hệ thống BDS360 sẽ bảo trì định kỳ từ 00:00 đến 02:00 sáng mai. Xin lỗi vì sự bất tiện này!";
-                    type = NotificationType.SYSTEM_ALERT;
-                    break;
+                        case 1: // POST: Tin đăng được chấp nhận
+                            if (posts.isEmpty())
+                                continue;
+                            Post approvedPost = posts.get(random.nextInt(posts.size()));
+                            message = String.format("Tin đăng mã '%d' của bạn đã được kiểm duyệt viên chấp nhận.",
+                                    approvedPost.getId());
+                            type = NotificationType.POST;
+                            notification.setUser(approvedPost.getUser());
+                            break;
 
-                // ================= CASE MỚI THÊM VÀO =================
-                case 7: // POST: Tin đăng bị khóa do vi phạm
-                    if (posts.isEmpty())
-                        continue;
-                    Post blockedPost = posts.get(random.nextInt(posts.size()));
-                    message = String.format("Tin đăng mã '%d' của bạn đã bị khóa do vi phạm chính sách của hệ thống.",
-                            blockedPost.getId());
-                    type = NotificationType.POST;
-                    notification.setUser(blockedPost.getUser());
-                    break;
+                        case 2: // POST: Tin đăng bị từ chối
+                            if (posts.isEmpty())
+                                continue;
+                            Post rejectedPost = posts.get(random.nextInt(posts.size()));
+                            message = String.format("Tin đăng mã '%d' của bạn đã bị từ chối do vi phạm điều khoản.",
+                                    rejectedPost.getId());
+                            type = NotificationType.POST;
+                            notification.setUser(rejectedPost.getUser());
+                            break;
 
-                default:
-                    continue;
-            }
+                        case 3: // TRANSACTION: Nạp tiền thành công
+                            if (transactions.isEmpty())
+                                continue;
+                            Transaction depositTx = transactions.stream()
+                                    .filter(tx -> tx.getStatus() == TransactionStatus.SUCCESS && tx.getAmount() > 0)
+                                    .findAny()
+                                    .orElse(null);
+                            if (depositTx == null)
+                                continue;
+                            message = String.format("Giao dịch thành công. Tài khoản của bạn được cộng %,d VNĐ.",
+                                    depositTx.getAmount());
+                            type = NotificationType.TRANSACTION;
+                            notification.setUser(depositTx.getUser());
+                            break;
 
-            notification.setMessage(message);
-            notification.setType(type);
-            notification.setRead(random.nextBoolean());
+                        case 4: // TRANSACTION: Trừ tiền (Đẩy tin/Mua VIP)
+                            if (transactions.isEmpty())
+                                continue;
+                            Transaction paymentTx = transactions.stream()
+                                    .filter(tx -> tx.getStatus() == TransactionStatus.SUCCESS && tx.getAmount() < 0)
+                                    .findAny()
+                                    .orElse(null);
+                            if (paymentTx == null)
+                                continue;
+                            message = String.format(
+                                    "Thanh toán thành công. Tài khoản của bạn bị trừ %,d VNĐ cho dịch vụ %s.",
+                                    Math.abs(paymentTx.getAmount()), paymentTx.getDescription());
+                            type = NotificationType.TRANSACTION;
+                            notification.setUser(paymentTx.getUser());
+                            break;
 
-            long secondsIn30Days = 30L * 24 * 60 * 60;
-            long randomSeconds = (long) (random.nextDouble() * secondsIn30Days);
-            notification.setCreatedAt(Instant.now().minusSeconds(randomSeconds));
+                        case 5: // SYSTEM_ALERT: Cảnh báo sắp hết hạn VIP
+                            message = "Gói VIP của bạn sẽ hết hạn trong vòng 3 ngày tới. Vui lòng gia hạn để duy trì quyền lợi.";
+                            type = NotificationType.SYSTEM_ALERT;
+                            break;
 
-            notifications.add(notification);
+                        case 6: // SYSTEM_ALERT: Bảo trì hệ thống / Khuyến mãi
+                            message = "Hệ thống BDS360 sẽ bảo trì định kỳ từ 00:00 đến 02:00 sáng mai. Xin lỗi vì sự bất tiện này!";
+                            type = NotificationType.SYSTEM_ALERT;
+                            break;
+
+                        // ================= CASE MỚI THÊM VÀO =================
+                        case 7: // POST: Tin đăng bị khóa do vi phạm
+                            if (posts.isEmpty())
+                                continue;
+                            Post blockedPost = posts.get(random.nextInt(posts.size()));
+                            message = String.format(
+                                    "Tin đăng mã '%d' của bạn đã bị khóa do vi phạm chính sách của hệ thống.",
+                                    blockedPost.getId());
+                            type = NotificationType.POST;
+                            notification.setUser(blockedPost.getUser());
+                            break;
+
+                        default:
+                            continue;
+                    }
+
+                    notification.setMessage(message);
+                    notification.setType(type);
+                    notification.setRead(random.nextBoolean());
+
+                    long secondsIn30Days = 30L * 24 * 60 * 60;
+                    long randomSeconds = (long) (random.nextDouble() * secondsIn30Days);
+                    notification.setCreatedAt(Instant.now().minusSeconds(randomSeconds));
+
+                    localNotifications.add(notification);
+                }
+
+                // 3. Ghi xuống Database một cách an toàn
+                if (!localNotifications.isEmpty()) {
+                    synchronized (notificationRepository) {
+                        notificationRepository.saveAll(localNotifications);
+                    }
+                    System.out.println(">>> Luồng " + Thread.currentThread().getName() + " đã tạo xong từ thông báo "
+                            + start + " đến " + end);
+                }
+            });
         }
 
-        notificationRepository.saveAll(notifications);
+        // 4. Chờ các luồng hoàn thành tác vụ
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(3, TimeUnit.MINUTES)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+        }
+
         System.out.println(">>> INIT DATA TABLE 'notifications': SUCCESS");
     }
 

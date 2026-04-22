@@ -1,4 +1,4 @@
-// @/components/composite/price-marker.tsx
+// @/features/posts/components/price-marker.tsx
 'use client';
 
 import { ListingType } from '@/constants';
@@ -19,28 +19,28 @@ export const PriceMarker: React.FC<PriceMarkerProps> = ({ price, type, onClick }
             onClick={onClick}
             style={{
                 position: 'relative',
-                background: '#000000', // Nền đen
-                color: '#ffffff', // Chữ trắng
-                padding: '2px 6px', // Padding cân đối hơn cho map marker
+                background: '#000000',
+                color: 'white',
+                // Tăng padding trái/phải lên 4px cho cân đối vì không có chữ VIP
+                padding: '1px 4px',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                border: '1px solid #ffffff', // Viền trắng
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                border: '1px solid white',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
                 fontSize: '12px',
                 whiteSpace: 'nowrap',
-                transform: isHovered ? 'scale(1.1) translateY(-5px)' : 'scale(1)',
-                transition: 'all 0.2s ease-out',
-                zIndex: isHovered ? 10 : 1,
-                userSelect: 'none',
+                transform: isHovered ? 'scale(1.2)' : 'scale(1)',
+                transition: 'transform 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                zIndex: 2,
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Sử dụng hàm format đặc thù của bạn */}
-            {formatPostPrice(price, type)}
+            <span>{formatPostPrice(price)}</span>
 
-            {/* Mũi nhọn phía dưới (Nền đen) */}
             <div
                 style={{
                     position: 'absolute',
@@ -55,20 +55,18 @@ export const PriceMarker: React.FC<PriceMarkerProps> = ({ price, type, onClick }
                     zIndex: 2,
                 }}
             />
-
-            {/* Viền trắng cho mũi nhọn */}
             <div
                 style={{
                     position: 'absolute',
-                    bottom: '-8px',
+                    bottom: '-7px',
                     left: '50%',
                     transform: 'translateX(-50%)',
                     width: 0,
                     height: 0,
-                    borderLeft: '7px solid transparent',
-                    borderRight: '7px solid transparent',
-                    borderTop: '7px solid #ffffff',
-                    zIndex: 1,
+                    borderLeft: '6px solid transparent',
+                    borderRight: '6px solid transparent',
+                    borderTop: '6px solid white',
+                    zIndex: 0,
                 }}
             />
         </div>

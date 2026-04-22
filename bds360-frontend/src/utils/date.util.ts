@@ -35,7 +35,8 @@ export const formatDate = (
  * @example formatDateTime('2024-03-15T14:30:00') => '14:30 - 15/03/2024'
  */
 export const formatDateTime = (
-    date?: string | Date | number | null
+    date?: string | Date | number | null,
+
 ): string => {
     return formatDate(date, DATE_FORMAT.FULL_TIME);
 };

@@ -1,9 +1,9 @@
-// @/components/composite/vip-marker.tsx
+// @/features/posts/components/vip-marker.tsx
 'use client';
 
 import { ListingType } from '@/constants';
 import React, { useState } from 'react';
-import { formatPostPrice } from '../posts.util';
+import { formatPostPrice } from '../posts.util'; // Đảm bảo đường dẫn này đúng với dự án của bạn
 
 interface VipMarkerProps {
     price: number;
@@ -15,74 +15,44 @@ interface VipMarkerProps {
 export const VipMarker: React.FC<VipMarkerProps> = ({ price, vipId, type, onClick }) => {
     const [isHovered, setIsHovered] = useState(false);
 
-    /**
-     * Định nghĩa màu sắc dựa trên VIP Level
-     * VIP 1 (ID: 2) -> Màu Vàng Gold
-     * VIP 2 (ID: 3) -> Màu Đỏ Cam (Volcano) - Cao cấp nhất
-     */
-    const getVipStyles = (id: number) => {
-        if (id === 3) { // VIP 2
-            return {
-                badge: 'rgb(255, 69, 0)', // Đỏ cam đặc trưng
-                shadow: isHovered ? '0 0 12px rgba(255, 69, 0, 0.6)' : '0 2px 4px rgba(0,0,0,0.3)',
-                border: '1px solid #ffffff'
-            };
-        }
-        if (id === 2) { // VIP 1
-            return {
-                badge: '#FFD700', // Vàng Gold
-                shadow: isHovered ? '0 0 8px rgba(255, 215, 0, 0.5)' : '0 2px 4px rgba(0,0,0,0.3)',
-                border: '1px solid #ffffff'
-            };
-        }
-        return { badge: '#666', shadow: '0 2px 4px rgba(0,0,0,0.3)', border: '1px solid white' };
-    };
-
-    const styles = getVipStyles(vipId);
+    // Xác định màu của ô "VIP" dựa trên vipId (Giữ y hệt logic cũ)
+    const vipColor = '#FF4500';
 
     return (
         <div
             onClick={onClick}
             style={{
                 position: 'relative',
-                background: '#000000',
-                color: 'white',
-                padding: '2px 4px 2px 8px', // Padding trái rộng hơn để cân đối với badge VIP bên phải
-                borderRadius: '6px',
+                background: '#000000', // Màu đen cho nền
+                color: 'white', // Chữ màu trắng
+                padding: '1px 2px', // Kích thước Marker giữ nguyên
+                borderRadius: '4px', // Bo tròn nhẹ
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                border: styles.border,
-                boxShadow: styles.shadow,
-                fontSize: '13px',
+                border: '1px solid white', // Viền trắng
+                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                fontSize: '12px', // Kích thước chữ cho giá
                 whiteSpace: 'nowrap',
+                transform: isHovered ? 'scale(1.2)' : 'scale(1)', // Hiệu ứng phóng to khi hover
+                transition: 'transform 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                transform: isHovered ? 'scale(1.15) translateY(-5px)' : 'scale(1)',
-                transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                zIndex: isHovered ? 10 : 2,
-                userSelect: 'none',
+                gap: '3px',
+                zIndex: 2,
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Sử dụng hàm format đặc thù của bạn */}
-            <span>{formatPostPrice(price, type)}</span>
-
-            {/* Badge VIP */}
+            <span>{formatPostPrice(price)}</span>
             <span
                 style={{
-                    background: styles.badge,
+                    background: vipColor, // Màu của ô "VIP"
                     color: 'white',
-                    padding: '2px 5px',
-                    borderRadius: '4px',
-                    fontSize: '10px',
-                    lineHeight: '1.2',
-                    textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 900,
+                    padding: '3px 4px', // Điều chỉnh padding
+                    borderRadius: '3px',
+                    fontSize: '10px', // Tích thước chữ của "VIP"
+                    lineHeight: '1',
+                    textShadow: '0 0 1px rgba(0, 0, 0, 1)', // Viền mờ màu đen
                 }}
             >
                 VIP
@@ -99,24 +69,23 @@ export const VipMarker: React.FC<VipMarkerProps> = ({ price, vipId, type, onClic
                     height: 0,
                     borderLeft: '6px solid transparent',
                     borderRight: '6px solid transparent',
-                    borderTop: '6px solid #000000',
+                    borderTop: '6px solid #000000', // Màu mũi nhọn khớp với nền (đen)
                     zIndex: 2,
                 }}
             />
-
             {/* Viền trắng cho mũi nhọn */}
             <div
                 style={{
                     position: 'absolute',
-                    bottom: '-8px',
+                    bottom: '-7px',
                     left: '50%',
                     transform: 'translateX(-50%)',
                     width: 0,
                     height: 0,
-                    borderLeft: '7px solid transparent',
-                    borderRight: '7px solid transparent',
-                    borderTop: '7px solid #ffffff',
-                    zIndex: 1,
+                    borderLeft: '6px solid transparent',
+                    borderRight: '6px solid transparent',
+                    borderTop: '6px solid white', // Viền trắng
+                    zIndex: 0,
                 }}
             />
         </div>

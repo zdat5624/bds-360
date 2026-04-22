@@ -2,24 +2,19 @@
 import React, { useState } from 'react';
 
 interface MapDotMarkerProps {
-    /** Màu xám đậm cho tin thường, giúp giảm sự chú ý so với tin VIP */
     color?: string;
     borderColor?: string;
     onPointClick?: () => void;
 }
 
-/**
- * MapDotMarker - Phiên bản tối giản cho tin đăng miễn phí.
- * Đặc điểm: Viền siêu mỏng, màu sắc trung tính, không đổ bóng mạnh.
- */
 export const MapDotMarker: React.FC<MapDotMarkerProps> = ({
-    color = '#595959', // Màu xám (Antd colorTextSecondary), ít nổi bật hơn đen
+    color = '#342c29',
     borderColor = '#ffffff',
     onPointClick,
 }) => {
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
-    // Kích thước nhỏ hơn một chút để trông thanh mảnh hơn
+    // Scale y hệt thiết kế cũ
     const size = isHovered ? 14 : 10;
 
     return (
@@ -37,19 +32,11 @@ export const MapDotMarker: React.FC<MapDotMarkerProps> = ({
                 height: `${size}px`,
                 backgroundColor: color,
                 borderRadius: '50%',
-
-                // VIỀN SIÊU MỎNG: 1px là giới hạn tinh tế nhất
-                border: `1px solid ${borderColor}`,
-
-                // Bỏ Shadow hoặc dùng shadow cực mờ để Marker "lặn" vào bản đồ hơn
-                boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
-
-                // Căn tâm chuẩn Mapbox
+                border: `2px solid ${borderColor}`,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
                 transform: 'translate(-50%, -50%)',
                 position: 'absolute',
-
                 boxSizing: 'border-box',
-                zIndex: isHovered ? 100 : 1,
             }}
         />
     );

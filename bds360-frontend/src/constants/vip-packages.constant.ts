@@ -52,3 +52,8 @@ export const VIP_COLOR_MAP: Record<number, string> = VIP_PACKAGES.reduce((acc, p
     acc[pkg.id] = pkg.themeColor;
     return acc;
 }, {} as Record<number, string>);
+
+export const VIP_TAG_COLOR_MAP: Record<number, string> = VIP_PACKAGES.reduce((acc, pkg) => {
+    acc[pkg.id] = pkg.tagColor; // Lấy 'default', 'gold', 'volcano'...
+    return acc;
+}, {} as Record<number, string>);

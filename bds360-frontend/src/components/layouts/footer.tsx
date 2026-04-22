@@ -101,11 +101,11 @@ export function Footer() {
                         <div>
                             <Text className="font-bold text-gray-800 block mb-3">HƯỚNG DẪN</Text>
                             <ul className="flex flex-col gap-2 text-sm text-gray-600">
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Về chúng tôi</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Báo giá và hỗ trợ</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Câu hỏi thường gặp</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Góp ý báo lỗi</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Sitemap</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 transition-colors">Về chúng tôi</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Báo giá và hỗ trợ</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Câu hỏi thường gặp</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Góp ý báo lỗi</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Sitemap</Link></li>
                             </ul>
                         </div>
                     </div>
@@ -114,12 +114,12 @@ export function Footer() {
                     <div className="flex flex-col gap-6">
                         <div>
                             <Text className="font-bold text-gray-800 block mb-3">QUY ĐỊNH</Text>
-                            <ul className="flex flex-col gap-2 text-sm text-gray-600">
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Quy định đăng tin</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Quy chế hoạt động</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Điều khoản thỏa thuận</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Chính sách bảo mật</Link></li>
-                                <li><Link href="#" className="hover:text-blue-600 transition-colors">Giải quyết khiếu nại</Link></li>
+                            <ul className="flex flex-col gap-2 text-sm">
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Quy định đăng tin</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Quy chế hoạt động</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Điều khoản thỏa thuận</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Chính sách bảo mật</Link></li>
+                                <li><Link href="#" className="!text-gray-700 !hover:text-blue-600 !transition-colors">Giải quyết khiếu nại</Link></li>
                             </ul>
                         </div>
 

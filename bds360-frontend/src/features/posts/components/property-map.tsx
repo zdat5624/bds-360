@@ -64,7 +64,7 @@ export function PropertyMap({
                 {...viewState}
                 onMove={(evt: any) => setViewState(evt.viewState)}
                 style={{ width: '100%', height: '100%' }}
-                mapStyle="mapbox://styles/mapbox/streets-v12" // Update lên bản v12 mới nhất
+                mapStyle="mapbox://styles/mapbox/streets-v11"
                 onLoad={handleMapLoad}
                 cooperativeGestures={true}
             >

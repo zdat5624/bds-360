@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.dto.request.RelatedPostRequest;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
+import vn.bds360.backend.modules.post.dto.response.MapPostResponse;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.ListingDetail;
@@ -550,4 +552,29 @@ public class PostService {
         return PageResponse.of(pageImpl);
     }
 
+    public List<MapPostResponse> getPostsForMap(PostFilterRequest filter) {
+        // 1. Ép cứng các điều kiện cho bài đăng public hợp lệ
+        filter.setIsApprovedOnly(true);
+        filter.setIsDeleteByUser(false);
+
+        // 2. Tái sử dụng toàn bộ logic filter phức tạp từ PostSpecification
+        Specification<Post> baseSpec = PostSpecification.filterBy(filter);
+
+        // 3. Nối thêm điều kiện đặc thù của Map: Phải có tọa độ (Lat/Lng không null)
+        Specification<Post> mapSpec = baseSpec.and((root, query, cb) -> cb.and(
+                cb.isNotNull(root.get("latitude")),
+                cb.isNotNull(root.get("longitude"))));
+
+        // 4. Lấy danh sách Entities và Map sang DTO
+        List<Post> posts = postRepository.findAll(mapSpec);
+
+        return posts.stream()
+                .map(post -> new MapPostResponse(
+                        post.getLatitude(),
+                        post.getLongitude(),
+                        post.getId(),
+                        post.getVip().getId(),
+                        post.getPrice()))
+                .toList();
+    }
 }

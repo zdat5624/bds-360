@@ -27,6 +27,7 @@ import vn.bds360.backend.modules.post.dto.request.PostCreateRequest;
 import vn.bds360.backend.modules.post.dto.request.PostFilterRequest;
 import vn.bds360.backend.modules.post.dto.request.RelatedPostRequest;
 import vn.bds360.backend.modules.post.dto.request.UpdatePostRequest;
+import vn.bds360.backend.modules.post.dto.response.MapPostResponse;
 import vn.bds360.backend.modules.post.dto.response.PostResponse;
 import vn.bds360.backend.modules.post.service.PostService;
 import vn.bds360.backend.modules.user.entity.User;
@@ -122,6 +123,12 @@ public class PostController {
 
         return ApiResponse.success(postService.getForYouPosts(user, request),
                 "Lấy danh sách tin dành cho bạn thành công");
+    }
+
+    @GetMapping("/map")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<MapPostResponse>> getPostsForMap(@Valid PostFilterRequest filter) {
+        return ApiResponse.success(postService.getPostsForMap(filter), "Lấy danh sách bản đồ thành công");
     }
 
 }

@@ -66,7 +66,7 @@ export interface Post {
 
     category: PostCategory;
     user: PostAuthor;
-    vip?: PostVip;
+    vip: PostVip;
     images: PostImage[];
     listingDetail?: ListingDetail;
 }
@@ -169,4 +169,49 @@ export interface SavedPostResponse extends Post {
 export interface PostViewChartResponse {
     date: string; // Có thể là "YYYY-MM-DD" (daily) hoặc "YYYY-MM" (monthly)
     views: number;
+}
+
+export interface MapPost {
+    latitude: number;
+    longitude: number;
+    postId: number;
+    vipId: number;
+    price: number;
+}
+
+
+export interface PriceAnalyticsParams {
+    type: ListingType; // Dùng luôn enum/type ListingType có sẵn của bạn
+    categoryId?: number;
+    provinceCode?: number;
+    districtCode?: number;
+    wardCode?: number;
+    months?: number;
+}
+
+export interface PriceTrendItem {
+    month: string;
+    minPrice: number;
+    maxPrice: number;
+    avgPrice: number;
+}
+
+export interface PriceHistoryResponse {
+    note?: string;
+    summary: {
+        currentAvgPrice: number;
+        changePercent: number;
+        peakPrice: number;
+        peakMonth: string;
+        dropFromPeakPercent: number;
+    };
+    trend: PriceTrendItem[];
+}
+
+export interface NearbyLocation {
+    locationCode: number;
+    locationName: string;
+    avgPrice: number;
+    activePostsCount: number;
+    locationType: 'WARD' | 'DISTRICT';
 }

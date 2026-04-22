@@ -17,6 +17,12 @@ export * from './components/hero-smart-filter-bar';
 export * from './components/map-selector';
 export * from './components/post-card';
 export * from './components/post-filter.modal';
+export * from './components/posts-map';
+export * from './components/smart-filter-bar';
+export * from './hooks/use-post-filter-url';
+
+
+
 
 
 

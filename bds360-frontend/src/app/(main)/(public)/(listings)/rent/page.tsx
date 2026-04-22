@@ -1,21 +1,16 @@
 // File: @/app/(main)/(public)/(listings)/rent/page.tsx
 'use client';
 
-import { useGetPosts } from '@/features/posts/api/posts.queries';
-import { PostCard } from '@/features/posts/components/post-card';
-import { SmartFilterBar } from '@/features/posts/components/smart-filter-bar';
-import { usePostFilterUrl } from '@/features/posts/hooks/use-post-filter-url'; // 🌟 Import Custom Hook
+import { PostCard, SmartFilterBar, useGetPosts, usePostFilterUrl } from '@/features/posts';
 import { Empty, Pagination, Skeleton } from 'antd';
 
 export default function RentPage() {
-    // 1. GỌI HOOK XỬ LÝ URL (Cố định trang này là RENT)
     const { filters, page, updateUrl } = usePostFilterUrl('RENT');
     const pageSize = 12;
 
-    // 2. GỌI API TỰ ĐỘNG THEO DỮ LIỆU URL
     const { data, isLoading, isError } = useGetPosts('public', {
         ...filters,
-        page: page - 1, // Spring Boot bắt đầu từ 0
+        page: page - 1,
         size: pageSize,
     });
 
@@ -25,14 +20,12 @@ export default function RentPage() {
     return (
         <div className="flex flex-col w-full bg-gray-50/30">
 
-            {/* ==============================================
-                Thanh Filter (Sticky: Luôn nổi trên cùng)
-            ============================================== */}
-            <div className="z-30">
+            {/* Thanh Filter (Sticky: Nổi trên Box Danh sách) */}
+            <div className="z-30 bg-white sticky top-0 shadow-sm">
                 <div className="p-4">
                     <SmartFilterBar
                         initialFilters={filters}
-                        onApply={(newFilters) => updateUrl(newFilters, 1)} // Reset về trang 1 khi áp dụng bộ lọc mới
+                        onApply={(newFilters) => updateUrl(newFilters, 1)}
                     />
                 </div>
                 <div className="px-4">
@@ -40,9 +33,7 @@ export default function RentPage() {
                 </div>
             </div>
 
-            {/* ==============================================
-                Khu vực Danh sách Bài đăng
-            ============================================== */}
+            {/* Khu vực Danh sách Bài đăng */}
             <div className="p-4 flex flex-col gap-4">
                 {!isLoading && !isError && (
                     <div className="text-sm text-gray-500 mb-1">
@@ -78,9 +69,15 @@ export default function RentPage() {
                                     pageSize={pageSize}
                                     total={totalElements}
                                     onChange={(newPage) => {
-                                        // Chỉ update page trên URL, giữ nguyên các bộ lọc hiện tại
                                         updateUrl(filters, newPage);
-                                        document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+                                        // 🌟 FIX CUỘN TRANG LÊN ĐẦU: 
+                                        // Nhắm vào thẻ có chứa class overflow-y-auto của Layout để cuộn
+                                        const scrollableDiv = document.querySelector('.overflow-y-auto');
+                                        if (scrollableDiv) {
+                                            scrollableDiv.scrollTo({ top: 0, behavior: 'smooth' });
+                                        } else {
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }
                                     }}
                                     showSizeChanger={false}
                                     className="scale-90 sm:scale-100 custom-pagination"
@@ -89,7 +86,7 @@ export default function RentPage() {
                         )}
                     </>
                 ) : (
-                    <div className="py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="py-20 ">
                         <Empty
                             image={Empty.PRESENTED_IMAGE_SIMPLE}
                             description="Không tìm thấy bất động sản nào phù hợp với bộ lọc"
