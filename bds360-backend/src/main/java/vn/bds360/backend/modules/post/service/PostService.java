@@ -504,12 +504,20 @@ public class PostService {
         List<Long> prefProvinceCodes = new ArrayList<>();
         List<Long> excludes = new ArrayList<>();
 
+        // 🌟 THÊM MỚI: Nạp ngay các ID cần loại trừ từ Request gửi lên
+        if (request.getExcludeIds() != null && !request.getExcludeIds().isEmpty()) {
+            excludes.addAll(request.getExcludeIds());
+        }
+
         if (user != null) {
             List<PostViewHistory> history = postViewHistoryRepository.findRecentHistoryByUser(user);
             for (PostViewHistory h : history) {
                 prefCategoryIds.add(h.getPost().getCategory().getId());
                 prefProvinceCodes.add(h.getPost().getProvince().getCode());
-                excludes.add(h.getPost().getId());
+                // Set tự động chặn trùng lặp nếu ID tin đã có trong mảng từ bước trên
+                if (!excludes.contains(h.getPost().getId())) {
+                    excludes.add(h.getPost().getId());
+                }
             }
         }
 

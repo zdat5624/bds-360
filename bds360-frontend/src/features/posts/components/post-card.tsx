@@ -45,7 +45,7 @@ export function PostCard({ post }: PostCardProps) {
     const bathrooms = post.listingDetail?.bathrooms || 0;
 
     return (
-        <Link href={`/posts/${post.id}`} target="_blank" className="block w-full">
+        <Link href={`/posts/${post.id}`} className="block w-full">
             <div className="group flex flex-col w-full bg-white rounded-xl border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden min-h-[420px]">
 
                 {/* ==============================================================

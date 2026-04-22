@@ -215,3 +215,12 @@ export interface NearbyLocation {
     activePostsCount: number;
     locationType: 'WARD' | 'DISTRICT';
 }
+
+export interface RelatedPostParams extends BaseFilterParams {
+    excludeIds?: string;
+}
+
+export interface ForYouPostParams extends BaseFilterParams {
+    type?: ListingType;
+    excludeIds?: string;
+}

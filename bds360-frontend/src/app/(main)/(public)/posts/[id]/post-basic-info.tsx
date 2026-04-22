@@ -66,7 +66,7 @@ export function PostBasicInfo({ post, className, style }: PostBasicInfoProps) {
                 <div className="relative">
                     <Paragraph
                         className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[15px] !mb-2"
-                        ellipsis={!isExpanded ? { rows: 5, expandable: false } : false}
+                        ellipsis={!isExpanded ? { rows: 6, expandable: false } : false}
                     >
                         {post.description}
                     </Paragraph>
@@ -75,7 +75,7 @@ export function PostBasicInfo({ post, className, style }: PostBasicInfoProps) {
                     <div className="flex justify-center w-full mt-2">
                         <Button
                             type="link"
-                            className="p-0 h-auto font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+                            className="p-0 h-auto font-semibold !text-black hover:!text-blue-700 transition-colors flex items-center gap-1"
                             onClick={() => setIsExpanded(!isExpanded)}
                         >
                             {isExpanded ? "Thu gọn ▲" : "Xem thêm ▼"}

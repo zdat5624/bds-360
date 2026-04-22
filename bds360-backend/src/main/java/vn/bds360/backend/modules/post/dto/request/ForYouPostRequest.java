@@ -1,6 +1,8 @@
 // vn/bds360/backend/modules/post/dto/request/ForYouPostRequest.java
 package vn.bds360.backend.modules.post.dto.request;
 
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.ListingType;
@@ -13,4 +15,6 @@ public class ForYouPostRequest extends BaseFilterRequest {
     // (RENT)
     // Nếu Frontend không truyền (null), backend sẽ lấy cả 2 loại
     private ListingType type;
+
+    private List<Long> excludeIds;
 }

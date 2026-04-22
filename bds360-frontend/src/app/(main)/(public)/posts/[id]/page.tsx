@@ -5,16 +5,19 @@ import { Breadcrumb, Result, Skeleton, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 
-import { useGetPostById, useGetPosts } from '@/features/posts/api/posts.queries';
+import { useGetPostById } from '@/features/posts/api/posts.queries';
+import { ForYouPosts } from '@/features/posts/components/for-you-posts';
 import { PropertyMap } from '@/features/posts/components/property-map';
+import { RelatedPosts } from '@/features/posts/components/related-posts';
+import { NearbyLocationsSidebar } from './nearby-locations-sidebar';
 import { PostAnalytics } from './post-analytics';
 import { PostBasicInfo } from './post-basic-info';
-import { PostCharacteristics } from './post-characteristics'; // Import mới
+import { PostCharacteristics } from './post-characteristics';
 import { PostGallery } from './post-gallery';
-import { PostMeta } from './post-meta'; // Import mới
+import { PostMeta } from './post-meta';
 import { PostSellerSidebar } from './post-seller-sidebar';
-import { RelatedPostsSidebar } from './related-posts-sidebar';
 
 const { Title } = Typography;
 
@@ -23,20 +26,15 @@ export default function PublicPostDetailPage() {
     const postId = Number(params.id);
 
     const { data: post, isLoading, isError } = useGetPostById(postId);
-    const { data: relatedData, isLoading: isLoadingRelated } = useGetPosts('public', {
-        categoryId: post?.category?.id as number,
-        size: 5,
-        page: 0
-    });
+    const [relatedPostIds, setRelatedPostIds] = useState<number[]>([]);
 
     if (isLoading) return <DetailSkeleton />;
     if (isError || !post) return <Result status="404" title="404" subTitle="Bài đăng không tồn tại." />;
 
     return (
-        <div className="bg-white min-h-screen pb-12 font-sans">
-            <div className="max-w-[1000px] mx-auto px-4 py-4">
-
-                <Breadcrumb separator="/" className="mb-3 text-[13px] text-gray-500">
+        <div className="bg-white min-h-screen pb-10 font-sans">
+            <div className="max-w-[1140px] mx-auto px-4 py-2 md:py-4">
+                <Breadcrumb separator="/" className="mb-3 text-[12px] md:text-[13px] text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
                     <Breadcrumb.Item><Link href="/">Trang chủ</Link></Breadcrumb.Item>
                     <Breadcrumb.Item>
                         <Link href={post.type === 'SALE' ? '/sale' : '/rent'}>
@@ -46,52 +44,48 @@ export default function PublicPostDetailPage() {
                     <Breadcrumb.Item className="text-gray-400">{post.category.name}</Breadcrumb.Item>
                 </Breadcrumb>
 
-                <div className="flex flex-col lg:flex-row gap-8">
+                <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
                     <div className="flex-1 min-w-0">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-6">
                             <PostGallery post={post} />
-
                             <PostBasicInfo post={post} />
-
-
                             <PostCharacteristics post={post} />
 
-                            <div className="py-4">
-                                <Title level={4} className="!text-lg font-bold !mb-4  tracking-wide">
+                            <div className="py-2">
+                                <Title level={4} className="!text-lg font-bold !mb-4 tracking-wide">
                                     Xem trên bản đồ
                                 </Title>
-                                <div className="h-[350px] w-full rounded-md overflow-hidden bg-gray-50 border border-gray-100">
+                                <div className="h-[250px] md:h-[350px] w-full rounded-md overflow-hidden bg-gray-50 border border-gray-100">
                                     <PropertyMap latitude={post.latitude ?? 0} longitude={post.longitude ?? 0} />
                                 </div>
                             </div>
 
-                            {/* Component Thông số tin đăng nằm dưới bản đồ */}
                             <PostMeta post={post} />
-
-                            <PostAnalytics className='!mt-4' post={post} />
-
+                            <PostAnalytics post={post} />
                         </motion.div>
                     </div>
 
-                    <div className="lg:w-[320px] flex flex-col gap-6">
+                    <aside className="w-full lg:w-[320px] flex flex-col gap-6">
                         <PostSellerSidebar user={post.user} />
+                        <NearbyLocationsSidebar post={post} />
+                    </aside>
+                </div>
 
-                        <RelatedPostsSidebar
-                            posts={relatedData?.content || []}
-                            isLoading={isLoadingRelated}
-                            currentPostId={postId}
-                        />
-                    </div>
+                <div className="mt-10 flex flex-col gap-10 border-t border-gray-100 pt-10">
+                    <RelatedPosts
+                        currentPost={post}
+                        onDataLoaded={setRelatedPostIds}
+                    />
+                    <ForYouPosts
+                        currentPost={post}
+                        excludePostIds={relatedPostIds}
+                    />
                 </div>
             </div>
-            <style jsx global>{`
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            `}</style>
         </div>
     );
 }
 
 function DetailSkeleton() {
-    return <div className="max-w-[1000px] mx-auto px-4 py-12"><Skeleton active avatar paragraph={{ rows: 12 }} /></div>;
+    return <div className="max-w-[1140px] mx-auto px-4 py-12"><Skeleton active avatar paragraph={{ rows: 12 }} /></div>;
 }

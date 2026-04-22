@@ -55,3 +55,16 @@ export const getFullAddress = (post?: Post | null): string => {
         post.provinceName
     ].filter(Boolean).join(', ');
 };
+
+/**
+ * Lấy địa chỉ ngắn gọn (Chỉ gồm Quận/Huyện và Tỉnh/Thành phố)
+ * Phù hợp hiển thị trên các thẻ (Card) có không gian hẹp.
+ */
+export const getShortAddress = (post?: Post | null): string => {
+    if (!post) return 'Đang cập nhật';
+
+    return [
+        post.districtName,
+        post.provinceName
+    ].filter(Boolean).join(', ');
+};

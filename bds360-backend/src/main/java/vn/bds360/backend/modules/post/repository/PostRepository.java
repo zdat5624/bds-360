@@ -43,11 +43,13 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
         @Query("SELECT COUNT(p) FROM Post p WHERE p.status IN (:status1, :status2)")
         Long countByStatusIn(PostStatus status1, PostStatus status2);
 
+        // 1. Lịch sử giá (Theo tháng)
         @Query(value = "SELECT " +
                         "DATE_FORMAT(p.created_at, '%Y-%m') AS monthStr, " +
-                        "MIN(p.price / p.area) AS minPrice, " +
-                        "MAX(p.price / p.area) AS maxPrice, " +
-                        "AVG(p.price / p.area) AS avgPrice " +
+                        // 👇 FIX: Thêm logic IF check loại tin ngay trong SQL
+                        "MIN(IF(p.type = 'SALE', p.price / NULLIF(p.area, 0), p.price)) AS minPrice, " +
+                        "MAX(IF(p.type = 'SALE', p.price / NULLIF(p.area, 0), p.price)) AS maxPrice, " +
+                        "AVG(IF(p.type = 'SALE', p.price / NULLIF(p.area, 0), p.price)) AS avgPrice " +
                         "FROM posts p " +
                         "WHERE p.type = :#{#type.name()} " +
                         "AND p.status IN ('APPROVED', 'REVIEW_LATER', 'EXPIRED') " +
@@ -71,7 +73,8 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
         @Query(value = "SELECT " +
                         "w.code AS locationCode, " +
                         "w.name AS locationName, " +
-                        "AVG(p.price / p.area) AS avgPrice, " +
+                        // 👇 FIX: Thêm logic IF check loại tin
+                        "AVG(IF(p.type = 'SALE', p.price / NULLIF(p.area, 0), p.price)) AS avgPrice, " +
                         "COUNT(p.id) AS postCount " +
                         "FROM wards w " +
                         "JOIN posts p ON w.code = p.ward_code " +
@@ -92,7 +95,8 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
         @Query(value = "SELECT " +
                         "d.code AS locationCode, " +
                         "d.name AS locationName, " +
-                        "AVG(p.price / p.area) AS avgPrice, " +
+                        // 👇 FIX: Thêm logic IF check loại tin
+                        "AVG(IF(p.type = 'SALE', p.price / NULLIF(p.area, 0), p.price)) AS avgPrice, " +
                         "COUNT(p.id) AS postCount " +
                         "FROM districts d " +
                         "JOIN posts p ON d.code = p.district_code " +

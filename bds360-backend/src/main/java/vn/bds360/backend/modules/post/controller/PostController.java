@@ -119,7 +119,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PostResponse>> getForYouPosts(
             @CurrentUser User user,
-            @Valid ForYouPostRequest request) { // 🌟 Đổi tham số nhận vào
+            @Valid ForYouPostRequest request) {
 
         return ApiResponse.success(postService.getForYouPosts(user, request),
                 "Lấy danh sách tin dành cho bạn thành công");

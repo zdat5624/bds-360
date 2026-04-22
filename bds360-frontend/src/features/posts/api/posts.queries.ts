@@ -3,7 +3,7 @@
 import customFetch from '@/lib/custom-fetch';
 import { BaseFilterParams, PageResponse } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { MapPost, NearbyLocation, Post, PostFilterParams, PostViewChartResponse, PriceAnalyticsParams, PriceHistoryResponse, SavedPostResponse } from './types';
+import { ForYouPostParams, MapPost, NearbyLocation, Post, PostFilterParams, PostViewChartResponse, PriceAnalyticsParams, PriceHistoryResponse, RelatedPostParams, SavedPostResponse } from './types';
 
 export const POSTS_QUERY_KEYS = {
     all: ['posts'] as const,
@@ -19,6 +19,9 @@ export const POSTS_QUERY_KEYS = {
     monthlyViews: (id: number, months: number) => [...POSTS_QUERY_KEYS.analytics(id), 'monthly', months] as const,
     analyticsPrice: (params: PriceAnalyticsParams) => [...POSTS_QUERY_KEYS.all, 'analytics', 'price', params] as const,
     analyticsNearby: (params: PriceAnalyticsParams) => [...POSTS_QUERY_KEYS.all, 'analytics', 'nearby', params] as const,
+
+    related: (id: number, params?: RelatedPostParams) => [...POSTS_QUERY_KEYS.detail(id), 'related', params] as const,
+    forYou: (params?: ForYouPostParams) => [...POSTS_QUERY_KEYS.all, 'forYou', params] as const,
 };
 
 const getPosts = async (scope: 'public' | 'admin' | 'my', filters: PostFilterParams): Promise<PageResponse<Post>> => {
@@ -128,5 +131,31 @@ export const useGetNearbyLocations = (params: PriceAnalyticsParams, enabled: boo
         queryKey: [...POSTS_QUERY_KEYS.all, 'analytics', 'nearby', params],
         queryFn: () => getNearbyLocations(params),
         enabled: enabled && !!params.type,
+    });
+};
+
+// 2. Viết hàm Fetch
+const getRelatedPosts = async (id: number, params?: RelatedPostParams): Promise<PageResponse<Post>> => {
+    return customFetch.get(`/posts/${id}/related`, { params });
+};
+
+const getForYouPosts = async (params?: ForYouPostParams): Promise<PageResponse<Post>> => {
+    return customFetch.get('/posts/for-you', { params });
+};
+
+// 3. Export Hooks
+export const useGetRelatedPosts = (id: number, params?: RelatedPostParams, enabled: boolean = true) => {
+    return useQuery({
+        queryKey: POSTS_QUERY_KEYS.related(id, params),
+        queryFn: () => getRelatedPosts(id, params),
+        enabled: enabled && !!id,
+    });
+};
+
+export const useGetForYouPosts = (params?: ForYouPostParams, enabled: boolean = true) => {
+    return useQuery({
+        queryKey: POSTS_QUERY_KEYS.forYou(params),
+        queryFn: () => getForYouPosts(params),
+        enabled,
     });
 };

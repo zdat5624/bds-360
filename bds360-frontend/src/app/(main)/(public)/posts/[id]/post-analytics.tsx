@@ -90,12 +90,10 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
         updateUrl(filters);
     };
 
-    // Render Chấm đỏ nằm đè lên trục Y
     const CustomReferenceLabel = (props: any) => {
         const { viewBox } = props;
         if (!viewBox) return null;
 
-        // 👈 FIX: Đưa x sang phải cùng (cộng thêm width của biểu đồ) để đại diện cho giá "Hiện tại"
         const cx = viewBox.x + viewBox.width;
         const cy = viewBox.y;
 
@@ -109,9 +107,16 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
 
     const CustomLegend = (props: any) => {
         const { payload } = props;
+
+        // Sắp xếp lại Legend: Cao nhất -> Trung bình -> Thấp nhất
+        const sortedPayload = [...payload].sort((a, b) => {
+            const order: Record<string, number> = { 'Cao nhất': 1, 'Trung bình': 2, 'Thấp nhất': 3 };
+            return (order[a.value] || 4) - (order[b.value] || 4);
+        });
+
         return (
             <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 !mt-4 text-[13px] text-gray-600">
-                {payload.map((entry: any, index: number) => (
+                {sortedPayload.map((entry: any, index: number) => (
                     <div key={`item-${index}`} className="flex items-center gap-1.5">
                         <span
                             className="w-2.5 h-2.5 rounded-full"
@@ -189,7 +194,7 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart
                                     data={priceData.trend}
-                                    margin={{ top: 15, right: 15, left: -25, bottom: 0 }} // Tăng right margin lên 15 để dot bên phải không bị cắt xén
+                                    margin={{ top: 15, right: 15, left: -25, bottom: 0 }}
                                 >
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
 
@@ -197,6 +202,11 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
                                     <YAxis tickFormatter={formatYAxis} tick={{ fontSize: 12, fill: '#bfbfbf' }} axisLine={{ stroke: '#f0f0f0' }} tickLine={false} />
 
                                     <RechartsTooltip
+                                        // Sắp xếp lại Tooltip: Cao nhất -> Trung bình -> Thấp nhất
+                                        itemSorter={(item) => {
+                                            const order: Record<string, number> = { maxPrice: 1, avgPrice: 2, minPrice: 3 };
+                                            return order[item.dataKey as string] || 4;
+                                        }}
                                         formatter={(value: any, name: any) => [
                                             formatAnalyticsPrice(Number(value) || 0, post.type),
                                             name
@@ -218,8 +228,11 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
                                         label={<CustomReferenceLabel />}
                                     />
 
+                                    {/* Line max và min nằm trên cùng đoạn mã để vẽ ở lớp dưới */}
                                     <Line type="linear" dataKey="maxPrice" name="Cao nhất" stroke="#cdbfd6" strokeWidth={1} dot={false} activeDot={{ r: 4 }} />
                                     <Line type="linear" dataKey="minPrice" name="Thấp nhất" stroke="#f8daa6" strokeWidth={1} dot={false} activeDot={{ r: 4 }} />
+
+                                    {/* Line avg nằm dưới cùng đoạn mã để luôn hiển thị đè lên trên (cao nhất) */}
                                     <Line type="linear" dataKey="avgPrice" name="Trung bình" stroke="#1677ff" strokeWidth={2} dot={{ r: 3, fill: '#1677ff', strokeWidth: 1 }} activeDot={{ r: 5, fill: '#1677ff', strokeWidth: 1 }} />
                                 </LineChart>
                             </ResponsiveContainer>
@@ -240,7 +253,7 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
 
                             <div className="border border-gray-100 rounded-md overflow-hidden">
 
-                                <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100">
+                                <div className="flex justify-between items-center shadow-background shadow-sm px-4 py-3 border-b border-gray-100">
                                     <div className="flex-1">
                                         <div className="font-semibold text-[14px]">So sánh giá khu vực lân cận</div>
                                         <div className="text-gray-500 text-[11px] mt-0.5">Tại {post.districtName}</div>
