@@ -124,14 +124,25 @@ public class NotificationService {
         if (recipient == null)
             throw new AppException(ErrorCode.USER_NOT_FOUND);
 
-        String message = String.format("Người dùng '%s - %s' đã xem số điện thoại của tin đăng mã '%d' của bạn.",
-                currentUser.getName(), currentUser.getPhone(), request.getPostId());
+        // Xử lý thông báo linh hoạt tùy theo việc có truyền postId hay không
+        String message;
+        if (request.getPostId() != null) {
+            // Trường hợp 1: Khách xem số điện thoại ở trang chi tiết tin đăng
+            message = String.format("Người dùng '%s - %s' đã xem số điện thoại của tin đăng mã #'%d' của bạn.",
+                    currentUser.getName(), currentUser.getPhone(), request.getPostId());
+        } else {
+            // Trường hợp 2: Khách xem số điện thoại ở trang hồ sơ cá nhân (không gắn với
+            // post cụ thể)
+            message = String.format("Người dùng '%s - %s' đã xem số điện thoại trên trang hồ sơ của bạn.",
+                    currentUser.getName(), currentUser.getPhone());
+        }
 
         // Chống spam thông báo trùng lặp
         if (notificationRepository.existsByMessage(message))
             return;
 
-        // Tái sử dụng hàm tạo thông báo ở trên
+        // Tái sử dụng hàm tạo thông báo ở trên (Có thể cân nhắc đổi
+        // NotificationType.POST thành kiểu khác hợp lý hơn nếu cần)
         this.createNotification(recipient, message, NotificationType.POST);
     }
 

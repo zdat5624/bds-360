@@ -87,12 +87,21 @@ export const useSavePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: savePost,
-        onSuccess: () => {
+        onSuccess: (_, postId) => {
+            // 1. Đồng bộ tức thì cho các Button lẻ (Manual Update)
+            // Key sinh ra: ['posts', 'saved', 'check', { ids: [postId] }]
+            queryClient.setQueryData(POSTS_QUERY_KEYS.checkSaved([postId]), { [postId]: true });
+
+            // 2. Ép các danh sách Batch Check (20-30 IDs) phải load lại bản mới nhất
+            queryClient.invalidateQueries({
+                queryKey: [...POSTS_QUERY_KEYS.all, 'saved', 'check'],
+                exact: false // Xóa tất cả query có prefix này
+            });
+
+            // 3. Làm mới toàn bộ danh sách "Tin đã lưu" (Trang cá nhân)
             queryClient.invalidateQueries({
                 queryKey: [...POSTS_QUERY_KEYS.lists(), 'saved']
             });
-            // Update UI list (vd icon trái tim)
-            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
         },
     });
 };
@@ -101,11 +110,18 @@ export const useUnsavePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: unsavePost,
-        onSuccess: () => {
+        onSuccess: (_, postId) => {
+            // Cập nhật thủ công sang false
+            queryClient.setQueryData(POSTS_QUERY_KEYS.checkSaved([postId]), { [postId]: false });
+
+            queryClient.invalidateQueries({
+                queryKey: [...POSTS_QUERY_KEYS.all, 'saved', 'check'],
+                exact: false
+            });
+
             queryClient.invalidateQueries({
                 queryKey: [...POSTS_QUERY_KEYS.lists(), 'saved']
             });
-            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
         },
     });
 };

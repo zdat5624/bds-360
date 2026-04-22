@@ -27,6 +27,6 @@ export interface NotificationFilterParams extends BaseFilterParams {
     type?: NotificationType;
 }
 export interface ViewPhoneNotificationPayload {
-    postId: number;
+    postId?: number;
     recipientId: number;
 }

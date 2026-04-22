@@ -34,7 +34,7 @@ export function Footer() {
                 zIndex: 10,
             }}
         >
-            <div className="container mx-auto px-4 py-10 max-w-7xl">
+            <div className="container mx-auto px-4 !pt-5 !pb-10 max-w-7xl">
                 {/* =========================================================
                     TOP SECTION: GRID 4 CỘT
                 ========================================================= */}

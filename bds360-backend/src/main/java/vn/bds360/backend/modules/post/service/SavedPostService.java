@@ -1,5 +1,11 @@
 package vn.bds360.backend.modules.post.service;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -92,5 +98,26 @@ public class SavedPostService {
 
         // 3. Bọc vào PageResponse custom của bạn
         return PageResponse.of(dtoPage);
+
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Boolean> checkSavedStatus(User user, List<Long> postIds) {
+        // 1. Nếu chưa login hoặc danh sách trống, mặc định tất cả là false
+        if (user == null || postIds == null || postIds.isEmpty()) {
+            return postIds != null
+                    ? postIds.stream().distinct().collect(Collectors.toMap(id -> id, id -> false))
+                    : Collections.emptyMap();
+        }
+
+        // 2. Lấy danh sách ID thực sự đã lưu từ Repository
+        Set<Long> savedIds = savedPostRepository.findSavedPostIdsByUserIdAndPostIdIn(user.getId(), postIds);
+
+        // 3. Map ngược lại: ID nào có trong savedIds thì true, không thì false
+        return postIds.stream()
+                .distinct()
+                .collect(Collectors.toMap(
+                        id -> id,
+                        savedIds::contains));
     }
 }

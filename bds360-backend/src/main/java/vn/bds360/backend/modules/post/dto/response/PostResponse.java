@@ -70,6 +70,7 @@ PostResponse {
         private String email;
         private String phone; // Quan trọng để khách hàng gọi điện
         private String avatar;
+        private Boolean isVerified;
     }
 
     @Data

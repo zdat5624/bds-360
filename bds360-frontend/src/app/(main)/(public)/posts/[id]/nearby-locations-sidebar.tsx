@@ -72,7 +72,7 @@ export function NearbyLocationsSidebar({ post, className }: NearbyLocationsSideb
     return (
         <div className={cn("bg-[#f2f2f2] p-5 rounded-lg border-none", className)}>
             <Title level={5} className="!mb-5 !text-[15px] font-bold text-[#2c2c2c] !mt-0">
-                {post.type === 'SALE' ? 'Bán' : 'Cho thuê'} {post.category.name.toLowerCase()} tại {post.provinceName}
+                {post.category.name} tại {post.provinceName}
             </Title>
 
             <div className="flex flex-col gap-3.5">

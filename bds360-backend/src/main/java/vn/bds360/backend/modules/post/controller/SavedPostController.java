@@ -1,11 +1,15 @@
 package vn.bds360.backend.modules.post.controller;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,5 +58,16 @@ public class SavedPostController {
         PageResponse<SavedPostResponse> savedPosts = savedPostService.getSavedPosts(currentUser, filterRequest);
 
         return ApiResponse.success(savedPosts, "Lấy danh sách tin đã lưu thành công");
+    }
+
+    @PostMapping("/saved/check")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Map<Long, Boolean>> checkSavedStatus(
+            @CurrentUser User currentUser,
+            @RequestBody List<Long> postIds) {
+
+        Map<Long, Boolean> result = savedPostService.checkSavedStatus(currentUser, postIds);
+
+        return ApiResponse.success(result, "Kiểm tra trạng thái lưu thành công");
     }
 }

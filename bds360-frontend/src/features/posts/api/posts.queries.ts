@@ -21,6 +21,8 @@ export const POSTS_QUERY_KEYS = {
     analyticsNearby: (params: PriceAnalyticsParams) => [...POSTS_QUERY_KEYS.all, 'analytics', 'nearby', params] as const,
 
     related: (id: number, params?: RelatedPostParams) => [...POSTS_QUERY_KEYS.detail(id), 'related', params] as const,
+
+    checkSaved: (ids: number[]) => [...POSTS_QUERY_KEYS.all, 'saved', 'check', { ids }] as const,
     forYou: (params?: ForYouPostParams) => [...POSTS_QUERY_KEYS.all, 'forYou', params] as const,
 };
 
@@ -157,5 +159,25 @@ export const useGetForYouPosts = (params?: ForYouPostParams, enabled: boolean = 
         queryKey: POSTS_QUERY_KEYS.forYou(params),
         queryFn: () => getForYouPosts(params),
         enabled,
+    });
+};
+
+
+const checkSavedStatus = async (postIds: number[]): Promise<Record<number, boolean>> => {
+    return customFetch.post('/posts/saved/check', postIds);
+};
+
+export const useCheckSavedStatus = (postIds: number[], enabled: boolean = true) => {
+    return useQuery({
+        queryKey: POSTS_QUERY_KEYS.checkSaved(postIds),
+        queryFn: () => checkSavedStatus(postIds),
+        enabled: enabled && postIds.length > 0,
+
+        // 🌟 ĐÂY LÀ BỘ ĐÔI HOÀN HẢO ĐỂ ĐỒNG BỘ TAB:
+        staleTime: 0, // Vừa lấy về là cũ ngay, để sẵn sàng fetch lại
+        refetchOnWindowFocus: true, // Khi click lại vào Tab là fetch ngay
+
+        // Có thể thêm cái này nếu muốn đồng bộ cả khi mạng bị đứt rồi có lại
+        refetchOnReconnect: true,
     });
 };

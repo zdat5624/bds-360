@@ -33,6 +33,9 @@ export const APP_ROUTES = {
         PAYMENTS: '/user/payments',
         PAYMENT_RESULT: '/user/payments/result',
         VIPS: '/user/vips',
+
+        SAVED_POSTS: '/saved-posts',
+
     },
 
     // 4. KHU VỰC DÀNH CHO NHÂN VIÊN VÀ QUẢN TRỊ (Back-office)

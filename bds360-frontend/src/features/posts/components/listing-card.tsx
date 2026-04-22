@@ -10,6 +10,7 @@ import { EnvironmentOutlined } from '@ant-design/icons';
 import { Card, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { SavePostButton } from './save-post-button';
 
 const { Paragraph } = Typography;
 
@@ -25,7 +26,7 @@ const cardVariants = {
 
 export function ListingCard({ post, className }: ListingCardProps) {
     const tagColor = post.vip?.id ? VIP_TAG_COLOR_MAP[post.vip.id] : 'default';
-    const isVip = post.vip?.vipLevel && post.vip.vipLevel > 0;
+    const isVip = (post.vip?.vipLevel ?? 0) > 0;
 
     const thumbnailUrl = post.images && post.images.length > 0
         ? post.images[0].url
@@ -43,9 +44,7 @@ export function ListingCard({ post, className }: ListingCardProps) {
                 <Card
                     className={cn(
                         "rounded-lg overflow-hidden h-full cursor-pointer bg-white",
-                        // Ép bỏ border và shadow mặc định của Ant Design
                         "!border-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.05)]"
-                        // Đã xóa dòng "ring-1 ring-orange-200" ở đây
                     )}
                     styles={{ body: { padding: '16px 8px' } }}
                     cover={
@@ -54,10 +53,9 @@ export function ListingCard({ post, className }: ListingCardProps) {
                             <img
                                 alt={post.title}
                                 src={thumbnailUrl}
-                                className="w-full h-40 object-cover rounded-lg"
+                                className="w-full h-40 object-cover"
                             />
 
-                            {/* TAG VIP */}
                             {isVip && (
                                 <Tag
                                     color={tagColor}
@@ -110,9 +108,15 @@ export function ListingCard({ post, className }: ListingCardProps) {
                             </div>
                         </div>
 
-                        {/* Ngày đăng */}
-                        <div className="text-gray-400 text-[11px] mt-1">
-                            {getSmartRelativeTime(post.createdAt, DATE_FORMAT.DEFAULT, 7)}
+                        {/* Hàng dưới cùng: Ngày đăng & Nút lưu */}
+                        <div className="flex justify-between items-center mt-1">
+                            <div className="text-gray-400 text-[11px]">
+                                {getSmartRelativeTime(post.createdAt, DATE_FORMAT.DEFAULT, 7)}
+                            </div>
+                            <SavePostButton
+                                postId={post.id}
+                                className="!p-2 text-[20px]"
+                            />
                         </div>
                     </div>
                 </Card>

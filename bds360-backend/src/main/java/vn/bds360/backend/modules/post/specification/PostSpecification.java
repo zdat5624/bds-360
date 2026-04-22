@@ -53,12 +53,17 @@ public class PostSpecification {
 			if (filter.getIsDeleteByUser() != null) {
 				predicate = cb.and(predicate, cb.equal(root.get("deletedByUser"), filter.getIsDeleteByUser()));
 			}
+
+			if (filter.getUserId() != null) {
+				predicate = cb.and(predicate, cb.equal(root.get("user").get("id"), filter.getUserId()));
+			}
+
 			if (filter.getUserEmail() != null && !filter.getUserEmail().isEmpty()) {
 				Join<Post, User> userJoin = root.join("user");
 				predicate = cb.and(predicate, cb.equal(userJoin.get("email"), filter.getUserEmail()));
 			}
 
-			// 🌟 2. LOGIC TÌM KIẾM ĐỘNG DỰA TRÊN `searchBy`
+			// 2. LOGIC TÌM KIẾM ĐỘNG DỰA TRÊN `searchBy`
 			if (filter.getSearch() != null && !filter.getSearch().trim().isEmpty() && filter.getSearchBy() != null
 					&& !filter.getSearchBy().isEmpty()) {
 				String keyword = filter.getSearch().trim();

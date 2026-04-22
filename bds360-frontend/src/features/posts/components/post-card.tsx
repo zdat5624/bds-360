@@ -7,13 +7,14 @@ import { Post } from '@/features/posts/api/types';
 import { formatPostPrice } from '@/features/posts/posts.util';
 import { getSmartRelativeTime } from '@/utils/date.util';
 import {
+    CheckCircleFilled,
     EnvironmentOutlined,
-    HeartOutlined,
     PhoneOutlined,
     PictureOutlined
 } from '@ant-design/icons';
-import { Avatar, Button, Typography } from 'antd';
+import { Avatar, Button, Tooltip, Typography } from 'antd';
 import Link from 'next/link';
+import { SavePostButton } from './save-post-button';
 
 const { Text } = Typography;
 
@@ -46,7 +47,7 @@ export function PostCard({ post }: PostCardProps) {
 
     return (
         <Link href={`/posts/${post.id}`} className="block w-full">
-            <div className="group flex flex-col w-full bg-white rounded-xl border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden min-h-[420px]">
+            <div className="group flex flex-col w-full bg-white rounded-xl border border-gray-200/80 shadow-[0_2px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden min-h-[420px]">
 
                 {/* ==============================================================
                     KHU VỰC HÌNH ẢNH (Đã sửa Ảnh Trái - Phải)
@@ -161,9 +162,21 @@ export function PostCard({ post }: PostCardProps) {
                                 {!post.user?.avatar && post.user?.name?.charAt(0)}
                             </Avatar>
                             <div className="flex flex-col min-w-0">
-                                <Text className="font-semibold text-gray-800 text-[0.88rem] truncate">
-                                    {post.user?.name || 'Người dùng ẩn danh nhưng tên rất dài dài dài'}
-                                </Text>
+                                <div className="flex items-center gap-1 min-w-0">
+                                    <Text className="font-semibold text-gray-800 text-[0.88rem] truncate">
+                                        {post.user?.name || 'Người dùng ẩn danh'}
+                                    </Text>
+
+                                    {/* 🌟 ICON TÍCH XANH NẰM CẠNH TÊN */}
+                                    {post.user.isVerified && (
+                                        <Tooltip title="Đã xác thực">
+                                            <CheckCircleFilled
+                                                className="text-[#0068FF] text-[13px] shrink-0"
+                                            />
+                                        </Tooltip>
+                                    )}
+                                </div>
+
                                 <Text className="text-gray-400 text-[0.75rem] md:text-[0.8rem] truncate">
                                     {getSmartRelativeTime(post.createdAt)}
                                 </Text>
@@ -171,16 +184,7 @@ export function PostCard({ post }: PostCardProps) {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                            <Button
-                                shape="circle"
-                                size="large"
-                                icon={<HeartOutlined />}
-                                className="text-gray-400 border-gray-200 hover:!text-red-500 hover:!border-red-500 shadow-none flex items-center justify-center"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    alert('Đã lưu tin!');
-                                }}
-                            />
+                            <SavePostButton className='!h-8 !w-8' postId={post.id} />
 
                             <Button
                                 type="primary"

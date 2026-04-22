@@ -44,7 +44,7 @@ export function PostGallery({ post }: PostGalleryProps) {
     };
 
     return (
-        <div className="flex flex-col gap-2 mb-4">
+        <div className="flex flex-col gap-2 mb-2">
             <Image.PreviewGroup>
                 <div
                     className="relative w-full h-[345px] rounded-md overflow-hidden flex items-center justify-center select-none"
@@ -83,7 +83,7 @@ export function PostGallery({ post }: PostGalleryProps) {
                         onMouseUp={() => setIsDragging(false)}
                         onMouseLeave={() => setIsDragging(false)}
                         // select-none giúp trải nghiệm kéo mượt hơn
-                        className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar cursor-grab active:cursor-grabbing select-none"
+                        className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar cursor-grab active:cursor-grabbing select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     >
                         {images.map((url, idx) => (
                             <div

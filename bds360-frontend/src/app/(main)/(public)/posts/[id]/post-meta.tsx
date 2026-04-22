@@ -25,7 +25,7 @@ export function PostMeta({ post, className, style }: PostMetaProps) {
     const tagPresetColor = post.vip ? VIP_TAG_COLOR_MAP[post.vip.id] : 'default';
     return (
         <div className={className} style={style}>
-            <div className="grid border-y border-gray-100 grid-cols-2 md:grid-cols-4 gap-4 py-2">
+            <div className="grid border-y border-gray-100 grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4 py-4">
                 <PostMetaItem
                     icon={<CalendarOutlined />}
                     label="Ngày đăng"

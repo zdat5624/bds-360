@@ -317,19 +317,6 @@ public class PostService {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        // Tăng view
-        post.setView(post.getView() + 1);
-        postRepository.save(post);
-
-        // Notify
-        if (post.getNotifyOnView() && currentUser != null && !isOwner && !isAdmin) {
-            String msg = String.format("Người dùng '%s - %s' đã xem tin đăng mã '%d' của bạn.",
-                    currentUser.getName(), currentUser.getPhone(), post.getId());
-            if (!notificationService.existsByMessage(msg)) {
-                notificationService.createNotification(post.getUser(), msg, NotificationType.POST);
-            }
-        }
-
         return postMapper.toResponse(post);
     }
 

@@ -1,9 +1,10 @@
 // @/components/layouts/header.tsx
 'use client';
 
+import { SavedPostsBadge } from '@/components/composite/saved-posts-badge';
 import { APP_ROUTES } from '@/config/routes';
 import { USER_MENU_ITEMS } from '@/constants';
-import { LogoutConfirmModal } from '@/features/auth/components/logout-confirm.modal'; // 👈 Import Modal vừa tạo
+import { LogoutConfirmModal } from '@/features/auth/components/logout-confirm.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useAuthStore } from '@/stores/auth.store';
 import {
@@ -30,7 +31,7 @@ export function Header() {
 
     // 2. STATES
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false); // Quản lý trạng thái mở Modal
+    const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
     useEffect(() => {
         setIsMobileMenuOpen(false);
@@ -56,8 +57,8 @@ export function Header() {
             icon: <LogoutOutlined style={{ color: colorError }} />,
             label: <span style={{ color: colorError }}>Đăng xuất</span>,
             onClick: () => {
-                setIsLogoutConfirmOpen(true); // Bật Modal thay vì xử lý logout trực tiếp
-                setIsMobileMenuOpen(false);   // Đóng Drawer Mobile nếu người dùng click từ Menu Mobile
+                setIsLogoutConfirmOpen(true);
+                setIsMobileMenuOpen(false);
             },
         },
     ];
@@ -97,7 +98,6 @@ export function Header() {
                 {/* ================= PHẢI: AUTH ACTIONS (DESKTOP) ================= */}
                 <div className="hidden md:flex items-center gap-4 h-full">
                     {!isInitialized ? (
-                        // Dùng 1 Skeleton.Button duy nhất đại diện cho cả cụm
                         <div className="flex items-center h-full">
                             <Skeleton.Button
                                 active
@@ -109,16 +109,8 @@ export function Header() {
                         <Space size="large" align="center" className="h-full">
                             <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
                                 <div
-                                    className="
-                group flex items-center gap-3 
-                px-2 py-1 pr-3
-                rounded-full 
-                border cursor-pointer 
-                transition-all duration-200
-            "
-                                    style={{
-                                        borderColor: 'transparent',
-                                    }}
+                                    className="group flex items-center gap-3 px-2 py-1 pr-3 rounded-full border cursor-pointer transition-all duration-200"
+                                    style={{ borderColor: 'transparent' }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.backgroundColor = colorPrimaryBg;
                                         e.currentTarget.style.borderColor = colorBorderSecondary;
@@ -132,30 +124,20 @@ export function Header() {
                                         className="transition-transform duration-200 group-hover:scale-105"
                                         src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`}
                                     />
-
                                     <div className="flex flex-col leading-tight">
-                                        <Text className="font-semibold text-sm">
-                                            {user?.name}
-                                        </Text>
-
-                                        <Text type="secondary" className="text-xs">
-                                            {user?.email}
-                                        </Text>
+                                        <Text className="font-semibold text-sm">{user?.name}</Text>
+                                        <Text type="secondary" className="text-xs">{user?.email}</Text>
                                     </div>
                                 </div>
                             </Dropdown>
                         </Space>
                     ) : (
-                        <Space size="large" align="center" className="h-full">
+                        <Space size="middle" align="center" className="h-full">
+
+                            {/* 🌟 BADGE TIN ĐÃ LƯU DÀNH CHO DESKTOP */}
+                            <SavedPostsBadge className="mt-1 mr-2" />
 
                             <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
-                                {/* <div className="flex items-center gap-3 p-1 pr-3 rounded-full border border-transparent cursor-pointer transition-all hover:bg-slate-50">
-                                    <Avatar src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} />
-                                    <div className="flex flex-col leading-tight">
-                                        <Text className="font-semibold text-sm">{user?.name}</Text>
-                                        <Text type="secondary" className="text-xs">{user?.email}</Text>
-                                    </div>
-                                </div> */}
                                 <div
                                     className="group flex items-center gap-3 p-1 pr-3 rounded-full border border-transparent cursor-pointer transition-all hover:bg-slate-50"
                                     style={{ ['--hover-color' as any]: colorPrimary }}
@@ -186,33 +168,32 @@ export function Header() {
                         </Space>
                     )}
                 </div>
-                {/* ================= MOBILE: HAMBURGER BUTTON ================= */}
-                {/* <Button
-                    type="text"
-                    icon={<MenuOutlined className="text-xl !w-full !h-full" />}
-                    className="md:!hidden flex items-center justify-center p-0"
-                    onClick={() => setIsMobileMenuOpen(true)}
-                /> */}
 
+                {/* ================= MOBILE: BỘ NÚT BÊN PHẢI (BADGE + HAMBURGER) ================= */}
+                <div className="md:hidden flex items-center gap-3">
 
-                <MenuOutlined
-                    onClick={() => setIsMobileMenuOpen(true)}
-                    style={{
-                        fontSize: 20,
-                        color: colorText,
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                    }}
-                    className="md:!hidden"
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = colorBgTextHover;
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                    }}
-                />
+                    {/* 🌟 BADGE TIN ĐÃ LƯU DÀNH CHO MOBILE (Chỉ hiện khi đã đăng nhập) */}
+                    {isInitialized && isAuthenticated && (
+                        <SavedPostsBadge className="mt-1.5" />
+                    )}
 
+                    <MenuOutlined
+                        onClick={() => setIsMobileMenuOpen(true)}
+                        style={{
+                            fontSize: 20,
+                            color: colorText,
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = colorBgTextHover;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                        }}
+                    />
+                </div>
 
                 {/* ================= MOBILE: DRAWER ================= */}
                 <Drawer
@@ -229,7 +210,6 @@ export function Header() {
                     <div className="flex flex-col h-full">
                         <div className="py-2 border-b" style={{ borderColor: colorBorderSecondary, background: colorBgContainer }}>
                             {!isInitialized ? (
-                                // FIX: Thêm div bọc ngoài, cấu trúc y hệt UI thật để giữ nguyên Layout
                                 <div className="flex items-center gap-3 h-[40px]">
                                     <Skeleton.Avatar active size="large" />
                                     <div className="flex flex-col w-full gap-1">

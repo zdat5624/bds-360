@@ -54,8 +54,8 @@ export default function HomePage() {
 
             <div className="h-4"></div>
 
-            <section className="container mx-auto px-4 py-12 pt-0">
-                <div className="flex flex-col gap-16">
+            <section className="container max-w-[1100px] mx-auto px-4 py-12 pt-0">
+                <div className="flex flex-col gap-4">
                     <ForYouPosts
                         type="SALE"
                         title="Bất động sản dành cho bạn"

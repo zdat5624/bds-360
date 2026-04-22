@@ -16,6 +16,7 @@ export interface PostAuthor {
     email: string;
     phone: string;
     avatar?: string; // Full url
+    isVerified: boolean;
 }
 
 export interface PostVip {
@@ -142,6 +143,9 @@ export interface PostFilterParams extends BaseFilterParams {
     districtCode?: number;
     wardCode?: number;
     vipId?: number;
+
+    userId?: number;
+    userEmail?: string;
 
     search?: string;
     //  THÊM TRƯỜNG NÀY ĐỂ ĐỒNG BỘ VỚI BACKEND

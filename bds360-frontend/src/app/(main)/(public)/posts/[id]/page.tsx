@@ -33,7 +33,7 @@ export default function PublicPostDetailPage() {
 
     return (
         <div className="bg-white min-h-screen pb-10 font-sans">
-            <div className="max-w-[1140px] mx-auto px-4 py-2 md:py-4">
+            <div className="max-w-[940] mx-auto px-4 py-2 md:py-4">
                 <Breadcrumb separator="/" className="mb-3 text-[12px] md:text-[13px] text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
                     <Breadcrumb.Item><Link href="/">Trang chủ</Link></Breadcrumb.Item>
                     <Breadcrumb.Item>
@@ -44,9 +44,9 @@ export default function PublicPostDetailPage() {
                     <Breadcrumb.Item className="text-gray-400">{post.category.name}</Breadcrumb.Item>
                 </Breadcrumb>
 
-                <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
+                <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
                     <div className="flex-1 min-w-0">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-6">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-2">
                             <PostGallery post={post} />
                             <PostBasicInfo post={post} />
                             <PostCharacteristics post={post} />
@@ -65,7 +65,7 @@ export default function PublicPostDetailPage() {
                         </motion.div>
                     </div>
 
-                    <aside className="w-full lg:w-[320px] flex flex-col gap-6">
+                    <aside className="w-full lg:w-[290px] flex flex-col gap-4">
                         <PostSellerSidebar user={post.user} />
                         <NearbyLocationsSidebar post={post} />
                     </aside>

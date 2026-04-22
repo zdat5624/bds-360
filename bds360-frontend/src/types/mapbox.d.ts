@@ -1,1 +1,0 @@
-// @/types/mapbox.d.ts

@@ -43,4 +43,5 @@ public class PostFilterRequest extends BaseFilterRequest {
 
     private List<PostStatus> statuses;
     private String userEmail;
+    private Integer userId;
 }
