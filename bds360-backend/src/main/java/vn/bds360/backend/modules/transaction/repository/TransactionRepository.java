@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
+import vn.bds360.backend.modules.statistic.dto.response.DailyStatProjection;
 import vn.bds360.backend.modules.statistic.dto.response.ManageTransactionStatisticsResponse;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
 import vn.bds360.backend.modules.transaction.constant.TransactionType;
@@ -94,7 +95,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
                         Pageable pageable);
 
         // Danh sách nạp tiền gần nhất
-        List<Transaction> findTop5ByTypeOrderByCreatedAtDesc(TransactionType type);
+        // Lấy 5 giao dịch mới nhất theo Loại và Trạng thái
+        List<Transaction> findTop5ByTypeAndStatusOrderByCreatedAtDesc(TransactionType type, TransactionStatus status);
 
         // Danh sách chi tiêu cao nhất trong kỳ
         List<Transaction> findTop5ByTypeAndStatusAndCreatedAtBetweenOrderByAmountAsc(
@@ -102,4 +104,19 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
                         TransactionStatus status,
                         Instant start,
                         Instant end);
+
+        // Tính tổng doanh thu (sử dụng ABS vì PAYMENT lưu số âm)
+        @Query("SELECT SUM(ABS(t.amount)) FROM Transaction t WHERE t.type = 'PAYMENT' AND t.status = 'SUCCESS' AND t.createdAt BETWEEN :start AND :end")
+        Long sumRevenueBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+        // Lấy doanh thu theo từng ngày
+        @Query(value = "SELECT DATE(created_at) as date, SUM(ABS(amount)) as value " +
+                        "FROM transactions " +
+                        "WHERE type = 'PAYMENT' AND status = 'SUCCESS' AND created_at BETWEEN :start AND :end " +
+                        "GROUP BY DATE(created_at) ORDER BY date ASC", nativeQuery = true)
+        List<DailyStatProjection> getDailyRevenue(@Param("start") Instant start, @Param("end") Instant end);
+
+        // Đếm giao dịch nạp tiền đang chờ hoặc lỗi
+        @Query("SELECT COUNT(t.id) FROM Transaction t WHERE t.type = 'DEPOSIT' AND t.status IN ('PENDING', 'FAILED')")
+        long countPendingOrFailedDeposits();
 }

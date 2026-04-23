@@ -16,6 +16,8 @@ export const VIP_PACKAGES = [
         buttonText: 'Đăng tin tiêu chuẩn',
         isPopular: false,
         shortName: 'VIP 0',
+        vipLevel: 0,
+
 
     },
     {
@@ -34,6 +36,9 @@ export const VIP_PACKAGES = [
         isPopular: true,
         shortName: 'VIP 1',
 
+        vipLevel: 1,
+
+
     },
     {
         id: 3,
@@ -50,7 +55,7 @@ export const VIP_PACKAGES = [
         buttonText: 'Đăng tin VIP 2',
         isPopular: false,
         shortName: 'VIP 2',
-
+        vipLevel: 2,
     },
 ];
 

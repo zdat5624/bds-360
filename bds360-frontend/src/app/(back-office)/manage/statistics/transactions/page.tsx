@@ -98,7 +98,7 @@ export default function ManageTransactionStatisticsPage() {
                 <Flex vertical>
                     <Flex vertical>
                         <Title level={3} >
-                            <TransactionOutlined style={{ marginRight: 8 }} />            Thống kê Dòng tiền
+                            <TransactionOutlined style={{ marginRight: 8 }} />  Thống kê dòng tiền
                         </Title>
                         <Text type="secondary" >
                             Báo cáo chi tiết về tình hình nạp, tiêu dùng và số dư hệ thống.
@@ -194,7 +194,8 @@ export default function ManageTransactionStatisticsPage() {
             </Row>
 
             <Row gutter={[16, 16]}>
-                <Col xs={24} lg={16}>
+                {/* Đổi width thành lg={24} để Tương quan dòng tiền chiếm trọn hàng */}
+                <Col xs={24} lg={24}>
                     <ChartCard title="Tương quan dòng tiền (Nạp / Tiêu)" isLoading={isLoading}>
                         <ResponsiveContainer width="100%" height={280}>
                             <AreaChart data={continuousCashFlowData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
@@ -219,6 +220,7 @@ export default function ManageTransactionStatisticsPage() {
                     </ChartCard>
                 </Col>
 
+                {/* Trạng thái giao dịch chiếm 1/3 (lg={8}) */}
                 <Col xs={24} lg={8}>
                     <ChartCard title="Trạng thái giao dịch" isLoading={isLoading}>
                         <Flex vertical align="center" justify="center" style={{ height: 280 }}>
@@ -235,9 +237,10 @@ export default function ManageTransactionStatisticsPage() {
                     </ChartCard>
                 </Col>
 
-                <Col xs={24} lg={24}>
+                {/* Đổi width thành lg={16} để Top 10 Khách hàng ghép cùng hàng với Trạng thái giao dịch */}
+                <Col xs={24} lg={16}>
                     <ChartCard title="Top 10 Khách hàng chi tiêu cao nhất" isLoading={isLoading}>
-                        <ResponsiveContainer width="100%" height={320}>
+                        <ResponsiveContainer width="100%" height={280}>
                             <BarChart data={dashboardData?.topSpenders} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                                 <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f5f5f5" />
                                 <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#bfbfbf' }} tickFormatter={(val) => formatCompactMoney(val)} />
@@ -278,11 +281,7 @@ export default function ManageTransactionStatisticsPage() {
                                 },
                                 {
                                     title: 'Số tiền', dataIndex: 'amount', key: 'amount', align: 'right',
-                                    render: (val) => <Text strong style={{ color: '#52c41a' }}>+{formatCurrency(val)}</Text>
-                                },
-                                {
-                                    title: 'Trạng thái', dataIndex: 'status', key: 'status', align: 'center',
-                                    render: (val) => getStatusTag(val)
+                                    render: (val) => <Text strong style={{ color: '#52c41a' }}>{formatCurrency(val)}</Text>
                                 },
                                 {
                                     title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', align: 'right',

@@ -23,6 +23,10 @@ bds360-frontend
 │  │  │     ├─ layout.tsx
 │  │  │     ├─ page.tsx
 │  │  │     └─ statistics
+│  │  │        ├─ posts
+│  │  │        │  └─ page.tsx
+│  │  │        ├─ transactions
+│  │  │        │  └─ page.tsx
 │  │  │        └─ users
 │  │  │           └─ page.tsx
 │  │  ├─ (main)
@@ -228,8 +232,12 @@ bds360-frontend
 │  │  │  └─ posts.util.ts
 │  │  ├─ statistics
 │  │  │  ├─ api
+│  │  │  │  ├─ manage-post-statistics.queries.ts
+│  │  │  │  ├─ manage-post-statistics.types.ts
 │  │  │  │  ├─ manage-statistics.queries.ts
 │  │  │  │  ├─ manage-statistics.types.ts
+│  │  │  │  ├─ manage-transaction-statistics.queries.ts
+│  │  │  │  ├─ manage-transaction-statistics.types.ts
 │  │  │  │  ├─ manage-user-statistics.queries.ts
 │  │  │  │  ├─ manage-user-statistics.types.ts
 │  │  │  │  ├─ user-statistics.queries.ts

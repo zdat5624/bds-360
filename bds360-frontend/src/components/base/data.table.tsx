@@ -2,12 +2,11 @@
 'use client';
 
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/constants';
-import { useAppTheme } from '@/hooks/use-app-theme'; // 👈 Dùng custom hook của dự án
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { Table, TableProps } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 
-// 👈 Đã đồng bộ key và value ('ASC' | 'DESC') với BaseFilterParams của Backend
 export interface TableState {
     currentPage: number;
     pageSize: number;
@@ -31,9 +30,10 @@ interface DataTableProps<T> {
     rowKey?: string | ((record: T) => string);
 
     scroll?: TableProps<T>['scroll'];
-
     selectedRowKeys?: React.Key[];
 
+    // 👇 Thêm prop bordered để linh hoạt bật/tắt (mặc định là false)
+    bordered?: boolean;
 }
 
 export function DataTable<T extends object>({
@@ -49,11 +49,10 @@ export function DataTable<T extends object>({
     showPaging = true,
     rowKey = 'id',
     scroll,
-
     selectedRowKeys,
+    bordered = false, // 👇 Đặt giá trị mặc định là false
 }: DataTableProps<T>) {
 
-    // Trích xuất biến màu từ custom theme
     const { colorBorderSecondary } = useAppTheme();
 
     const handleChange = (
@@ -69,12 +68,10 @@ export function DataTable<T extends object>({
 
         if (!Array.isArray(sorterParam) && sorterParam.field) {
             newState.sortBy = sorterParam.field as string;
-            // 👈 Tự động map sang chuẩn In Hoa của Backend
             newState.sortDirection =
                 sorterParam.order === 'ascend' ? 'ASC' :
                     sorterParam.order === 'descend' ? 'DESC' : undefined;
         } else {
-            // Xóa sort nếu người dùng tắt sắp xếp
             newState.sortBy = undefined;
             newState.sortDirection = undefined;
         }
@@ -85,12 +82,13 @@ export function DataTable<T extends object>({
     return (
         <Table<T>
             className="custom-table"
+            // 👇 Thêm logic: Nếu bordered = true mới thêm style biến màu viền, ngược lại bỏ trống
             style={
-                {
-                    '--table-border-color': colorBorderSecondary, // Dùng biến từ useAppTheme
-                } as React.CSSProperties
+                bordered
+                    ? { '--table-border-color': colorBorderSecondary } as React.CSSProperties
+                    : undefined
             }
-            bordered={false}
+            bordered={bordered}
             rowKey={rowKey}
             rowSelection={
                 enableRowSelection

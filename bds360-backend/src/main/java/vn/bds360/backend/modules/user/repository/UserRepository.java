@@ -7,9 +7,11 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vn.bds360.backend.common.constant.Role;
+import vn.bds360.backend.modules.statistic.dto.response.DailyStatProjection;
 import vn.bds360.backend.modules.statistic.dto.response.ManageUserStatisticsResponse;
 import vn.bds360.backend.modules.user.entity.User;
 
@@ -39,4 +41,11 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @Query("SELECT SUM(u.balance) FROM User u")
     Long sumTotalSystemBalance();
+
+    // Lấy số lượng người dùng mới theo từng ngày
+    @Query(value = "SELECT DATE(created_at) as date, COUNT(id) as value " +
+            "FROM users " +
+            "WHERE created_at BETWEEN :start AND :end " +
+            "GROUP BY DATE(created_at) ORDER BY date ASC", nativeQuery = true)
+    List<DailyStatProjection> getDailyNewUsers(@Param("start") Instant start, @Param("end") Instant end);
 }

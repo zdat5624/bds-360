@@ -12,28 +12,28 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
-import vn.bds360.backend.modules.statistic.dto.response.ManageUserStatisticsResponse;
-import vn.bds360.backend.modules.statistic.service.ManageUserStatisticsService;
+import vn.bds360.backend.modules.statistic.dto.response.ManagePostStatisticsResponse;
+import vn.bds360.backend.modules.statistic.service.ManagePostStatisticsService;
 import vn.bds360.backend.security.annotation.IsAdminOrModerator;
 
 @RestController
-@RequestMapping("/api/v1/manage/statistics/users")
+@RequestMapping("/api/v1/manage/statistics/posts")
 @RequiredArgsConstructor
 @ApiGlobalResponse
-@Tag(name = "manage-user-statistics", description = "Quản trị viên - Thống kê người dùng")
-public class ManageUserStatisticsController {
+@Tag(name = "manage-post-statistics", description = "Quản trị viên - Thống kê Tin đăng")
+public class ManagePostStatisticsController {
 
-    private final ManageUserStatisticsService manageUserStatisticsService;
+    private final ManagePostStatisticsService postStatisticsService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @IsAdminOrModerator
-    @Operation(summary = "Lấy dữ liệu Dashboard thống kê người dùng (KPIs & Biểu đồ)")
-    public ApiResponse<ManageUserStatisticsResponse> getUserDashboardStats(
+    @Operation(summary = "Lấy dữ liệu Dashboard thống kê Tin đăng (Nguồn cung, lượt xem, backlog)")
+    public ApiResponse<ManagePostStatisticsResponse> getPostDashboardStats(
             @RequestParam(defaultValue = "30") Integer days) {
 
         return ApiResponse.success(
-                manageUserStatisticsService.getDashboardStatistics(days),
-                "Lấy dữ liệu thống kê người dùng thành công");
+                postStatisticsService.getPostDashboard(days),
+                "Lấy dữ liệu thống kê tin đăng thành công");
     }
 }

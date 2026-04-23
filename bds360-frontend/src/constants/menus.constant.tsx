@@ -1,7 +1,7 @@
 import {
     AppstoreOutlined,
-    BarChartOutlined,
     BellOutlined,
+    ContainerOutlined,
     CreditCardOutlined,
     CrownOutlined,
     DashboardOutlined,
@@ -89,7 +89,7 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
             },
             {
                 key: APP_ROUTES.MANAGE.STATISTICS.POSTS,
-                icon: <BarChartOutlined />,
+                icon: <ContainerOutlined />,
                 label: <Link href={APP_ROUTES.MANAGE.STATISTICS.POSTS}>Tin đăng</Link>,
             },
             {

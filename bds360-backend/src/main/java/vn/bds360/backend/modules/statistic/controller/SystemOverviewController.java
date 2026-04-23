@@ -12,28 +12,28 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import vn.bds360.backend.common.annotation.ApiGlobalResponse;
 import vn.bds360.backend.common.dto.response.ApiResponse;
-import vn.bds360.backend.modules.statistic.dto.response.ManageUserStatisticsResponse;
-import vn.bds360.backend.modules.statistic.service.ManageUserStatisticsService;
+import vn.bds360.backend.modules.statistic.dto.response.SystemOverviewResponse;
+import vn.bds360.backend.modules.statistic.service.SystemOverviewService;
 import vn.bds360.backend.security.annotation.IsAdminOrModerator;
 
 @RestController
-@RequestMapping("/api/v1/manage/statistics/users")
+@RequestMapping("/api/v1/manage/statistics/overview")
 @RequiredArgsConstructor
 @ApiGlobalResponse
-@Tag(name = "manage-user-statistics", description = "Quản trị viên - Thống kê người dùng")
-public class ManageUserStatisticsController {
+@Tag(name = "manage-system-overview", description = "Quản trị viên - Dashboard Tổng quan hệ thống")
+public class SystemOverviewController {
 
-    private final ManageUserStatisticsService manageUserStatisticsService;
+    private final SystemOverviewService systemOverviewService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @IsAdminOrModerator
-    @Operation(summary = "Lấy dữ liệu Dashboard thống kê người dùng (KPIs & Biểu đồ)")
-    public ApiResponse<ManageUserStatisticsResponse> getUserDashboardStats(
+    @Operation(summary = "Lấy dữ liệu toàn cảnh hệ thống (Doanh thu, Vận hành, Xu hướng)")
+    public ApiResponse<SystemOverviewResponse> getSystemOverviewStats(
             @RequestParam(defaultValue = "30") Integer days) {
 
         return ApiResponse.success(
-                manageUserStatisticsService.getDashboardStatistics(days),
-                "Lấy dữ liệu thống kê người dùng thành công");
+                systemOverviewService.getSystemOverview(days),
+                "Lấy dữ liệu tổng quan hệ thống thành công");
     }
 }

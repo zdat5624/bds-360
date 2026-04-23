@@ -16,7 +16,11 @@ import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.dto.response.MapPostResponse;
 import vn.bds360.backend.modules.post.entity.Post;
+import vn.bds360.backend.modules.statistic.dto.response.ManagePostStatisticsResponse.ListingTypeStats;
+import vn.bds360.backend.modules.statistic.dto.response.ManagePostStatisticsResponse.PostGrowthTrend;
+import vn.bds360.backend.modules.statistic.dto.response.ManagePostStatisticsResponse.ProvinceStats;
 import vn.bds360.backend.modules.statistic.dto.response.ManageUserStatisticsResponse;
+import vn.bds360.backend.modules.statistic.dto.response.SystemOverviewResponse;
 import vn.bds360.backend.modules.user.entity.User;
 
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
@@ -165,5 +169,42 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
         List<ManageUserStatisticsResponse.TopAgent> getTopAgentsByActivePosts(
                         @Param("statuses") List<PostStatus> statuses,
                         Pageable pageable); // Dùng Pageable để limit 10
+
+        // Đếm tổng số tin theo danh sách trạng thái
+        long countByStatusIn(List<PostStatus> statuses);
+
+        // Đếm số tin theo trạng thái và cấp độ VIP lớn hơn một mức nhất định
+        long countByStatusInAndVip_VipLevelGreaterThan(List<PostStatus> statuses, int vipLevel);
+
+        // Đếm số tin mới tạo trong một khoảng thời gian
+        long countByCreatedAtBetween(Instant start, Instant end);
+
+        // Biểu đồ: Xu hướng nguồn cung theo ngày
+        @Query(value = "SELECT DATE(created_at) as date, COUNT(id) as count " +
+                        "FROM posts " +
+                        "WHERE created_at BETWEEN :start AND :end " +
+                        "GROUP BY DATE(created_at) ORDER BY date ASC", nativeQuery = true)
+        List<PostGrowthTrend> getSupplyTrend(@Param("start") Instant start, @Param("end") Instant end);
+
+        // Biểu đồ: Cơ cấu nhu cầu (Nhóm theo ListingType của Category) đối với tin đang
+        // hiển thị
+        @Query("SELECT p.category.type as type, COUNT(p) as count FROM Post p WHERE p.status IN :statuses GROUP BY p.category.type")
+        List<ListingTypeStats> getDemandStructure(@Param("statuses") List<PostStatus> statuses);
+
+        // Biểu đồ: Top tỉnh thành có lượng tin hiển thị lớn nhất
+        @Query("SELECT p.province.name as name, COUNT(p) as count FROM Post p WHERE p.status IN :statuses GROUP BY p.province.name ORDER BY count DESC")
+        List<ProvinceStats> getTopActiveProvinces(@Param("statuses") List<PostStatus> statuses, Pageable pageable);
+
+        // Bảng 1: Top tin đăng có lượt xem cao nhất trong kỳ
+        List<Post> findTop5ByCreatedAtBetweenOrderByViewDesc(Instant start, Instant end);
+
+        // Bảng 2: Top tin VIP mới nhất
+        List<Post> findTop5ByVip_VipLevelGreaterThanOrderByCreatedAtDesc(int vipLevel);
+
+        // Lấy cơ cấu tin đăng đang hiển thị theo cấp độ VIP
+        @Query("SELECT p.vip.vipLevel as vipLevel, COUNT(p.id) as count " +
+                        "FROM Post p WHERE p.status IN :statuses GROUP BY p.vip.vipLevel ORDER BY p.vip.vipLevel ASC")
+        List<SystemOverviewResponse.VipDistribution> getActivePostsVipDistribution(
+                        @Param("statuses") List<PostStatus> statuses);
 
 }

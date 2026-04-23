@@ -28,9 +28,11 @@ public class ManageUserStatisticsResponse {
     public static class KpiSummary {
         private long totalUsers;
         private long newUsers;
-        private double newUserGrowthPercent; // % tăng/giảm so với kỳ trước
-        private double verificationRate; // Tỷ lệ % xác thực
-        private long activeUsers; // Từng có tin đăng APPROVED/REVIEW_LATER
+        @Builder.Default // Thêm cái này để Lombok gán giá trị mặc định là 0.0 thay vì lỗi
+        private double newUserGrowthPercent = 0.0;
+        @Builder.Default
+        private double verificationRate = 0.0;
+        private long activeUsers;
     }
 
     public interface UserGrowthTrend {

@@ -158,7 +158,7 @@ export default function ManageUserStatisticsPage() {
                         isLoading={isLoading}
                         footer={
                             <Flex align="center" style={{ height: 32, width: '100%' }}>
-                                <Progress percent={kpis?.verificationRate} size="small" showInfo={false} strokeColor="#52c41a" trailColor="#f0f0f0" strokeWidth={6} />
+                                <Progress percent={kpis?.verificationRate} size="small" showInfo={false} strokeColor="#52c41a" railColor="#f0f0f0" strokeWidth={6} />
                             </Flex>
                         }
                     />

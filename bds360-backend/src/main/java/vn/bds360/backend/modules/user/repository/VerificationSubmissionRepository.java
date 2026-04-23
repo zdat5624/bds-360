@@ -12,15 +12,17 @@ import vn.bds360.backend.modules.user.constant.VerificationStatus;
 import vn.bds360.backend.modules.user.entity.VerificationSubmission; // 🌟 Đổi import
 
 public interface VerificationSubmissionRepository extends // 🌟 Đổi tên interface
-        JpaRepository<VerificationSubmission, Long>, // 🌟 Đổi Entity type
-        JpaSpecificationExecutor<VerificationSubmission> {
+                JpaRepository<VerificationSubmission, Long>, // 🌟 Đổi Entity type
+                JpaSpecificationExecutor<VerificationSubmission> {
 
-    boolean existsByUserIdAndStatus(Long userId, VerificationStatus status);
+        boolean existsByUserIdAndStatus(Long userId, VerificationStatus status);
 
-    Optional<VerificationSubmission> findTopByUserIdOrderByCreatedAtDesc(Long userId);
+        Optional<VerificationSubmission> findTopByUserIdOrderByCreatedAtDesc(Long userId);
 
-    Page<VerificationSubmission> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+        Page<VerificationSubmission> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
-    Optional<VerificationSubmission> findTopByUserIdAndStatusOrderByCreatedAtDesc(Long userId,
-            VerificationStatus status);
+        Optional<VerificationSubmission> findTopByUserIdAndStatusOrderByCreatedAtDesc(Long userId,
+                        VerificationStatus status);
+
+        long countByStatus(VerificationStatus status);
 }
