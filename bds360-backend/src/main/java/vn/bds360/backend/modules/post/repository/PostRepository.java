@@ -16,6 +16,7 @@ import vn.bds360.backend.common.constant.ListingType;
 import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.dto.response.MapPostResponse;
 import vn.bds360.backend.modules.post.entity.Post;
+import vn.bds360.backend.modules.statistic.dto.response.ManageUserStatisticsResponse;
 import vn.bds360.backend.modules.user.entity.User;
 
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
@@ -149,5 +150,20 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
 
         // Lấy top tin đăng hiệu quả nhất
         List<Post> findByUserOrderByViewDesc(User user, Pageable pageable);
+
+        // 1. Số lượng "Người dùng đang hoạt động" (Có tin đăng APPROVED hoặc
+        // REVIEW_LATER)
+        @Query("SELECT COUNT(DISTINCT p.user.id) FROM Post p WHERE p.status IN (:statuses)")
+        long countActiveUsersByPostStatuses(@Param("statuses") List<PostStatus> statuses);
+
+        // 2. Top 10 Đại lý (User có nhiều bài đăng APPROVED/REVIEW_LATER nhất)
+        @Query("SELECT u.id as userId, u.name as name, u.email as email, COUNT(p.id) as activePostCount " +
+                        "FROM User u JOIN u.posts p " +
+                        "WHERE p.status IN (:statuses) " +
+                        "GROUP BY u.id, u.name, u.email " +
+                        "ORDER BY activePostCount DESC")
+        List<ManageUserStatisticsResponse.TopAgent> getTopAgentsByActivePosts(
+                        @Param("statuses") List<PostStatus> statuses,
+                        Pageable pageable); // Dùng Pageable để limit 10
 
 }

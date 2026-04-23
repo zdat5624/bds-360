@@ -57,7 +57,16 @@ public class VerificationSubmission {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = Instant.now();
-        this.status = VerificationStatus.PENDING; // Mặc định tạo ra là chờ duyệt
+        // Chỉ gán ngày hiện tại nếu chưa được set (Hỗ trợ tốt cho việc Seed dữ liệu quá
+        // khứ)
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
+
+        // Chỉ gán trạng thái PENDING nếu chưa được set (Hỗ trợ Seeder tạo dữ liệu
+        // APPROVED/REJECTED)
+        if (this.status == null) {
+            this.status = VerificationStatus.PENDING;
+        }
     }
 }

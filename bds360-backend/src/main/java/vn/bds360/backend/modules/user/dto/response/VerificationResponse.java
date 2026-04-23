@@ -19,4 +19,6 @@ public class VerificationResponse {
     private Instant createdAt;
     private Instant reviewedAt;
     private String reviewedBy;
+    private String userAvatar;
+
 }

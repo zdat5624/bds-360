@@ -110,11 +110,9 @@ export default function ManageLayout({ children }: { children: ReactNode }) {
                 <ManageHeader />
 
                 <Content className="p-4 md:p-6 flex-1 flex flex-col">
-                    {/* Bỏ class bg-white, border-slate-200/60 */}
                     <div
-                        className="w-full flex-1 flex flex-col rounded-lg shadow-sm border p-6"
+                        className="w-full flex-1 flex flex-col !p-0"
                         style={{
-                            background: colorBgContainer,
                             borderColor: colorBorderSecondary
                         }}
                     >

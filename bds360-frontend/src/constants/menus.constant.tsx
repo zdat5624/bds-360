@@ -1,12 +1,15 @@
-// @/constants/menus.constant.tsx
 import {
     AppstoreOutlined,
+    BarChartOutlined,
     BellOutlined,
     CreditCardOutlined,
     CrownOutlined,
     DashboardOutlined,
     FileTextOutlined,
     KeyOutlined,
+    // 🌟 Thêm các icon mới phục vụ cho mục Thống kê
+    LineChartOutlined,
+    PieChartOutlined,
     PlusCircleOutlined,
     TeamOutlined,
     TransactionOutlined,
@@ -46,13 +49,11 @@ export const USER_MENU_ITEMS: MenuProps['items'] = [
         icon: <CreditCardOutlined />,
         label: <Link href={APP_ROUTES.USER.PAYMENTS}>Lịch sử giao dịch</Link>,
     },
-
     {
         key: APP_ROUTES.USER.VIPS,
         icon: <CrownOutlined />,
         label: <Link href={APP_ROUTES.USER.VIPS}>Gói VIP</Link>,
     },
-
     {
         key: APP_ROUTES.USER.PROFILE,
         icon: <UserOutlined />,
@@ -63,9 +64,6 @@ export const USER_MENU_ITEMS: MenuProps['items'] = [
         icon: <KeyOutlined />,
         label: <Link href={APP_ROUTES.USER.CHANGE_PASSWORD}>Đổi mật khẩu</Link>,
     },
-
-
-
 ];
 
 // ==========================================
@@ -77,6 +75,31 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
         icon: <DashboardOutlined />,
         label: <Link href={APP_ROUTES.MANAGE.DASHBOARD}>Tổng quan</Link>,
     },
+
+    // 🌟 THÊM MỚI: Nhóm Thống kê & Báo cáo (SubMenu)
+    {
+        key: 'statistics-group', // Key định danh cho submenu
+        icon: <LineChartOutlined />,
+        label: 'Thống kê & Báo cáo',
+        children: [
+            {
+                key: APP_ROUTES.MANAGE.STATISTICS.USERS,
+                icon: <PieChartOutlined />,
+                label: <Link href={APP_ROUTES.MANAGE.STATISTICS.USERS}>Người dùng</Link>,
+            },
+            {
+                key: APP_ROUTES.MANAGE.STATISTICS.POSTS,
+                icon: <BarChartOutlined />,
+                label: <Link href={APP_ROUTES.MANAGE.STATISTICS.POSTS}>Tin đăng</Link>,
+            },
+            {
+                key: APP_ROUTES.MANAGE.STATISTICS.TRANSACTIONS,
+                icon: <TransactionOutlined />,
+                label: <Link href={APP_ROUTES.MANAGE.STATISTICS.TRANSACTIONS}>Dòng tiền</Link>,
+            },
+        ],
+    },
+
     {
         key: APP_ROUTES.MANAGE.USERS,
         icon: <TeamOutlined />,
@@ -94,7 +117,7 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
     },
     {
         key: APP_ROUTES.MANAGE.PAYMENTS,
-        icon: <TransactionOutlined />,
+        icon: <TransactionOutlined />, // Có thể đổi sang CreditCardOutlined nếu bị trùng icon với Dòng tiền
         label: <Link href={APP_ROUTES.MANAGE.PAYMENTS}>Quản lý giao dịch</Link>,
     },
     {

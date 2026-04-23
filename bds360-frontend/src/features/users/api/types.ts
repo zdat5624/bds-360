@@ -57,6 +57,7 @@ export interface UserFilterParams extends BaseFilterParams {
 export interface VerificationSubmission {
     id: number;
     userId: number;
+    userAvatar: string;
     userName: string;
     userEmail: string;
     idCardFront: string;

@@ -46,6 +46,12 @@ export const APP_ROUTES = {
         CATEGORIES: '/manage/categories',
         PAYMENTS: '/manage/payments',
         POSTS: '/manage/posts',
+
+        STATISTICS: {
+            USERS: '/manage/statistics/users',
+            TRANSACTIONS: '/manage/statistics/transactions',
+            POSTS: '/manage/statistics/posts',
+        },
     },
 
     // 5. ERROR ROUTES

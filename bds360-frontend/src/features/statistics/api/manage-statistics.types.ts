@@ -1,3 +1,6 @@
+// @/features/statistics/api/manage-statistics.types.ts
+
+
 export interface AdminStatisticsResponse {
     totalRevenueYear: number;
     totalRevenueMonth: number;
