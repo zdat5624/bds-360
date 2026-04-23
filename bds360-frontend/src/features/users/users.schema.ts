@@ -34,6 +34,10 @@ export const createUserSchema = z.object({
     }),
 
     address: z.string().trim().optional(),
+
+    avatar: z.string({ message: 'Vui lòng chọn ảnh đại diện' })
+        .trim()
+        .min(1, { message: 'Vui lòng chọn ảnh đại diện' }),
 });
 
 export type CreateUserFormValues = z.infer<typeof createUserSchema>;

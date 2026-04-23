@@ -17,3 +17,16 @@ export const USER_ROLE_OPTIONS = USER_ROLE_VALUES.map((value) => ({
     value,
     label: USER_ROLE_LABEL[value],
 }));
+
+export const USER_ROLE_OPTIONS_NO_ADMIN = USER_ROLE_VALUES
+    .filter(role => role !== 'ADMIN')
+    .map((value) => ({
+        value,
+        label: USER_ROLE_LABEL[value],
+    }));
+
+export const USER_ROLE_COLOR: Record<Role, string> = {
+    ADMIN: '#f5222d',
+    MODERATOR: '#722ed1',
+    USER: '#1677ff',
+};

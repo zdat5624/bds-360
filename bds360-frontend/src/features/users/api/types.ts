@@ -15,6 +15,7 @@ export interface CreateUserPayload {
     role: Role;
     gender: Gender;
     address?: string;
+    avatar: string;
 }
 
 export interface UpdateUserPayload {

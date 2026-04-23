@@ -94,11 +94,11 @@ export default function ManageVipsPage() {
             </Flex>
 
             <div
-                className="w-full flex flex-col rounded-lg shadow-sm overflow-hidden p-4"
+                className="w-full flex flex-col rounded-lg shadow-sm overflow-hidden"
                 style={{ backgroundColor: colorBgContainer, border: `1px solid ${colorBorderSecondary}` }}
             >
                 <div
-                    className="flex justify-between items-center border-b"
+                    className="flex justify-between items-center border-b p-4"
                     style={{ borderColor: colorBorderSecondary }}
                 >
                     <Text strong type="secondary" className="uppercase text-[11px] tracking-wider">
@@ -106,7 +106,7 @@ export default function ManageVipsPage() {
                     </Text>
                 </div>
 
-                <div className="!w-full ">
+                <div className="!w-full  pt-2 px-4 pb-4">
                     <DataTable<Vip>
                         columns={columns}
                         data={vips || []}

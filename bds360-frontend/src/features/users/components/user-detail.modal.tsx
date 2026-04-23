@@ -1,7 +1,7 @@
 'use client';
 
 import { AppModal } from '@/components/base/app.modal';
-import { USER_ROLE_LABEL } from '@/constants';
+import { USER_ROLE_COLOR, USER_ROLE_LABEL } from '@/constants';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatCurrency, formatDateTime } from '@/utils';
 import { UserOutlined } from '@ant-design/icons';
@@ -16,12 +16,7 @@ interface UserDetailModalProps {
     userId: number | null;
 }
 
-// Map màu sắc cho Role để UI sinh động hơn
-const ROLE_COLOR: Record<string, string> = {
-    ADMIN: 'red',
-    USER: 'blue',
-    STAFF: 'green',
-};
+
 
 // Map nhãn giới tính (nếu constants chưa có bạn có thể dùng trực tiếp ở đây)
 const GENDER_MAP: Record<string, string> = {
@@ -77,8 +72,10 @@ export function UserDetailModal({ isOpen, onClose, userId }: UserDetailModalProp
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Vai trò hệ thống">
-                            <Tag color={ROLE_COLOR[user.role] || 'default'} variant="filled" className="border-none font-medium">
-                                {USER_ROLE_LABEL[user.role] || user.role}
+
+
+                            <Tag color={USER_ROLE_COLOR[user.role]}>
+                                {USER_ROLE_LABEL[user.role]}
                             </Tag>
                         </Descriptions.Item>
 

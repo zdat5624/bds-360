@@ -1,3 +1,5 @@
+// vn.bds360.backend.modules.user.dto.request.CreateUserRequest.java
+
 package vn.bds360.backend.modules.user.dto.request;
 
 import jakarta.persistence.EnumType;
@@ -10,7 +12,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.Role;
-import vn.bds360.backend.modules.user.constant.Gender;;
+import vn.bds360.backend.modules.user.constant.Gender;
 
 @Getter
 @Setter
@@ -41,5 +43,8 @@ public class CreateUserRequest {
     private Gender gender;
 
     private String address;
+
+    // BỔ SUNG FIELD AVATAR
+    private String avatar;
 
 }

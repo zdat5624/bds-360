@@ -6,6 +6,7 @@ import {
     CrownOutlined,
     DashboardOutlined,
     FileTextOutlined,
+    IdcardOutlined,
     KeyOutlined,
     // 🌟 Thêm các icon mới phục vụ cho mục Thống kê
     LineChartOutlined,
@@ -104,6 +105,12 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
         key: APP_ROUTES.MANAGE.USERS,
         icon: <TeamOutlined />,
         label: <Link href={APP_ROUTES.MANAGE.USERS}>Quản lý người dùng</Link>,
+    },
+
+    {
+        key: APP_ROUTES.MANAGE.VERIFICATIONS,
+        icon: <IdcardOutlined />,
+        label: <Link href={APP_ROUTES.MANAGE.VERIFICATIONS}>Duyệt xác thực</Link>,
     },
     {
         key: APP_ROUTES.MANAGE.TRANSACTIONS,

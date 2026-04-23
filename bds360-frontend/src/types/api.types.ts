@@ -14,6 +14,12 @@ export interface ApiResponse<T = any> {
     validationErrors?: FieldErrorDetail[];
 }
 
+export type ApiError = {
+    code: number;
+    message: string;
+    validationErrors?: FieldErrorDetail[];
+};
+
 // Tương ứng với class PageResponse<T>
 export interface PageResponse<T> {
     currentPage: number;

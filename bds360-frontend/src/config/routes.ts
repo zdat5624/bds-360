@@ -42,6 +42,7 @@ export const APP_ROUTES = {
     MANAGE: {
         DASHBOARD: '/manage',
         USERS: '/manage/users',
+        VERIFICATIONS: '/manage/verifications',
         VIPS: '/manage/vips',
         CATEGORIES: '/manage/categories',
         POSTS: '/manage/posts',

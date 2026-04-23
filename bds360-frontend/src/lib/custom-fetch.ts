@@ -1,7 +1,7 @@
 // @/lib/custom-fetch.ts
 
 import { envConfig } from '@/config';
-import { ApiResponse } from '@/types';
+import { ApiError, ApiResponse } from '@/types';
 import { authStorage } from '@/utils'; // 👈 Import authStorage từ file index của utils
 import { message } from 'antd';
 import axios, { AxiosError, AxiosResponse } from 'axios';
@@ -57,10 +57,10 @@ customFetch.interceptors.response.use(
 
         // [B] Luồng Lỗi Business (code !== 10000)
         if (typeof window !== 'undefined') {
-            message.error(msg || 'Có lỗi nghiệp vụ xảy ra từ hệ thống!');
+            message.error(msg || '***1>>> custom-fetch.ts: Có lỗi nghiệp vụ xảy ra từ hệ thống!');
 
         }
-        return Promise.reject(response.data);
+        return Promise.reject(response.data as ApiError);
     },
     (error: AxiosError<ApiResponse>) => {
         // [C] Luồng Lỗi Hệ Thống (HTTP 400, 401, 403, 500)
@@ -96,7 +96,7 @@ customFetch.interceptors.response.use(
         if (typeof window !== 'undefined') {
             // Tránh báo lỗi 2 lần nếu là lỗi Auth đã xử lý ở trên
             if (error.response?.status !== 401) {
-                message.error(errorMessage);
+                message.error(`***2>>> custom-fetch.ts: ${errorMessage}`);
             }
         }
 

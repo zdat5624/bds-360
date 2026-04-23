@@ -101,14 +101,6 @@ export default function ManageTransactionsPage() {
             render: (id) => <Text className="font-mono">#{id}</Text>
         },
         {
-            title: 'Mã GD (VNPAY)',
-            dataIndex: 'txnId',
-            key: 'txnId',
-            width: 160,
-            sorter: true,
-            render: (txnId: string) => <Text copyable className="font-mono text-[12px]">{txnId || '--'}</Text>,
-        },
-        {
             title: 'Khách hàng',
             dataIndex: 'user',
             key: 'user',
@@ -120,10 +112,21 @@ export default function ManageTransactionsPage() {
             ),
         },
         {
+            title: 'Mã GD (VNPAY)',
+            dataIndex: 'txnId',
+            key: 'txnId',
+            width: 160,
+            sorter: true,
+            render: (txnId: string) => <Text copyable className="font-mono text-[12px]">{txnId || '--'}</Text>,
+        },
+
+        {
             title: 'Loại',
             dataIndex: 'type',
             key: 'type',
             width: 120,
+            align: "center",
+
             render: (type: TransactionType) => TRANSACTION_TYPE_LABEL[type],
         },
         {
@@ -146,6 +149,8 @@ export default function ManageTransactionsPage() {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
+            align: "center",
+
             width: 130,
             render: (status: TransactionStatus) => (
                 <Tag color={TRANSACTION_STATUS_COLOR[status]} variant="filled" className="border-none">
@@ -157,6 +162,7 @@ export default function ManageTransactionsPage() {
             title: 'Ngày tạo',
             dataIndex: 'createdAt',
             key: 'createdAt',
+            align: "right",
             width: 170,
             sorter: true,
             render: (date: string) => <Text type="secondary" className="text-[13px]">{formatDateTime(date)}</Text>,
@@ -228,11 +234,7 @@ export default function ManageTransactionsPage() {
                         )}
                     </div>
 
-                    <div className="hidden md:block">
-                        <Text type="secondary" className="text-[11px] uppercase tracking-widest">
-                            Tổng giao dịch: <span className="font-bold">{data?.totalElements || 0}</span>
-                        </Text>
-                    </div>
+
                 </div>
 
                 <div className="w-full pt-2 px-4 pb-4">
