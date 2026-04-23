@@ -1,3 +1,5 @@
+// @/app/(back-office)/manage/statistics/users/page.tsx
+
 'use client';
 
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -9,6 +11,7 @@ import {
     CheckCircleOutlined,
     ExclamationCircleOutlined,
     FireOutlined,
+    PieChartOutlined,
     SafetyCertificateOutlined,
     TeamOutlined,
     UserAddOutlined
@@ -91,7 +94,7 @@ export default function ManageUserStatisticsPage() {
             <Flex justify="space-between" align="end" wrap="wrap" gap={12}>
                 <Flex vertical>
                     <Title level={3} >
-                        Thống kê người dùng
+                        <PieChartOutlined style={{ marginRight: 8 }} />Thống kê người dùng
                     </Title>
                     <Text type="secondary" >
                         Báo cáo tăng trưởng và chỉ số người dùng trong hệ thống .

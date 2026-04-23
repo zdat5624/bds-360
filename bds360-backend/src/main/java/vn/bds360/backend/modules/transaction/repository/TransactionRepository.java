@@ -64,10 +64,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
 
         long countByTypeAndCreatedAtBetween(TransactionType type, Instant start, Instant end);
 
-        // Biểu đồ Tương quan Nạp - Tiêu
+        // Biểu đồ Tương quan Nạp - Tiêu (Dùng ABS cho cashOut)
         @Query(value = "SELECT DATE(created_at) as date, " +
                         "SUM(CASE WHEN type = 'DEPOSIT' AND status = 'SUCCESS' THEN amount ELSE 0 END) as cashIn, " +
-                        "SUM(CASE WHEN type = 'PAYMENT' AND status = 'SUCCESS' THEN amount ELSE 0 END) as cashOut " +
+                        "SUM(CASE WHEN type = 'PAYMENT' AND status = 'SUCCESS' THEN ABS(amount) ELSE 0 END) as cashOut "
+                        +
                         "FROM transactions " +
                         "WHERE created_at BETWEEN :startDate AND :endDate " +
                         "GROUP BY DATE(created_at) ORDER BY date ASC", nativeQuery = true)
@@ -81,8 +82,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
                         @Param("start") Instant start,
                         @Param("end") Instant end);
 
-        // Top 10 Khách hàng chi tiêu
-        @Query("SELECT u.id as userId, u.name as name, u.email as email, u.avatar as avatar, SUM(t.amount) as totalSpent "
+        @Query("SELECT u.id as userId, u.name as name, u.email as email, u.avatar as avatar, SUM(ABS(t.amount)) as totalSpent "
                         +
                         "FROM Transaction t JOIN t.user u " +
                         "WHERE t.type = 'PAYMENT' AND t.status = 'SUCCESS' AND t.createdAt BETWEEN :start AND :end " +
@@ -97,7 +97,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
         List<Transaction> findTop5ByTypeOrderByCreatedAtDesc(TransactionType type);
 
         // Danh sách chi tiêu cao nhất trong kỳ
-        List<Transaction> findTop5ByTypeAndStatusAndCreatedAtBetweenOrderByAmountDesc(
+        List<Transaction> findTop5ByTypeAndStatusAndCreatedAtBetweenOrderByAmountAsc(
                         TransactionType type,
                         TransactionStatus status,
                         Instant start,

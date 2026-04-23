@@ -21,7 +21,10 @@ bds360-frontend
 │  │  ├─ (back-office)
 │  │  │  └─ manage
 │  │  │     ├─ layout.tsx
-│  │  │     └─ page.tsx
+│  │  │     ├─ page.tsx
+│  │  │     └─ statistics
+│  │  │        └─ users
+│  │  │           └─ page.tsx
 │  │  ├─ (main)
 │  │  │  ├─ (account)
 │  │  │  │  └─ user
@@ -225,8 +228,12 @@ bds360-frontend
 │  │  │  └─ posts.util.ts
 │  │  ├─ statistics
 │  │  │  ├─ api
-│  │  │  │  ├─ statistics.queries.ts
-│  │  │  │  └─ types.ts
+│  │  │  │  ├─ manage-statistics.queries.ts
+│  │  │  │  ├─ manage-statistics.types.ts
+│  │  │  │  ├─ manage-user-statistics.queries.ts
+│  │  │  │  ├─ manage-user-statistics.types.ts
+│  │  │  │  ├─ user-statistics.queries.ts
+│  │  │  │  └─ user-statistics.types.ts
 │  │  │  ├─ components
 │  │  │  ├─ index.ts
 │  │  │  └─ statistics.schema.ts
