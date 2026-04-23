@@ -2,7 +2,7 @@
 
 import customFetch from '@/lib/custom-fetch';
 import { PageResponse } from '@/types';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { Category, CategoryFilterParams } from './types';
 
 export const CATEGORIES_QUERY_KEYS = {
@@ -27,11 +27,16 @@ const getCategoryById = async (id: number): Promise<Category> => {
     return customFetch.get(`/categories/${id}`);
 };
 
-export const useGetCategories = (filters: CategoryFilterParams, isAdmin: boolean = false) => {
+export const useGetCategories = (filters: CategoryFilterParams, isAdmin: boolean = false,
+    options?: Partial<UseQueryOptions<PageResponse<Category>>>
+
+) => {
     return useQuery({
         // Đính kèm cờ isAdmin vào queryKey để cache không bị nhầm lẫn giữa 2 luồng
         queryKey: [...CATEGORIES_QUERY_KEYS.list(filters), { isAdmin }],
         queryFn: () => isAdmin ? getAdminCategories(filters) : getCategories(filters),
+        placeholderData: keepPreviousData,
+        ...options,
     });
 };
 

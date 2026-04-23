@@ -6,8 +6,8 @@ import { z } from 'zod';
 export const createCategorySchema = z.object({
     name: z.string({ message: 'Tên danh mục không được để trống' })
         .trim()
-        .min(5, { message: 'Tên danh mục phải từ 5 đến 100 ký tự' })
-        .max(100, { message: 'Tên danh mục phải từ 5 đến 100 ký tự' }),
+        .min(5, { message: 'Tên danh mục phải từ 5 đến 50 ký tự' })
+        .max(50, { message: 'Tên danh mục phải từ 5 đến 50 ký tự' }),
 
     type: z.enum(LISTING_TYPE_VALUES, {
         message: 'Loại danh mục không được để trống hoặc không hợp lệ'
@@ -21,8 +21,8 @@ export const updateCategorySchema = z.object({
 
     name: z.string({ message: 'Tên danh mục không được để trống' })
         .trim()
-        .min(5, { message: 'Tên danh mục phải từ 5 đến 100 ký tự' })
-        .max(100, { message: 'Tên danh mục phải từ 5 đến 100 ký tự' }),
+        .min(5, { message: 'Tên danh mục phải từ 5 đến 50 ký tự' })
+        .max(50, { message: 'Tên danh mục phải từ 5 đến 50 ký tự' }),
 
     type: z.enum(LISTING_TYPE_VALUES, {
         message: 'Loại danh mục không được để trống hoặc không hợp lệ'

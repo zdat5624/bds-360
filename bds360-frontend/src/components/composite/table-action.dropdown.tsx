@@ -47,8 +47,9 @@ export function TableActionDropdown({ actions }: TableActionDropdownProps) {
             <Button
                 type="text"
                 shape="default"
+                className='!p-1'
                 // Dùng EllipsisOutlined và xoay 90 độ để có 3 dấu chấm dọc chuẩn
-                icon={<EllipsisOutlined rotate={90} style={{ color: colorTextSecondary, fontSize: 18 }} />}
+                icon={<EllipsisOutlined rotate={90} style={{ color: colorTextSecondary, fontSize: 11 }} />}
                 onClick={(e) => e.stopPropagation()} // Ngăn click xuyên xuống hàng khi mới bấm mở menu
             />
         </Dropdown>

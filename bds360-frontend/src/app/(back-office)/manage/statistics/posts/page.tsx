@@ -75,10 +75,10 @@ export default function ManagePostStatisticsPage() {
 
                 <Flex vertical>
                     <Flex vertical>
-                        <Title level={3} >
+                        <Title level={3} style={{ margin: 0 }} >
                             <ContainerOutlined style={{ marginRight: 8 }} />Thống kê tin đăng
                         </Title>
-                        <Text type="secondary">
+                        <Text type="secondary" style={{ marginTop: 4 }}>
                             Thống kê tin đắng, tình trạng kiểm duyệt và phân bổ khu vực.
                         </Text>
                     </Flex>

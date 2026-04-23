@@ -93,10 +93,10 @@ export default function ManageUserStatisticsPage() {
         <Flex vertical gap={20} style={{ background: colorBgLayout, minHeight: '100%' }}>
             <Flex justify="space-between" align="end" wrap="wrap" gap={12}>
                 <Flex vertical>
-                    <Title level={3} >
+                    <Title level={3} style={{ margin: 0 }} >
                         <PieChartOutlined style={{ marginRight: 8 }} />Thống kê người dùng
                     </Title>
-                    <Text type="secondary" >
+                    <Text type="secondary" style={{ marginTop: 4 }} >
                         Báo cáo tăng trưởng và chỉ số người dùng trong hệ thống .
                     </Text>
                 </Flex>

@@ -97,10 +97,10 @@ export default function ManageTransactionStatisticsPage() {
             <Flex justify="space-between" align="end" wrap="wrap" gap={12}>
                 <Flex vertical>
                     <Flex vertical>
-                        <Title level={3} >
+                        <Title level={3} style={{ margin: 0 }}>
                             <TransactionOutlined style={{ marginRight: 8 }} />  Thống kê dòng tiền
                         </Title>
-                        <Text type="secondary" >
+                        <Text type="secondary" style={{ marginTop: 4 }} >
                             Báo cáo chi tiết về tình hình nạp, tiêu dùng và số dư hệ thống.
 
                         </Text>

@@ -110,10 +110,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
         Long sumRevenueBetween(@Param("start") Instant start, @Param("end") Instant end);
 
         // Lấy doanh thu theo từng ngày
-        @Query(value = "SELECT DATE(created_at) as date, SUM(ABS(amount)) as value " +
+        @Query(value = "SELECT CAST(DATE(created_at) AS CHAR) as date, SUM(ABS(amount)) as value " +
                         "FROM transactions " +
                         "WHERE type = 'PAYMENT' AND status = 'SUCCESS' AND created_at BETWEEN :start AND :end " +
-                        "GROUP BY DATE(created_at) ORDER BY date ASC", nativeQuery = true)
+                        "GROUP BY CAST(DATE(created_at) AS CHAR) " +
+                        "ORDER BY CAST(DATE(created_at) AS CHAR) ASC", nativeQuery = true)
         List<DailyStatProjection> getDailyRevenue(@Param("start") Instant start, @Param("end") Instant end);
 
         // Đếm giao dịch nạp tiền đang chờ hoặc lỗi
