@@ -1,7 +1,9 @@
 // @/app/(main)/(account)/user/profile/page.tsx
 'use client';
 import { UpdateProfileForm } from '@/features/users';
+import { VerificationSection } from '@/features/users/components/verification-section'; // 🌟 Import mới
 import {
+  IdcardOutlined,
   UserOutlined
 } from '@ant-design/icons';
 import { Divider, Typography } from 'antd';
@@ -10,10 +12,11 @@ const { Title, Text } = Typography;
 
 export default function ProfilePage() {
   return (
-    // Khống chế độ rộng tối đa (max-w-4xl) để form không bị bè ra quá đà trên màn hình to
     <>
-      {/* --- HEADER TRANG --- */}
-      <div >
+      {/* ==========================================
+          KHU VỰC 1: THÔNG TIN CÁ NHÂN
+      ========================================== */}
+      <div>
         <Title level={3} className="!m-0 flex items-center gap-2">
           <UserOutlined />
           Thông tin cá nhân
@@ -25,9 +28,27 @@ export default function ProfilePage() {
 
       <Divider className="!my-4" />
 
-      {/* --- KHU VỰC FORM (Trực tiếp, không viền, không hộp bao quanh) --- */}
-      <div className="max-w-4xl">
+      <div className="max-w-4xl mb-12">
         <UpdateProfileForm />
+      </div>
+
+      {/* ==========================================
+          KHU VỰC 2: XÁC THỰC TÀI KHOẢN
+      ========================================== */}
+      <div>
+        <Title level={3} className="!m-0 flex items-center gap-2">
+          <IdcardOutlined />
+          Xác thực tài khoản
+        </Title>
+        <Text type="secondary">
+          Cung cấp CMND/CCCD để tăng độ uy tín cho tài khoản của bạn trên hệ thống.
+        </Text>
+      </div>
+
+      <Divider className="!my-4" />
+
+      <div className="max-w-4xl">
+        <VerificationSection />
       </div>
     </>
   );

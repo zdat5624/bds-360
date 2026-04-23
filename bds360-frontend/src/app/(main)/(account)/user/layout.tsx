@@ -22,7 +22,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
 
 
     const sidebarContent = (
-        <div className="h-full pt-6 px-4">
+        <div className="h-full py-6 px-4">
             <UserSidebar />
         </div>
     );

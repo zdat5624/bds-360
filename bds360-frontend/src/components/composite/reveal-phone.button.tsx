@@ -21,7 +21,7 @@ export function RevealPhoneButton({ phone, postId, recipientId, className }: Rev
     const [showPhone, setShowPhone] = useState(false);
     const [copied, setCopied] = useState(false);
     const router = useRouter(); // 👈 Khởi tạo router
-
+    console.log("recipientId:", recipientId)
     // Khởi tạo mutation để gửi thông báo
     const notifyViewPhoneMutation = useNotifyViewPhone();
 
@@ -30,8 +30,9 @@ export function RevealPhoneButton({ phone, postId, recipientId, className }: Rev
 
     // Tiền xử lý chuỗi số điện thoại
     const safePhone = phone || '';
+
     const maskedPhone = safePhone.length >= 4
-        ? `${safePhone.slice(0, 4)} *** ***`
+        ? `${safePhone.slice(0, 4)} ${safePhone.slice(4, 8)} ***`
         : 'Chưa cập nhật';
 
     const handleCopy = (e: React.MouseEvent) => {
@@ -101,7 +102,7 @@ export function RevealPhoneButton({ phone, postId, recipientId, className }: Rev
             </span>
 
             {!showPhone && (
-                <span className="ml-1 text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-medium">
+                <span className="ml-1 text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-medium  hidden sm:inline-block">
                     Hiện số
                 </span>
             )}

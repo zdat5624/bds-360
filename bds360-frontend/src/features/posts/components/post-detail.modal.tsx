@@ -45,12 +45,14 @@ export function PostDetailModal({ isOpen, postId, onClose }: PostDetailModalProp
     const [activeIndex, setActiveIndex] = useState(0);
     const { data: post, isFetching } = useGetPostById(postId as number, !!postId && isOpen);
 
-    const getVipTag = (vip?: { id: number; name: string; vipLevel: number }) => {
-        if (!vip) return <Text type="secondary">Chưa có</Text>;
-        const pkg = VIP_PACKAGES.find((p) => p.id === vip.id);
+    const getVipTag = (vip?: { id: number; name?: string }) => {
+        if (!vip?.id) return <Text type="secondary">Chưa có</Text>;
+
+        const pkg = VIP_PACKAGES.find((p) => p.id === Number(vip.id));
+
         return (
             <Tag color={pkg?.tagColor || 'default'} variant="filled">
-                {pkg?.name || vip.name}
+                {pkg?.name || vip.name || 'Không xác định'}
             </Tag>
         );
     };

@@ -5,8 +5,9 @@ import { Breadcrumb, Result, Skeleton, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { useIncrementPostView } from '@/features/posts/api/posts.mutations';
 import { useGetPostById } from '@/features/posts/api/posts.queries';
 import { ForYouPosts } from '@/features/posts/components/for-you-posts';
 import { PropertyMap } from '@/features/posts/components/property-map';
@@ -27,6 +28,21 @@ export default function PublicPostDetailPage() {
 
     const { data: post, isLoading, isError } = useGetPostById(postId);
     const [relatedPostIds, setRelatedPostIds] = useState<number[]>([]);
+
+    // Khởi tạo mutation
+    const incrementViewMutation = useIncrementPostView();
+
+    // Chạy ngầm API tăng view khi bài đăng được tải xuống thành công
+    useEffect(() => {
+        if (post?.id) {
+            incrementViewMutation.mutate(post.id, {
+                onError: (error) => {
+                    console.error("Lỗi khi ghi nhận lượt xem:", error);
+                }
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [post?.id]);
 
     if (isLoading) return <DetailSkeleton />;
     if (isError || !post) return <Result status="404" title="404" subTitle="Bài đăng không tồn tại." />;

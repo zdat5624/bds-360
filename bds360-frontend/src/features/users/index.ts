@@ -7,6 +7,8 @@ export * from '@/features/users/api/user.queries';
 
 
 // @/features/users/index.ts
-export { UpdateProfileForm } from './components/update-profile.form';
-export { UserInfo } from './components/user-info';
+export * from './components/update-profile.form';
+export * from './components/user-info';
+export * from './components/verification-section';
+
 

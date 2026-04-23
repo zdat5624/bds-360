@@ -72,6 +72,16 @@ public class VerificationController {
                 "Lấy hồ sơ xác thực mới nhất thành công");
     }
 
+    @GetMapping("/users/verification/latest")
+    @ResponseStatus(HttpStatus.OK)
+    @RequireLogin
+    public ApiResponse<VerificationResponse> getMyLatestVerification(@CurrentUser User user) {
+        // Tái sử dụng hàm của Service, nhưng ép cứng ID là của người đang đăng nhập
+        return ApiResponse.success(
+                verificationService.getLatestVerificationInfo(user.getId()),
+                "Lấy hồ sơ xác thực mới nhất thành công");
+    }
+
     // ==========================================
     // NHÓM API DÀNH CHO NGƯỜI DÙNG (USER)
     // ==========================================

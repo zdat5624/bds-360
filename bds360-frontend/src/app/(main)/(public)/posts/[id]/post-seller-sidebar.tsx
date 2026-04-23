@@ -10,9 +10,8 @@ import { Tooltip } from 'antd';
 import Link from 'next/link';
 import React, { useState } from 'react';
 
-// Mở rộng interface nếu PostAuthor gốc chưa có trường isVerified
 interface PostSellerSidebarProps {
-    user: PostAuthor & { isVerified?: boolean }; // Thêm isVerified từ Backend
+    user: PostAuthor & { isVerified?: boolean };
     className?: string;
     postId?: number
 }
@@ -31,13 +30,11 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
 
     return (
         <div className={cn(
-            // Giảm padding tổng thể xuống p-3 md:p-4
             "bg-white p-3 md:p-4 rounded-2xl flex flex-col items-center shadow-[0_0_10px_rgba(0,0,0,0.1)] border border-gray-100/50",
             "lg:sticky lg:top-[55px]",
             className
         )}>
             {/* --- AVATAR --- */}
-            {/* Giảm kích thước avatar xuống w-14 h-14 và margin bottom */}
             <div className="relative w-14 h-14 mb-2">
                 {user?.avatar ? (
                     <img
@@ -52,7 +49,6 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
                         </span>
                     </div>
                 )}
-                {/* Đã gỡ bỏ dấu chấm online màu xanh lá cây theo yêu cầu */}
             </div>
 
             {/* --- USER INFO & VERIFIED UI --- */}
@@ -60,13 +56,11 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
                 Được đăng bởi
             </span>
 
-            {/* Giảm margin bottom của cụm Tên */}
             <div className="flex items-center gap-1.5 justify-center mb-1.5">
                 <h3 className="text-base font-bold text-gray-900 line-clamp-1 text-center">
                     {user?.name || 'Người dùng ẩn danh'}
                 </h3>
 
-                {/* Tích xanh xác thực có Tooltip */}
                 {isVerified && (
                     <Tooltip title="Đã xác thực">
                         <CheckCircleFilled
@@ -85,10 +79,13 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
             {/* --- ACTIONS --- */}
             <div className="w-full flex flex-col gap-2">
 
-                {/* Nút Gọi điện (Giảm chiều cao xuống h-10) */}
-                <RevealPhoneButton postId={postId} phone={safePhone} />
+                {/* 👇 ĐÃ FIX: Truyền thêm recipientId={user?.id} */}
+                <RevealPhoneButton
+                    postId={postId}
+                    phone={safePhone}
+                    recipientId={user?.id}
+                />
 
-                {/* Nút Nhắn Zalo (Giảm chiều cao xuống h-10) */}
                 <a
                     href={zaloLink}
                     target="_blank"
@@ -107,9 +104,7 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
             </div>
 
             {/* --- XEM THÊM TIN KHÁC --- */}
-            {/* Thu nhỏ khoảng cách phân cách phía trên */}
-
-            {!postId && (
+            {postId && (
                 <div className="w-full mt-3 pt-2.5 border-t border-gray-100">
                     <Link
                         href={`#`}
@@ -120,8 +115,6 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
                     </Link>
                 </div>
             )}
-
-
         </div>
     );
 };

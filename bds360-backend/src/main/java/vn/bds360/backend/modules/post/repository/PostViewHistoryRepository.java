@@ -35,4 +35,14 @@ public interface PostViewHistoryRepository extends JpaRepository<PostViewHistory
 
         @Query("SELECT pvh FROM PostViewHistory pvh JOIN FETCH pvh.post WHERE pvh.user = :user ORDER BY pvh.viewedAt DESC LIMIT 10")
         List<PostViewHistory> findRecentHistoryByUser(@Param("user") User user);
+
+        // Gom nhóm view theo ngày của TẤT CẢ bài đăng thuộc về 1 User
+        // Gom nhóm view theo ngày của TẤT CẢ bài đăng thuộc về 1 User
+        @Query(value = "SELECT DATE(vh.viewed_at) as viewDate, COUNT(vh.id) as viewCount " + // 🌟 Đổi created_at ->
+                                                                                             // viewed_at
+                        "FROM post_view_histories vh " +
+                        "JOIN posts p ON vh.post_id = p.id " +
+                        "WHERE p.user_id = :userId AND vh.viewed_at >= :startDate " + // 🌟 Đổi created_at -> viewed_at
+                        "GROUP BY DATE(vh.viewed_at)", nativeQuery = true) // 🌟 Đổi created_at -> viewed_at
+        List<Object[]> countDailyViewsByPostOwnerNative(Long userId, Instant startDate);
 }

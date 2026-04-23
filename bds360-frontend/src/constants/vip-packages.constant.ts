@@ -3,7 +3,7 @@
 export const VIP_PACKAGES = [
     {
         id: 1,
-        name: 'Gói Tiêu Chuẩn',
+        name: 'Gói VIP 0',
         defaultPrice: 'Miễn phí',
         themeColor: '#8c8c8c', //  Sửa thành màu xám (Gray)
         features: [
@@ -15,6 +15,8 @@ export const VIP_PACKAGES = [
         tagColor: 'default',
         buttonText: 'Đăng tin tiêu chuẩn',
         isPopular: false,
+        shortName: 'VIP 0',
+
     },
     {
         id: 2,
@@ -30,6 +32,8 @@ export const VIP_PACKAGES = [
         tagColor: 'gold',
         buttonText: 'Đăng tin VIP 1',
         isPopular: true,
+        shortName: 'VIP 1',
+
     },
     {
         id: 3,
@@ -45,6 +49,8 @@ export const VIP_PACKAGES = [
         tagColor: 'volcano',
         buttonText: 'Đăng tin VIP 2',
         isPopular: false,
+        shortName: 'VIP 2',
+
     },
 ];
 

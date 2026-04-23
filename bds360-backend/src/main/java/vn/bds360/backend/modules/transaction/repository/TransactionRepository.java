@@ -1,6 +1,7 @@
 package vn.bds360.backend.modules.transaction.repository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
 import vn.bds360.backend.modules.transaction.constant.TransactionStatus;
+import vn.bds360.backend.modules.transaction.constant.TransactionType;
 import vn.bds360.backend.modules.transaction.entity.Transaction;
+import vn.bds360.backend.modules.user.entity.User;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> {
@@ -32,4 +35,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
 
         @Query("SELECT SUM(t.amount) FROM Transaction t WHERE YEAR(t.createdAt) = :year AND MONTH(t.createdAt) = :month AND t.status = :status AND t.amount > 0")
         Long sumAmountByYearMonthAndStatus(Integer year, Integer month, TransactionStatus status);
+
+        // Tính tổng tiền theo loại giao dịch từ một thời điểm nhất định (ví dụ: đầu
+        // tháng)
+        @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user = :user AND t.type = :type AND t.status = :status AND t.createdAt >= :since")
+        Long sumAmountByUserAndTypeAndStatusSince(User user, TransactionType type, TransactionStatus status,
+                        Instant since);
+
+        // Lấy tất cả giao dịch thành công từ một thời điểm để vẽ biểu đồ
+        List<Transaction> findByUserAndStatusAndCreatedAtGreaterThanEqual(User user, TransactionStatus status,
+                        Instant createdAt);
 }

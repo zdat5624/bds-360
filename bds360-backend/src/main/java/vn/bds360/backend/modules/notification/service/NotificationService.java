@@ -27,6 +27,8 @@ import vn.bds360.backend.modules.notification.dto.response.NotificationResponse;
 import vn.bds360.backend.modules.notification.entity.Notification;
 import vn.bds360.backend.modules.notification.mapper.NotificationMapper;
 import vn.bds360.backend.modules.notification.repository.NotificationRepository;
+import vn.bds360.backend.modules.post.entity.Post;
+import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.service.UserService;
 
@@ -39,6 +41,7 @@ public class NotificationService {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserService userService;
     private final NotificationMapper notificationMapper;
+    private final PostRepository postRepository;
 
     /**
      * 1. HÀM CORE: TẠO THÔNG BÁO (Public cho toàn hệ thống)
@@ -116,7 +119,7 @@ public class NotificationService {
      */
     @Transactional
     public void handleViewPhoneNotification(User currentUser, ViewPhoneNotificationRequest request) {
-        // Admin xem thì không cần thông báo làm phiền chủ tin
+        // Admin/Mod xem thì không cần thông báo làm phiền chủ tin
         if (currentUser.getRole() == Role.ADMIN || currentUser.getRole() == Role.MODERATOR)
             return;
 
@@ -126,8 +129,18 @@ public class NotificationService {
 
         // Xử lý thông báo linh hoạt tùy theo việc có truyền postId hay không
         String message;
+
         if (request.getPostId() != null) {
-            // Trường hợp 1: Khách xem số điện thoại ở trang chi tiết tin đăng
+            // 🌟 KIỂM TRA VIP LEVEL CỦA TIN ĐĂNG
+            Post post = postRepository.findById(request.getPostId()).orElse(null);
+
+            // Nếu không tìm thấy post, hoặc post có vipLevel < 2 thì KHÔNG gửi thông báo
+            if (post == null || post.getVip() == null || post.getVip().getVipLevel() < 2) {
+                return;
+            }
+
+            // Trường hợp 1: Khách xem số điện thoại ở trang chi tiết tin đăng (thỏa mãn VIP
+            // >= 2)
             message = String.format("Người dùng '%s - %s' đã xem số điện thoại của tin đăng mã #'%d' của bạn.",
                     currentUser.getName(), currentUser.getPhone(), request.getPostId());
         } else {
@@ -141,8 +154,7 @@ public class NotificationService {
         if (notificationRepository.existsByMessage(message))
             return;
 
-        // Tái sử dụng hàm tạo thông báo ở trên (Có thể cân nhắc đổi
-        // NotificationType.POST thành kiểu khác hợp lý hơn nếu cần)
+        // Tái sử dụng hàm tạo thông báo ở trên
         this.createNotification(recipient, message, NotificationType.POST);
     }
 

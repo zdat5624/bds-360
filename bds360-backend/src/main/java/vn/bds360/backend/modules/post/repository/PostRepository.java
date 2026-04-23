@@ -140,4 +140,14 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
                         @Param("districtCode") Long districtCode,
                         @Param("wardCode") Long wardCode);
 
+        // Đếm số lượng tin theo trạng thái
+        Long countByUserAndStatus(User user, PostStatus status);
+
+        // Tính tổng view của tất cả các tin thuộc sở hữu của User
+        @Query("SELECT COALESCE(SUM(p.view), 0) FROM Post p WHERE p.user = :user")
+        Long sumTotalViewsByUser(User user);
+
+        // Lấy top tin đăng hiệu quả nhất
+        List<Post> findByUserOrderByViewDesc(User user, Pageable pageable);
+
 }

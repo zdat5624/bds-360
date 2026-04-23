@@ -1,8 +1,8 @@
-// @/features/statistics/api/statistics.queries.ts
+// @/features/statistics/api/manage-statistics.queries.ts
 
 import customFetch from '@/lib/custom-fetch';
 import { useQuery } from '@tanstack/react-query';
-import { AdminStatisticsResponse, MonthlyRevenueResponse } from './types';
+import { AdminStatisticsResponse, MonthlyRevenueResponse } from './manage-statistics.types';
 
 export const STATISTICS_QUERY_KEYS = {
     all: ['statistics'] as const,

@@ -17,6 +17,7 @@ import vn.bds360.backend.modules.user.entity.User;
 import vn.bds360.backend.modules.user.repository.UserRepository;
 import vn.bds360.backend.security.SecurityService;
 import vn.bds360.backend.security.annotation.CurrentUser;
+import vn.bds360.backend.security.annotation.RequireLogin; // 🌟 Bổ sung import
 
 @Component
 @RequiredArgsConstructor
@@ -34,17 +35,26 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
         public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                         NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-                // 1. Lấy Email từ Security Context (Token) một cách an toàn
                 Optional<String> emailOpt = SecurityService.getCurrentUserLogin();
+                User user = null;
 
-                // 🌟 NẾU KHÔNG ĐĂNG NHẬP (Khách vãng lai): Trả về null thay vì ném lỗi
-                if (emailOpt.isEmpty()) {
-                        return null;
+                // 1. Bỏ qua nếu không có token HOẶC bị Spring tự gán là "anonymousUser"
+                if (emailOpt.isPresent() && !"anonymousUser".equals(emailOpt.get())) {
+                        user = userRepository.findByEmail(emailOpt.get()).orElse(null);
                 }
 
-                // 2. NẾU CÓ TOKEN NHƯNG KHÔNG CÓ TRONG DB: Lúc này mới ném lỗi (Token ảo/User
-                // đã bị xóa)
-                return userRepository.findByEmail(emailOpt.get())
-                                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                // 2. Kiểm tra xem API hiện tại có bắt buộc đăng nhập không (@RequireLogin)
+                boolean isRequireLogin = parameter.getMethodAnnotation(RequireLogin.class) != null
+                                || parameter.getDeclaringClass().getAnnotation(RequireLogin.class) != null;
+
+                // 3. Xử lý logic trả về thông minh
+                if (user == null && isRequireLogin) {
+                        // Nếu API là Private mà thông tin user = null -> Chặn đứng, ném lỗi 401
+                        throw new AppException(ErrorCode.UNAUTHORIZED);
+                }
+
+                // Nếu API là Public (như /for-you) -> Thoải mái trả về null để luồng code chạy
+                // tiếp vào Service
+                return user;
         }
 }

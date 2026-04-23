@@ -20,7 +20,7 @@ export function UserInfo() {
     // XỬ LÝ LOADING (Giữ nguyên "thuốc chữa" của ông)
     if (!isInitialized) {
         return (
-            <div className="flex flex-col gap-5 pb-4">
+            <div className="flex flex-col gap-5 pb-6">
                 <div className="flex items-center gap-3">
                     <Skeleton.Avatar active size={48} />
                     <div className="flex flex-col justify-center gap-1 w-full h-[48px]">

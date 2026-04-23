@@ -11,7 +11,10 @@ bds360-frontend
 ├─ package.json
 ├─ postcss.config.mjs
 ├─ public
-│  └─ google-maps.png
+│  ├─ google-maps.png
+│  └─ images
+│     ├─ banner-real-estate.png
+│     └─ image_Pippit_202604212240.png
 ├─ README.md
 ├─ src
 │  ├─ app
@@ -49,6 +52,11 @@ bds360-frontend
 │  │  │  │     │  └─ page.tsx
 │  │  │  │     └─ vips
 │  │  │  │        └─ page.tsx
+│  │  │  ├─ (no-sidebar)
+│  │  │  │  └─ saved-posts
+│  │  │  │     ├─ layout.tsx
+│  │  │  │     ├─ page.tsx
+│  │  │  │     └─ SavedPostsSidebar.tsx
 │  │  │  ├─ (public)
 │  │  │  │  ├─ (listings)
 │  │  │  │  │  ├─ layout.tsx
@@ -57,7 +65,21 @@ bds360-frontend
 │  │  │  │  │  └─ sale
 │  │  │  │  │     └─ page.tsx
 │  │  │  │  ├─ layout.tsx
-│  │  │  │  └─ page.tsx
+│  │  │  │  ├─ page.tsx
+│  │  │  │  ├─ posts
+│  │  │  │  │  └─ [id]
+│  │  │  │  │     ├─ nearby-locations-sidebar.tsx
+│  │  │  │  │     ├─ page.tsx
+│  │  │  │  │     ├─ post-analytics.tsx
+│  │  │  │  │     ├─ post-basic-info.tsx
+│  │  │  │  │     ├─ post-characteristics.tsx
+│  │  │  │  │     ├─ post-gallery.tsx
+│  │  │  │  │     ├─ post-meta.tsx
+│  │  │  │  │     ├─ post-seller-sidebar.tsx
+│  │  │  │  │     └─ related-posts-sidebar.tsx
+│  │  │  │  └─ u
+│  │  │  │     └─ [id]
+│  │  │  │        └─ page.tsx
 │  │  │  └─ layout.tsx
 │  │  ├─ auth
 │  │  │  ├─ forgot-password
@@ -86,6 +108,8 @@ bds360-frontend
 │  │  ├─ composite
 │  │  │  ├─ filter.modal.tsx
 │  │  │  ├─ index.ts
+│  │  │  ├─ reveal-phone.button.tsx
+│  │  │  ├─ saved-posts-badge.tsx
 │  │  │  ├─ table-action.dropdown.tsx
 │  │  │  └─ user-info.tsx
 │  │  ├─ icons
@@ -176,17 +200,25 @@ bds360-frontend
 │  │  │  │  ├─ delete-post.modal.tsx
 │  │  │  │  ├─ filter-modal.tsx
 │  │  │  │  ├─ filter-tags.tsx
+│  │  │  │  ├─ for-you-posts.tsx
 │  │  │  │  ├─ hero-smart-filter-bar.tsx
+│  │  │  │  ├─ listing-card.tsx
 │  │  │  │  ├─ map-dot-marker.tsx
 │  │  │  │  ├─ map-selector.tsx
 │  │  │  │  ├─ post-card.tsx
 │  │  │  │  ├─ post-detail.modal.tsx
 │  │  │  │  ├─ post-filter.modal.tsx
+│  │  │  │  ├─ post-popup.tsx
 │  │  │  │  ├─ post-view-statistics.tsx
+│  │  │  │  ├─ posts-map.tsx
 │  │  │  │  ├─ price-marker.tsx
 │  │  │  │  ├─ property-map.tsx
+│  │  │  │  ├─ related-posts.tsx
+│  │  │  │  ├─ save-post-button.tsx
 │  │  │  │  ├─ smart-filter-bar.tsx
 │  │  │  │  └─ vip-marker.tsx
+│  │  │  ├─ hooks
+│  │  │  │  └─ use-post-filter-url.ts
 │  │  │  ├─ index.ts
 │  │  │  ├─ posts.constant.ts
 │  │  │  ├─ posts.schema.ts
@@ -217,7 +249,10 @@ bds360-frontend
 │  │  │  │  └─ user.queries.ts
 │  │  │  ├─ components
 │  │  │  │  ├─ update-profile.form.tsx
-│  │  │  │  └─ user-info.tsx
+│  │  │  │  ├─ user-info.tsx
+│  │  │  │  ├─ verification-detail.modal.tsx
+│  │  │  │  ├─ verification-history.modal.tsx
+│  │  │  │  └─ verification-section.tsx
 │  │  │  ├─ index.ts
 │  │  │  ├─ users.constant.ts
 │  │  │  └─ users.schema.ts
@@ -251,7 +286,6 @@ bds360-frontend
 │  │  ├─ api.types.ts
 │  │  ├─ common.types.ts
 │  │  ├─ index.ts
-│  │  ├─ mapbox.d.ts
 │  │  └─ models.types.ts
 │  └─ utils
 │     ├─ date.util.ts

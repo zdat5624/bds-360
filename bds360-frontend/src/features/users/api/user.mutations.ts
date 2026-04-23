@@ -78,14 +78,20 @@ const reviewVerification = async (payload: ReviewVerificationPayload): Promise<v
     return customFetch.put(`/manage/verification-requests/${requestId}/review`, rest);
 };
 
-export const useSubmitVerification = () => {
+export const useSubmitVerification = (userId?: number) => { // Truyền thêm userId của người đang login
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: submitVerification,
         onSuccess: () => {
-            // Làm mới lịch sử nộp đơn của User
+            // 1. Làm mới lịch sử nộp đơn của User
             queryClient.invalidateQueries({ queryKey: VERIFICATIONS_QUERY_KEYS.all });
+
+            // 2. 🌟 Làm mới thông tin User để UI lập tức biết user đang ở trạng thái PENDING
+            if (userId) {
+                queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.detail(userId) });
+            }
+            // (Nếu bạn có một Query Key riêng cho getAccount / getProfile thì invalidate nó ở đây)
         },
     });
 };
