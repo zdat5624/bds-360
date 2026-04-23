@@ -103,7 +103,12 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
     {
         key: APP_ROUTES.MANAGE.USERS,
         icon: <TeamOutlined />,
-        label: <Link href={APP_ROUTES.MANAGE.USERS}>Quản lý tài khoản</Link>,
+        label: <Link href={APP_ROUTES.MANAGE.USERS}>Quản lý người dùng</Link>,
+    },
+    {
+        key: APP_ROUTES.MANAGE.TRANSACTIONS,
+        icon: <TransactionOutlined />, // Có thể đổi sang CreditCardOutlined nếu bị trùng icon với Dòng tiền
+        label: <Link href={APP_ROUTES.MANAGE.TRANSACTIONS}>Quản lý giao dịch</Link>,
     },
     {
         key: APP_ROUTES.MANAGE.POSTS,
@@ -115,11 +120,7 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
         icon: <AppstoreOutlined />,
         label: <Link href={APP_ROUTES.MANAGE.CATEGORIES}>Quản lý danh mục</Link>,
     },
-    {
-        key: APP_ROUTES.MANAGE.PAYMENTS,
-        icon: <TransactionOutlined />, // Có thể đổi sang CreditCardOutlined nếu bị trùng icon với Dòng tiền
-        label: <Link href={APP_ROUTES.MANAGE.PAYMENTS}>Quản lý giao dịch</Link>,
-    },
+
     {
         key: APP_ROUTES.MANAGE.VIPS,
         icon: <CrownOutlined />,

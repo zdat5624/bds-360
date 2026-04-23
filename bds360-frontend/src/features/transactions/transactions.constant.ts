@@ -10,7 +10,7 @@ export type TransactionStatus = (typeof TRANSACTION_STATUS_VALUES)[number];
 
 // Từ điển Map sang tiếng Việt
 export const TRANSACTION_STATUS_LABEL: Record<TransactionStatus, string> = {
-    PENDING: 'Đang xử lý',
+    PENDING: 'Đang thanh toán',
     SUCCESS: 'Thành công',
     FAILED: 'Thất bại',
 };

@@ -133,15 +133,16 @@ export default function ManageCategoriesPage() {
 
             {/* 2. Main Box */}
             <div
-                className="w-full flex flex-col rounded-lg shadow-sm overflow-hidden"
+                className="w-full flex flex-col rounded-lg shadow-sm  overflow-hidden"
                 style={{ backgroundColor: colorBgContainer, border: `1px solid ${colorBorderSecondary}` }}
             >
-                {/* Toolbar */}
+
                 <div
-                    className="flex flex-wrap justify-between items-center px-4 py-3 border-b"
+                    className="flex flex-wrap justify-between gap-3 items-center border-b px-4 py-4 "
                     style={{ borderColor: colorBorderSecondary }}
                 >
-                    <div className="flex flex-wrap items-center gap-3">
+                    {/* Nhóm bên trái: Lọc và Tìm kiếm */}
+                    <div className="flex flex-wrap justify-center md:justify-start items-center gap-3">
                         <Segmented
                             options={[
                                 { label: 'Tất cả', value: 'ALL' },
@@ -158,23 +159,26 @@ export default function ManageCategoriesPage() {
                         <Input
                             placeholder="Tìm tên danh mục..."
                             prefix={<SearchOutlined style={{ color: colorTextSecondary }} />}
-                            className="!w-64"
+                            className="sm:!w-64 w-full"
                             allowClear
                             onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value, page: 0 }))}
                         />
                     </div>
 
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => setFormModal({ isOpen: true, data: null })}
-                    >
-                        Tạo mới
-                    </Button>
+                    {/* Nhóm bên phải: Nút Thêm mới */}
+                    <div className="w-full sm:w-auto flex-shrink-0">
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            className="w-full sm:w-auto"
+                        >
+                            Tạo mới
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Table */}
-                <div className="w-full px-4 pt-2 pb-4">
+                <div className="w-full  px-4 py-2">
                     <DataTable<Category>
                         columns={columns}
                         data={data?.content || []}

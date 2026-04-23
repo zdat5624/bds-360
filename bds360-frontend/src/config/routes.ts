@@ -44,8 +44,8 @@ export const APP_ROUTES = {
         USERS: '/manage/users',
         VIPS: '/manage/vips',
         CATEGORIES: '/manage/categories',
-        PAYMENTS: '/manage/payments',
         POSTS: '/manage/posts',
+        TRANSACTIONS: '/manage/transactions',
 
         STATISTICS: {
             USERS: '/manage/statistics/users',

@@ -69,10 +69,10 @@ public class CategoryService {
         Pageable pageable = getPageable(filter);
 
         // Truyền các tiêu chí lọc từ object filter vào repository
-        var pageData = categoryRepository.findByNameContainingAndType(
+        var pageData = categoryRepository.findByFilter(
+                filter.getName(),
                 filter.getType(),
-                pageable)
-                .map(categoryMapper::toResponse);
+                pageable).map(categoryMapper::toResponse);
 
         return PageResponse.of(pageData);
     }

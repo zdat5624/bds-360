@@ -14,8 +14,13 @@ import vn.bds360.backend.modules.category.entity.Category;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Page<Category> findAll(Pageable pageable);
 
-    @Query("SELECT c FROM Category c WHERE " + "(:type IS NULL OR c.type = :type)")
-    Page<Category> findByNameContainingAndType(
+    @Query("""
+                SELECT c FROM Category c
+                WHERE (:type IS NULL OR c.type = :type)
+                  AND (:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')))
+            """)
+    Page<Category> findByFilter(
+            @Param("name") String name,
             @Param("type") ListingType type,
             Pageable pageable);
 }
