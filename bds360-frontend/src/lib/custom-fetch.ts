@@ -1,6 +1,6 @@
 // @/lib/custom-fetch.ts
 
-import { APP_ROUTES, envConfig } from '@/config';
+import { envConfig } from '@/config';
 import { ApiResponse } from '@/types';
 import { authStorage } from '@/utils'; // 👈 Import authStorage từ file index của utils
 import { message } from 'antd';
@@ -78,7 +78,7 @@ customFetch.interceptors.response.use(
                 authStorage.clearAuth();
                 if (typeof window !== 'undefined') {
                     message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-                    window.location.href = APP_ROUTES.AUTH.LOGIN;
+                    // window.location.href = APP_ROUTES.AUTH.LOGIN;
                 }
             } else {
                 // 👇 Nếu đang đăng nhập mà bị 401 (sai pass, token google hỏng) thì chỉ báo lỗi thôi

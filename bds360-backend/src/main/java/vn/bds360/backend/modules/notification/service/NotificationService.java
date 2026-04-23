@@ -117,7 +117,7 @@ public class NotificationService {
     @Transactional
     public void handleViewPhoneNotification(User currentUser, ViewPhoneNotificationRequest request) {
         // Admin xem thì không cần thông báo làm phiền chủ tin
-        if (currentUser.getRole() == Role.ADMIN)
+        if (currentUser.getRole() == Role.ADMIN || currentUser.getRole() == Role.MODERATOR)
             return;
 
         User recipient = userService.fetchUserById(request.getRecipientId());

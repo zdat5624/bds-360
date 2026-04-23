@@ -2,6 +2,7 @@
 'use client';
 
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useAuthStore } from '@/stores/auth.store'; // Đã import sẵn từ code của bạn
 import { BellOutlined, CloseOutlined } from '@ant-design/icons';
 import { Badge, Button, Popover } from 'antd';
 import { useEffect, useRef, useState } from 'react';
@@ -18,6 +19,10 @@ export function FloatingNotificationButton() {
         colorTextLightSolid
     } = useAppTheme();
 
+    // 🌟 THÊM: Lấy trạng thái từ AuthStore
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const isInitialized = useAuthStore((state) => state.isInitialized);
+
     const [popoverOpen, setPopoverOpen] = useState(false);
     const [showLabel, setShowLabel] = useState(false);
     const [shouldShake, setShouldShake] = useState(false);
@@ -28,7 +33,7 @@ export function FloatingNotificationButton() {
     const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const shakeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const { data: unreadCount, isSuccess } = useGetUnreadCount();
+    const { data: unreadCount, isSuccess } = useGetUnreadCount(isAuthenticated);
     const currentCount = unreadCount ?? 0;
 
     const prevUnreadCountRef = useRef<number | undefined>(undefined);
@@ -82,6 +87,11 @@ export function FloatingNotificationButton() {
             setIsPulsing(false);
         }
     };
+
+    // 🌟 THÊM: Kiểm tra auth (Đặt ngay trước lệnh return JSX)
+    if (!isInitialized || !isAuthenticated) {
+        return null; // Không render nút chuông nếu chưa đăng nhập hoặc app chưa khởi tạo xong auth
+    }
 
     return (
         <div className="fixed bottom-6 right-6 z-[100]">
@@ -144,7 +154,7 @@ export function FloatingNotificationButton() {
                         key={`shake-${currentCount}`}
                         className={`relative ${shouldShake ? 'animate-shake' : ''}`}
                     >
-                        {/*  VÒNG SÁNG PULSE RADAR (Nằm dưới cùng)  */}
+                        {/* VÒNG SÁNG PULSE RADAR (Nằm dưới cùng)  */}
                         {isPulsing && (
                             <div
                                 className="absolute inset-1 rounded-full animate-ping opacity-75"

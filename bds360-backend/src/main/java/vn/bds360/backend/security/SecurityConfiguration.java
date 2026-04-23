@@ -78,6 +78,8 @@ public class SecurityConfiguration {
                                         "/api/v1/vips",
                                         "/api/v1/categories",
                                         "/api/v1/categories/**",
+                                        "/api/v1/provinces/**",
+
                                         "/api/v1/posts/{postId}/address"
 
                                 ).permitAll()

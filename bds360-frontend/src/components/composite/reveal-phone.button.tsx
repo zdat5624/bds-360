@@ -1,6 +1,7 @@
 // @/components/composite/reveal-phone-button.tsx
 'use client';
 
+import { APP_ROUTES } from '@/config';
 import { useNotifyViewPhone } from '@/features/notifications/api/notifications.mutations';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store'; // Import store quản lý Auth (nếu có)
@@ -60,7 +61,7 @@ export function RevealPhoneButton({ phone, postId, recipientId, className }: Rev
             message.info('Vui lòng đăng nhập để xem số điện thoại!');
             // Chuyển hướng đến trang đăng nhập. 
             // Có thể thêm tham số ?callbackUrl để họ đăng nhập xong quay lại đúng trang này
-            router.push('/login');
+            router.push(APP_ROUTES.AUTH.LOGIN);
             return; // Dừng thực thi các lệnh bên dưới
         }
 

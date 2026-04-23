@@ -112,7 +112,7 @@ export default function UserProfilePage() {
                                 <Skeleton paragraph={{ rows: 4 }} active />
                             </div>
                         ) : userInfo ? (
-                            <PostSellerSidebar hide={true} user={userInfo} />
+                            <PostSellerSidebar user={userInfo} />
                         ) : (
                             <div className="bg-white p-5 rounded-2xl shadow-sm text-center border border-gray-100">
                                 <div className="w-16 h-16 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">

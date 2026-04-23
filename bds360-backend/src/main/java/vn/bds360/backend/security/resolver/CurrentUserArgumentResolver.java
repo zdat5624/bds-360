@@ -1,4 +1,7 @@
+// File: vn.bds360.backend.security.resolver.CurrentUserArgumentResolver.java
 package vn.bds360.backend.security.resolver;
+
+import java.util.Optional;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -21,27 +24,27 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
         private final UserRepository userRepository;
 
-        // 1. Kiểm tra xem tham số có hợp lệ để xử lý không?
         @Override
         public boolean supportsParameter(MethodParameter parameter) {
-                // Trả về TRUE nếu tham số có gắn @CurrentUser VÀ kiểu dữ liệu của nó là class
-                // User
                 return parameter.hasParameterAnnotation(CurrentUser.class)
                                 && parameter.getParameterType().equals(User.class);
         }
 
-        // 2. Nếu hàm trên trả về TRUE, Spring sẽ chạy hàm này để lấy dữ liệu
         @Override
         public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                         NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-                // Lấy Email từ Security Context (Token)
-                String email = SecurityService.getCurrentUserLogin()
-                                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                // 1. Lấy Email từ Security Context (Token) một cách an toàn
+                Optional<String> emailOpt = SecurityService.getCurrentUserLogin();
 
-                // Truy vấn Database và trả về Object User.
-                // Object này sẽ được Spring tự động "bơm" vào tham số ở Controller
-                return userRepository.findByEmail(email)
+                // 🌟 NẾU KHÔNG ĐĂNG NHẬP (Khách vãng lai): Trả về null thay vì ném lỗi
+                if (emailOpt.isEmpty()) {
+                        return null;
+                }
+
+                // 2. NẾU CÓ TOKEN NHƯNG KHÔNG CÓ TRONG DB: Lúc này mới ném lỗi (Token ảo/User
+                // đã bị xóa)
+                return userRepository.findByEmail(emailOpt.get())
                                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         }
 }

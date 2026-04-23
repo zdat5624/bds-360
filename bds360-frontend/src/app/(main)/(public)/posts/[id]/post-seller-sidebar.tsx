@@ -14,10 +14,10 @@ import React, { useState } from 'react';
 interface PostSellerSidebarProps {
     user: PostAuthor & { isVerified?: boolean }; // Thêm isVerified từ Backend
     className?: string;
-    hide: boolean;
+    postId?: number
 }
 
-export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, className, hide = false }) => {
+export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, className, postId }) => {
     const [showPhone, setShowPhone] = useState(false);
 
     // Xử lý logic hiển thị số điện thoại an toàn
@@ -86,7 +86,7 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
             <div className="w-full flex flex-col gap-2">
 
                 {/* Nút Gọi điện (Giảm chiều cao xuống h-10) */}
-                <RevealPhoneButton phone={safePhone} />
+                <RevealPhoneButton postId={postId} phone={safePhone} />
 
                 {/* Nút Nhắn Zalo (Giảm chiều cao xuống h-10) */}
                 <a
@@ -109,7 +109,7 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
             {/* --- XEM THÊM TIN KHÁC --- */}
             {/* Thu nhỏ khoảng cách phân cách phía trên */}
 
-            {!hide && (
+            {!postId && (
                 <div className="w-full mt-3 pt-2.5 border-t border-gray-100">
                     <Link
                         href={`#`}

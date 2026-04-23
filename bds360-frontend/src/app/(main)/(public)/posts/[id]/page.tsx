@@ -66,7 +66,7 @@ export default function PublicPostDetailPage() {
                     </div>
 
                     <aside className="w-full lg:w-[290px] flex flex-col gap-4">
-                        <PostSellerSidebar user={post.user} />
+                        <PostSellerSidebar postId={post.id} user={post.user} />
                         <NearbyLocationsSidebar post={post} />
                     </aside>
                 </div>

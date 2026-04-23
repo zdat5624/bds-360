@@ -121,6 +121,8 @@ public class PostController {
             @CurrentUser User user,
             @Valid ForYouPostRequest request) {
 
+        System.out.println(">>> log here");
+
         return ApiResponse.success(postService.getForYouPosts(user, request),
                 "Lấy danh sách tin dành cho bạn thành công");
     }

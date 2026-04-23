@@ -33,7 +33,7 @@ export const useGetMyNotifications = (filters: NotificationFilterParams) => {
     });
 };
 
-export const useGetUnreadCount = () => {
+export const useGetUnreadCount = (enabled: boolean = true) => {
     return useQuery({
         queryKey: NOTIFICATIONS_QUERY_KEYS.unreadTotal(),
         queryFn: async () => {
@@ -41,6 +41,7 @@ export const useGetUnreadCount = () => {
             // Đảm bảo ép kiểu Number để tránh lỗi cộng chuỗi "01" + "2" = "012"
             return detailedCounts.reduce((sum, item) => sum + Number(item.count || 0), 0);
         },
+        enabled: enabled,
         refetchInterval: 30000,
     });
 };

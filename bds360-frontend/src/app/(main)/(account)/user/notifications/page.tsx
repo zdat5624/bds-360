@@ -384,7 +384,6 @@ export default function UserNotificationsPage() {
                 onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
-                isDanger={true}
                 title="Xóa thông báo"
                 content={`Bạn có chắc chắn muốn xóa vĩnh viễn ${deleteModal.ids.length} thông báo đã chọn?`}
                 okText="Xóa ngay"
