@@ -28,6 +28,7 @@ public class ForYouSpecification {
             // 1. Điều kiện bắt buộc
             p = cb.and(p, root.get("status").in(PostStatus.APPROVED, PostStatus.REVIEW_LATER));
             p = cb.and(p, cb.equal(root.get("deletedByUser"), false));
+            p = cb.and(p, cb.equal(root.get("isHidden"), false));
             p = cb.and(p, cb.notEqual(root.get("user").get("id"), userId));
 
             if (!excludes.isEmpty()) {
@@ -63,6 +64,7 @@ public class ForYouSpecification {
             // 1. Điều kiện bắt buộc
             p = cb.and(p, root.get("status").in(PostStatus.APPROVED, PostStatus.REVIEW_LATER));
             p = cb.and(p, cb.equal(root.get("deletedByUser"), false));
+            p = cb.and(p, cb.equal(root.get("isHidden"), false));
 
             if (userId != null) {
                 p = cb.and(p, cb.notEqual(root.get("user").get("id"), userId));

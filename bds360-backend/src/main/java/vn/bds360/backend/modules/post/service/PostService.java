@@ -308,10 +308,17 @@ public class PostService {
         boolean isAdmin = currentUser != null && currentUser.getRole() == Role.ADMIN;
         boolean isOwner = currentUser != null && post.getUser().getId().equals(currentUser.getId());
 
-        if (post.getDeletedByUser() && !isAdmin) {
+        // Nếu bài bị Xóa mềm -> Chỉ Admin/Owner mới được xem
+        if (post.getDeletedByUser() && !isAdmin && !isOwner) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
+        // 🌟 THÊM MỚI: Nếu bài đang Ẩn -> Chỉ Admin/Owner mới được xem
+        if (Boolean.TRUE.equals(post.getIsHidden()) && !isAdmin && !isOwner) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        // Kiểm tra Status (Hết hạn hoặc Chờ duyệt)
         if ((post.getStatus() == PostStatus.EXPIRED || post.getStatus() == PostStatus.PENDING)
                 && !isOwner && !isAdmin) {
             throw new AppException(ErrorCode.FORBIDDEN);
@@ -326,6 +333,7 @@ public class PostService {
     public PageResponse<PostResponse> getPublicPosts(PostFilterRequest filter) {
         filter.setIsApprovedOnly(true);
         filter.setIsDeleteByUser(false);
+        filter.setIsHidden(false);
 
         var spec = PostSpecification.filterBy(filter);
 
@@ -425,6 +433,7 @@ public class PostService {
         filter1.setProvinceCode(currentPost.getProvince().getCode());
         filter1.setIsApprovedOnly(true);
         filter1.setIsDeleteByUser(false);
+        filter1.setIsHidden(false);
 
         var spec1 = PostSpecification.filterBy(filter1)
                 .and((root, query, cb) -> cb.not(root.get("id").in(excludes)));
@@ -446,6 +455,7 @@ public class PostService {
             filter2.setCategoryId(currentPost.getCategory().getId()); // Giữ danh mục, bỏ Tỉnh
             filter2.setIsApprovedOnly(true);
             filter2.setIsDeleteByUser(false);
+            filter2.setIsHidden(false);
 
             var spec2 = PostSpecification.filterBy(filter2)
                     .and((root, query, cb) -> cb.not(root.get("id").in(excludes)));
@@ -465,7 +475,7 @@ public class PostService {
             filter3.setType(currentPost.getType()); // Chỉ giữ lại loại hình (SALE/RENT)
             filter3.setIsApprovedOnly(true);
             filter3.setIsDeleteByUser(false);
-
+            filter3.setIsHidden(false);
             var spec3 = PostSpecification.filterBy(filter3)
                     .and((root, query, cb) -> cb.not(root.get("id").in(excludes)));
 
@@ -551,6 +561,7 @@ public class PostService {
         // 1. Ép cứng các điều kiện cho bài đăng public hợp lệ
         filter.setIsApprovedOnly(true);
         filter.setIsDeleteByUser(false);
+        filter.setIsHidden(false);
 
         // 2. Tái sử dụng toàn bộ logic filter phức tạp từ PostSpecification
         Specification<Post> baseSpec = PostSpecification.filterBy(filter);
@@ -571,5 +582,27 @@ public class PostService {
                         post.getVip().getId(),
                         post.getPrice()))
                 .toList();
+    }
+
+    @Transactional
+    public PostResponse togglePostVisibility(User user, Long postId, boolean isHidden) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        // 1. Chỉ chủ bài viết mới được quyền Ẩn/Hiện bài của mình
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        // 2. Chặn thao tác nếu bài đã bị Admin khóa hoặc đã bị xóa mềm
+        if (post.getStatus() == PostStatus.BLOCKED || post.getDeletedByUser()) {
+            throw new AppException(ErrorCode.POST_STATUS_INVALID);
+        }
+
+        // 3. Cập nhật trạng thái
+        post.setIsHidden(isHidden);
+        postRepository.save(post);
+
+        return postMapper.toResponse(post);
     }
 }

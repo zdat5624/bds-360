@@ -53,6 +53,8 @@ export interface Post {
     createdAt: string;
     updatedAt?: string;
 
+    isHidden: boolean;
+
     deletedByUser: boolean;
 
     streetAddress: string;
@@ -150,6 +152,8 @@ export interface PostFilterParams extends BaseFilterParams {
     search?: string;
     //  THÊM TRƯỜNG NÀY ĐỂ ĐỒNG BỘ VỚI BACKEND
     searchBy?: string[];
+
+    isHidden?: boolean;
 
     isDeleteByUser?: boolean;
     isApprovedOnly?: boolean;

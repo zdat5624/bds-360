@@ -1,0 +1,220 @@
+// @/features/posts/components/post-unblock.modal.tsx
+'use client';
+
+import { AppModal } from '@/components/base/app.modal';
+import { Post, POST_STATUS_COLOR, POST_STATUS_LABEL } from '@/features/posts';
+import { useAppTheme } from '@/hooks/use-app-theme';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { App, Button, Form, Input, Radio, Switch, Tag, Typography } from 'antd';
+import { useEffect, useState } from 'react';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { useUpdatePostStatus } from '../api/posts.mutations';
+import { updatePostStatusSchema } from '../posts.schema';
+
+const { Text } = Typography;
+
+interface PostUnblockModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    post: Post | null;
+}
+
+export function PostUnblockModal({ isOpen, onClose, post }: PostUnblockModalProps) {
+    const { message } = App.useApp();
+    const { colorBgContainer, colorBorderSecondary } = useAppTheme();
+    const { mutateAsync: updatePostStatus, isPending } = useUpdatePostStatus();
+
+    const [customMessageEnabled, setCustomMessageEnabled] = useState(false);
+
+    const {
+        control,
+        handleSubmit,
+        reset,
+        watch,
+        setValue,
+        formState: { errors },
+    } = useForm<any>({
+        resolver: zodResolver(updatePostStatusSchema),
+        defaultValues: {
+            postId: 0,
+            status: 'PENDING',
+            message: '',
+            sendNotification: true,
+        },
+    });
+
+    const currentStatus = watch('status');
+    const isSendingNotification = watch('sendNotification');
+    const currentCustomMessage = watch('message');
+
+    useEffect(() => {
+        if (isOpen && post) {
+            // Logic: Nếu post có gói VIP (vipLevel > 0), auto trỏ về APPROVED
+            const defaultStatus = (post.vip?.vipLevel && post.vip.vipLevel > 0) ? 'APPROVED' : 'PENDING';
+
+            reset({
+                postId: post.id,
+                status: defaultStatus,
+                message: '',
+                sendNotification: true,
+            });
+            setCustomMessageEnabled(false);
+        }
+    }, [isOpen, post, reset]);
+
+    const getDefaultMessage = (status: string) => {
+        const postId = post?.id || '?';
+        if (status === 'PENDING') {
+            return `Tin đăng mã '${postId}' của bạn đã được mở khóa và đang trong trạng thái Chờ duyệt lại`;
+        } else if (status === 'APPROVED') {
+            return `Tin đăng mã '${postId}' của bạn đã được mở khóa và hiện đang được hiển thị trên hệ thống`;
+        }
+        return '';
+    };
+
+    const getFinalMessage = () => {
+        if (!currentStatus) return 'Vui lòng chọn trạng thái';
+        const defaultMessage = getDefaultMessage(currentStatus);
+        return customMessageEnabled && currentCustomMessage?.trim()
+            ? `${defaultMessage}. ${currentCustomMessage.trim()}`
+            : defaultMessage;
+    };
+
+    const onSubmit: SubmitHandler<any> = async (data) => {
+        try {
+            if (customMessageEnabled && data.sendNotification && !data.message?.trim()) {
+                message.error('Vui lòng nhập nội dung tùy chỉnh nếu gửi thông báo');
+                return;
+            }
+
+            const finalPayload = {
+                ...data,
+                message: data.sendNotification ? getFinalMessage() : undefined,
+                sendNotification: Boolean(data.sendNotification),
+            };
+
+            await updatePostStatus(finalPayload);
+            message.success('Mở khóa tin đăng thành công!');
+            onClose();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+        }
+    };
+
+    return (
+        <AppModal
+            title={
+                <div className="flex justify-between items-center w-full pr-8">
+                    <span className="text-emerald-600">Mở khóa tin đăng #{post?.id || '?'}</span>
+                    <div className="flex items-center gap-2 font-normal text-sm text-gray-800">
+                        <Text>Gửi thông báo</Text>
+                        <Switch
+                            checked={isSendingNotification}
+                            onChange={(checked) => {
+                                setValue('sendNotification', checked);
+                                if (!checked) {
+                                    setCustomMessageEnabled(false);
+                                    setValue('message', '');
+                                }
+                            }}
+                            size="small"
+                        />
+                    </div>
+                </div>
+            }
+            isOpen={isOpen}
+            onClose={onClose}
+            width={600}
+            isLoading={isPending}
+        >
+            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+                <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block mb-2 font-medium">Trạng thái hiện tại</label>
+                            {post?.status && (
+                                <Tag color={POST_STATUS_COLOR[post.status]} className="text-sm px-3 py-1">
+                                    {POST_STATUS_LABEL[post.status]}
+                                </Tag>
+                            )}
+                        </div>
+                        <Form.Item
+                            label={<span className="font-medium">Trạng thái sau khi mở khóa</span>}
+                            validateStatus={errors.status ? 'error' : ''}
+                            help={errors.status?.message as string}
+                            className="!mb-0"
+                        >
+                            <Controller
+                                name="status"
+                                control={control}
+                                render={({ field }) => (
+                                    <Radio.Group {...field} optionType="button" buttonStyle="solid">
+                                        <Radio.Button value="PENDING" className={field.value === 'PENDING' ? '!bg-yellow-500 !text-white !border-yellow-500' : ''}>
+                                            Chờ duyệt
+                                        </Radio.Button>
+                                        <Radio.Button value="APPROVED" className={field.value === 'APPROVED' ? '!bg-green-500 !text-white !border-green-500' : ''}>
+                                            Đang hiển thị
+                                        </Radio.Button>
+                                    </Radio.Group>
+                                )}
+                            />
+                        </Form.Item>
+                    </div>
+
+                    {isSendingNotification && (
+                        <div className="flex flex-col gap-4 border-t pt-4" style={{ borderColor: colorBorderSecondary }}>
+                            <div>
+                                <label className="block mb-2 font-medium">Nội dung thông báo (Xem trước)</label>
+                                <div
+                                    className="p-3 rounded-lg text-sm"
+                                    style={{ backgroundColor: colorBgContainer, border: `1px solid ${colorBorderSecondary}` }}
+                                >
+                                    <Text>{getFinalMessage()}</Text>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <Switch
+                                    checked={customMessageEnabled}
+                                    onChange={(checked) => {
+                                        setCustomMessageEnabled(checked);
+                                        if (!checked) setValue('message', '');
+                                    }}
+                                    size="small"
+                                />
+                                <Text>Thêm tin nhắn tùy chỉnh</Text>
+                            </div>
+
+                            {customMessageEnabled && (
+                                <Form.Item
+                                    validateStatus={errors.message ? 'error' : ''}
+                                    help={errors.message?.message as string}
+                                    className="!mb-0"
+                                >
+                                    <Controller
+                                        name="message"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input.TextArea
+                                                {...field}
+                                                rows={3}
+                                                placeholder="Nhập nội dung tùy chỉnh..."
+                                            />
+                                        )}
+                                    />
+                                </Form.Item>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex justify-end gap-2 mt-6">
+                    <Button onClick={onClose} disabled={isPending}>Hủy</Button>
+                    <Button type="primary" htmlType="submit" loading={isPending} disabled={!currentStatus}>
+                        Xác nhận Mở khóa
+                    </Button>
+                </div>
+            </Form>
+        </AppModal>
+    );
+}

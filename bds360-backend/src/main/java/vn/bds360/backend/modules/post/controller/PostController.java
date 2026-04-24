@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -62,14 +63,6 @@ public class PostController {
         return ApiResponse.success(postService.updatePost(user, request), "Cập nhật tin đăng thành công");
     }
 
-    @DeleteMapping("/{id}")
-    @RequireLogin
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Void> deletePost(@CurrentUser User user, @PathVariable Long id) {
-        postService.deletePost(user, id, false);
-        return ApiResponse.success(null, "Xóa tin đăng thành công");
-    }
-
     @GetMapping("/my-posts")
     @RequireLogin
     @ResponseStatus(HttpStatus.OK)
@@ -100,21 +93,6 @@ public class PostController {
         return ApiResponse.success(postService.getPublicPosts(filter), "Lấy danh sách tin đăng thành công");
     }
 
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<PostResponse> getPostById(@CurrentUser User user, @PathVariable Long id) {
-        // user có thể null nếu public user gọi, Service sẽ tự handle
-        return ApiResponse.success(postService.getPostById(user, id), "Lấy chi tiết tin đăng thành công");
-    }
-
-    @GetMapping("/{id}/related")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<PageResponse<PostResponse>> getRelatedPosts(
-            @PathVariable Long id,
-            @Valid RelatedPostRequest request) {
-        return ApiResponse.success(postService.getRelatedPosts(id, request), "Lấy danh sách tin tương tự thành công");
-    }
-
     @GetMapping("/for-you")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PageResponse<PostResponse>> getForYouPosts(
@@ -131,6 +109,46 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<List<MapPostResponse>> getPostsForMap(@Valid PostFilterRequest filter) {
         return ApiResponse.success(postService.getPostsForMap(filter), "Lấy danh sách bản đồ thành công");
+    }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PostResponse> getPostById(@CurrentUser User user, @PathVariable Long id) {
+        // user có thể null nếu public user gọi, Service sẽ tự handle
+        return ApiResponse.success(postService.getPostById(user, id), "Lấy chi tiết tin đăng thành công");
+    }
+
+    @GetMapping("/{id}/related")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PageResponse<PostResponse>> getRelatedPosts(
+            @PathVariable Long id,
+            @Valid RelatedPostRequest request) {
+        return ApiResponse.success(postService.getRelatedPosts(id, request), "Lấy danh sách tin tương tự thành công");
+    }
+
+    @DeleteMapping("/{id}")
+    @RequireLogin
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> deletePost(@CurrentUser User user, @PathVariable Long id) {
+        postService.deletePost(user, id, false);
+        return ApiResponse.success(null, "Xóa tin đăng thành công");
+    }
+
+    @PutMapping("/{id}/visibility")
+    @RequireLogin
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PostResponse> togglePostVisibility(
+            @CurrentUser User user,
+            @PathVariable Long id,
+            @RequestParam boolean isHidden) {
+
+        // Gọi xuống Service để xử lý logic
+        PostResponse updatedPost = postService.togglePostVisibility(user, id, isHidden);
+
+        // Trả về message linh hoạt tùy thuộc vào hành động Ẩn hay Hiện
+        String message = isHidden ? "Đã tạm ẩn tin đăng" : "Đã hiển thị lại tin đăng";
+
+        return ApiResponse.success(updatedPost, message);
     }
 
 }

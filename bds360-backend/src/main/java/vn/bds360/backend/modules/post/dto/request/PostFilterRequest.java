@@ -28,6 +28,8 @@ public class PostFilterRequest extends BaseFilterRequest {
     private Long vipId;
     private String search;
 
+    private Boolean isHidden;
+
     // 🌟 THÊM TRƯỜNG NÀY (Mặc định tìm theo ID)
     private List<String> searchBy = new ArrayList<>(List.of("id"));
 

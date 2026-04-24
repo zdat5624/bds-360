@@ -84,6 +84,9 @@ public class Post {
     private String createdBy;
     private String updatedBy;
 
+    @Column(name = "is_hidden")
+    private Boolean isHidden = false;
+
     @ManyToOne
     @JoinColumn(name = "province_code")
     @NotNull(message = "Tỉnh/Thành phố không được để trống")
@@ -127,6 +130,14 @@ public class Post {
 
     @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private ListingDetail listingDetail;
+
+    // Thêm cascade = CascadeType.REMOVE và orphanRemoval = true
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<PostViewHistory> postViewHistories;
+
+    // Thêm cascade = CascadeType.REMOVE và orphanRemoval = true
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<SavedPost> savedPosts;
 
     @PrePersist
     public void handleBeforeCreate() {

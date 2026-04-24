@@ -73,19 +73,33 @@ export const useGetMyVerificationHistory = (filters: BaseFilterParams) => {
 
 
 // 1. Đổi URL thành API dành cho User (không cần truyền userId lên URL nữa)
-const getLatestVerification = async (): Promise<VerificationSubmission> => {
-    return customFetch.get(`/users/verification/latest`);
+const getLatestVerification = async (userId: number): Promise<VerificationSubmission> => {
+    return customFetch.get(`/manage/verification-requests/users/${userId}/latest`);
 };
 
 export const useGetLatestVerification = (userId: number, enabled: boolean = true) => {
     return useQuery({
         queryKey: [...VERIFICATIONS_QUERY_KEYS.all, 'latest', userId] as const,
-        queryFn: () => getLatestVerification(),
+        // Cập nhật: Truyền userId vào function
+        queryFn: () => getLatestVerification(userId),
         enabled: enabled && !!userId,
 
-        //  TỐI ƯU QUAN TRỌNG: Tắt tính năng tự động gọi lại (retry) khi lỗi.
+        // TỐI ƯU QUAN TRỌNG: Tắt tính năng tự động gọi lại (retry) khi lỗi.
         // Vì nếu người dùng chưa từng nộp đơn, API sẽ trả về 404 (Not Found).
         // React Query mặc định sẽ cố gọi lại 3 lần làm UI bị xoay (loading) rất lâu.
+        retry: false,
+    });
+};
+
+const getMyLatestVerification = async (): Promise<VerificationSubmission> => {
+    return customFetch.get(`/users/verification/latest`);
+};
+
+export const useGetMyLatestVerification = (enabled: boolean = true) => {
+    return useQuery({
+        queryKey: [...VERIFICATIONS_QUERY_KEYS.all, 'my-latest'] as const,
+        queryFn: () => getMyLatestVerification(),
+        enabled,
         retry: false,
     });
 };

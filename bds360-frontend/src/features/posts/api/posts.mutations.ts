@@ -39,6 +39,11 @@ const incrementView = async (id: number): Promise<void> => {
     return customFetch.post(`/posts/${id}/view`);
 };
 
+const togglePostVisibility = async ({ id, isHidden }: { id: number; isHidden: boolean }): Promise<Post> => {
+    // Dùng params để truyền isHidden lên URL (vd: /api/v1/posts/1/visibility?isHidden=true)
+    return customFetch.put(`/posts/${id}/visibility`, null, { params: { isHidden } });
+};
+
 // --- HOOKS ---
 
 export const useCreatePost = () => {
@@ -128,4 +133,17 @@ export const useUnsavePost = () => {
 
 export const useIncrementPostView = () => {
     return useMutation({ mutationFn: incrementView });
+};
+
+export const useTogglePostVisibility = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: togglePostVisibility,
+        onSuccess: (_, variables) => {
+            // Làm mới lại danh sách (vd: bảng "Tin của tôi")
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
+            // Làm mới lại trang chi tiết tin nếu người dùng đang đứng xem
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.detail(variables.id) });
+        },
+    });
 };

@@ -6,6 +6,8 @@ import { authStorage } from '@/utils'; // 👈 Import authStorage từ file inde
 import { message } from 'antd';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
+const isDev = envConfig.NODE_ENV === 'development'; // Có thể dùng để bật tắt log hoặc các tính năng chỉ dành cho dev
+
 // Hằng số mapping từ Backend
 const SUCCESS_CODE = 10000;
 
@@ -56,7 +58,7 @@ customFetch.interceptors.response.use(
         }
 
         // [B] Luồng Lỗi Business (code !== 10000)
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && isDev) {
             message.error(msg || '***1>>> custom-fetch.ts: Có lỗi nghiệp vụ xảy ra từ hệ thống!');
 
         }
@@ -93,7 +95,7 @@ customFetch.interceptors.response.use(
         // C2: Các lỗi hệ thống khác
         const errorData = error.response?.data;
         const errorMessage = errorData?.message || 'Không thể kết nối đến máy chủ!';
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && isDev) {
             // Tránh báo lỗi 2 lần nếu là lỗi Auth đã xử lý ở trên
             if (error.response?.status !== 401) {
                 message.error(`***2>>> custom-fetch.ts: ${errorMessage}`);

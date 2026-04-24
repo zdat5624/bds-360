@@ -195,8 +195,33 @@ export function VerificationReviewModal({ isOpen, onClose, submission }: Verific
                                 control={control}
                                 render={({ field }) => (
                                     <Radio.Group {...field} optionType="button" buttonStyle="solid">
-                                        <Radio value="APPROVED" className="!text-green-600 hover:!text-green-500">Phê duyệt</Radio>
-                                        <Radio value="REJECTED" className="!text-red-600 hover:!text-red-500">Từ chối</Radio>
+                                        <Radio
+                                            value="APPROVED"
+                                            className="
+                                                !border-green-600 
+                                                !text-green-600 
+                                                hover:!text-green-500
+                                                [&.ant-radio-button-wrapper-checked]:!bg-green-600
+                                                [&.ant-radio-button-wrapper-checked]:!border-green-600
+                                                [&.ant-radio-button-wrapper-checked]:!text-white
+                                            "
+                                        >
+                                            Phê duyệt
+                                        </Radio>
+
+                                        <Radio
+                                            value="REJECTED"
+                                            className="
+                                                !border-red-600 
+                                                !text-red-600 
+                                                hover:!text-red-500
+                                                [&.ant-radio-button-wrapper-checked]:!bg-red-600
+                                                [&.ant-radio-button-wrapper-checked]:!border-red-600
+                                                [&.ant-radio-button-wrapper-checked]:!text-white
+                                            "
+                                        >
+                                            Từ chối
+                                        </Radio>
                                     </Radio.Group>
                                 )}
                             />

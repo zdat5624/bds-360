@@ -52,7 +52,7 @@ export function PostMeta({ post, className, style }: PostMetaProps) {
                 <PostMetaItem
                     icon={<IdcardOutlined />}
                     label="Mã tin"
-                    value={<span className="text-gray-700 font-bold">#{post.id}</span>}
+                    value={<span className="text-gray-700 font-bold">{post.id}</span>}
                 />
             </div>
         </div>

@@ -79,7 +79,7 @@ export default function ManageVerificationsPage() {
             key: 'id',
             width: 80,
             sorter: true,
-            render: (id) => <Text className="font-mono">#{id}</Text>
+            render: (id) => <Text className="font-mono">{id}</Text>
         },
         {
             title: 'Người dùng',

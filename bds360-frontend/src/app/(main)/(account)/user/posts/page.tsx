@@ -143,7 +143,7 @@ export default function UserPostsPage() {
             width: 100,
             align: 'center',
             sorter: true,
-            render: (id: number) => <Text strong style={{ color: colorText }}>#{id}</Text>,
+            render: (id: number) => <Text strong style={{ color: colorText }}>{id}</Text>,
         },
         {
             title: 'Thông tin bài đăng',

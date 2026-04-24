@@ -41,8 +41,8 @@ export default function ManageTransactionsPage() {
         email: undefined,
         transactionId: undefined,
         txnId: undefined,
-        startDate: toApiStartDate(dayjs().subtract(30, 'day')),
-        endDate: toApiEndDate(dayjs()),
+        startDate: undefined,
+        endDate: undefined,
     }), []);
 
     const [filters, setFilters] = useState<TransactionFilterParams>(defaultFilters);
@@ -98,7 +98,7 @@ export default function ManageTransactionsPage() {
             key: 'id',
             width: 100,
             sorter: true,
-            render: (id) => <Text className="font-mono">#{id}</Text>
+            render: (id) => <Text className="font-mono">{id}</Text>
         },
         {
             title: 'Khách hàng',

@@ -58,6 +58,10 @@ public class PostSpecification {
 				predicate = cb.and(predicate, cb.equal(root.get("user").get("id"), filter.getUserId()));
 			}
 
+			if (filter.getIsHidden() != null) {
+				predicate = cb.and(predicate, cb.equal(root.get("isHidden"), filter.getIsHidden()));
+			}
+
 			if (filter.getUserEmail() != null && !filter.getUserEmail().isEmpty()) {
 				Join<Post, User> userJoin = root.join("user");
 				predicate = cb.and(predicate, cb.equal(userJoin.get("email"), filter.getUserEmail()));

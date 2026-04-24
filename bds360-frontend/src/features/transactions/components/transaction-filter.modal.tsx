@@ -6,12 +6,11 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { toApiEndDate, toApiStartDate } from '@/utils';
 import { DATE_FORMAT, dayjs } from '@/utils/date.util';
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, DatePicker, Flex, Form, Input, Select, Space, Switch, Typography } from 'antd';
+import { Button, DatePicker, Form, Input, Select, Space } from 'antd';
 import { useEffect, useState } from 'react';
 import { TransactionFilterParams } from '../api/types';
 import { TRANSACTION_STATUS_OPTIONS, TRANSACTION_TYPE_OPTIONS } from '../transactions.constant';
 
-const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 interface TransactionFilterModalProps {
@@ -25,7 +24,6 @@ export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: Tr
     const { colorTextSecondary } = useAppTheme();
     const [form] = Form.useForm();
     const [searchField, setSearchField] = useState<'email' | 'transactionId' | 'txnId'>('email');
-    const [isDateFilterEnabled, setIsDateFilterEnabled] = useState(true);
 
     useEffect(() => {
         if (isOpen) {
@@ -41,17 +39,14 @@ export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: Tr
             }
 
             setSearchField(currentSearchField as any);
-            const hasDate = !!filters.startDate;
-            setIsDateFilterEnabled(hasDate);
 
             form.setFieldsValue({
                 searchValue: currentSearchValue,
                 status: filters.status || '',
                 type: filters.type || '',
-                isDateEnabled: hasDate,
-                dateRange: hasDate
+                dateRange: filters.startDate && filters.endDate
                     ? [dayjs(filters.startDate), dayjs(filters.endDate)]
-                    : [dayjs().subtract(30, 'day'), dayjs()]
+                    : null
             });
         }
     }, [isOpen, filters, form]);
@@ -62,7 +57,7 @@ export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: Tr
             searchParams[searchField] = values.searchValue;
         }
 
-        const dateParams = values.isDateEnabled && values.dateRange ? {
+        const dateParams = values.dateRange ? {
             startDate: toApiStartDate(values.dateRange[0]),
             endDate: toApiEndDate(values.dateRange[1]),
         } : {
@@ -122,18 +117,9 @@ export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: Tr
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mt-2">
-                    <Flex gap={12} align="center" className={isDateFilterEnabled ? "mb-3" : ""}>
-                        <Form.Item name="isDateEnabled" valuePropName="checked" noStyle>
-                            <Switch size="small" onChange={(checked) => setIsDateFilterEnabled(checked)} />
-                        </Form.Item>
-                        <Text strong>Lọc theo khoảng ngày</Text>
-                    </Flex>
-
-                    {isDateFilterEnabled && (
-                        <Form.Item name="dateRange" style={{ marginBottom: 0 }}>
-                            <RangePicker className="w-full" format={DATE_FORMAT.DEFAULT} allowClear={false} />
-                        </Form.Item>
-                    )}
+                    <Form.Item label={<span className="font-medium">Lọc theo khoảng ngày</span>} name="dateRange" style={{ marginBottom: 0 }}>
+                        <RangePicker className="w-full" format={DATE_FORMAT.DEFAULT} allowClear={true} />
+                    </Form.Item>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-6">

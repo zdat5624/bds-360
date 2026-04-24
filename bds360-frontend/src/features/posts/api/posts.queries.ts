@@ -2,7 +2,7 @@
 
 import customFetch from '@/lib/custom-fetch';
 import { BaseFilterParams, PageResponse } from '@/types';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { ForYouPostParams, MapPost, NearbyLocation, Post, PostFilterParams, PostViewChartResponse, PriceAnalyticsParams, PriceHistoryResponse, RelatedPostParams, SavedPostResponse } from './types';
 
 export const POSTS_QUERY_KEYS = {
@@ -58,10 +58,19 @@ const getPostViewsMonthly = async (id: number, months: number = 6): Promise<Post
 
 // --- HOOKS ---
 
-export const useGetPosts = (scope: 'public' | 'admin' | 'my', filters: PostFilterParams) => {
+export const useGetPosts = (scope: 'public' | 'admin' | 'my', filters: PostFilterParams, options?: Omit<
+    UseQueryOptions<
+        PageResponse<Post>, // data từ queryFn
+        Error,              // error
+        PageResponse<Post>, // data sau select
+        ReturnType<typeof POSTS_QUERY_KEYS.list> // queryKey type
+    >,
+    'queryKey' | 'queryFn'
+>) => {
     return useQuery({
         queryKey: POSTS_QUERY_KEYS.list(scope, filters),
         queryFn: () => getPosts(scope, filters),
+        ...options
     });
 };
 

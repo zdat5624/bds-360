@@ -5,7 +5,7 @@ import { AppModal } from '@/components/base/app.modal';
 import { VIP_PACKAGES } from '@/constants';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatDateTime } from '@/utils';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { EyeInvisibleOutlined, EyeOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Divider, Image, Skeleton, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useGetPostById } from '../api/posts.queries';
@@ -150,6 +150,17 @@ export function PostDetailModal({ isOpen, postId, onClose }: PostDetailModalProp
                                         </Tag>
                                     );
                                 })()}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Chế độ hiển thị">
+                                {post.isHidden ? (
+                                    <Tag icon={<EyeInvisibleOutlined />} color="warning">
+                                        Đang tạm ẩn
+                                    </Tag>
+                                ) : (
+                                    <Tag icon={<EyeOutlined />} color="processing">
+                                        Đang hiển thị
+                                    </Tag>
+                                )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Gói hiển thị">{getVipTag(post.vip)}</Descriptions.Item>
 

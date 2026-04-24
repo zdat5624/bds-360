@@ -66,6 +66,8 @@ export const createPostSchema = z.object({
 
 export type CreatePostFormValues = z.infer<typeof createPostSchema>;
 
+// @/features/posts/posts.schema.ts
+
 export const updatePostStatusSchema = z.object({
     postId: z.number({ message: 'ID bài đăng không hợp lệ' }),
 
@@ -73,8 +75,9 @@ export const updatePostStatusSchema = z.object({
         message: 'Trạng thái không hợp lệ'
     }),
 
-    message: z.string().trim().optional(), // Thêm trim() đề phòng khoảng trắng vô nghĩa
-    sendNotification: z.boolean().default(true),
+    message: z.string().trim().optional(),
+
+    sendNotification: z.boolean(),
 });
 
 export type UpdatePostStatusFormValues = z.infer<typeof updatePostStatusSchema>;
@@ -124,3 +127,15 @@ export const updatePostSchema = z.object({
 });
 
 export type UpdatePostFormValues = z.infer<typeof updatePostSchema>;
+
+
+
+export const togglePostVisibilitySchema = z.object({
+    id: z.number({ message: 'ID bài đăng không hợp lệ' }),
+
+    isHidden: z.coerce.boolean({
+        message: 'Trạng thái ẩn/hiện không hợp lệ',
+    }),
+});
+
+export type TogglePostVisibilityFormValues = z.infer<typeof togglePostVisibilitySchema>;
