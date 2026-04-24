@@ -2,7 +2,7 @@
 
 import customFetch from '@/lib/custom-fetch';
 import { BaseFilterParams, PageResponse, User } from '@/types';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { UserFilterParams, VerificationFilterParams, VerificationSubmission } from './types';
 
 export const USERS_QUERY_KEYS = {
@@ -56,6 +56,7 @@ export const useGetVerificationRequests = (filters: VerificationFilterParams) =>
     return useQuery({
         queryKey: VERIFICATIONS_QUERY_KEYS.list(filters),
         queryFn: () => getVerificationRequests(filters),
+        placeholderData: keepPreviousData,
     });
 };
 

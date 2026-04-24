@@ -117,7 +117,15 @@ export default function ManageTransactionsPage() {
             key: 'txnId',
             width: 160,
             sorter: true,
-            render: (txnId: string) => <Text copyable className="font-mono text-[12px]">{txnId || '--'}</Text>,
+            render: (txnId: string) => {
+                if (!txnId) return <Text>--</Text>;
+
+                return (
+                    <Text className="font-mono text-[12px]" copyable>
+                        {txnId}
+                    </Text>
+                );
+            }
         },
 
         {
