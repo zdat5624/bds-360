@@ -1,12 +1,14 @@
 // @/components/composite/user-info.tsx
 'use client';
 
-import { TopUpButton } from '@/features/transactions/components/top-up.button'; // 👇 Import TopUpButton
+import { APP_ROUTES } from '@/config/routes'; // 🌟 Import APP_ROUTES
+import { TopUpButton } from '@/features/transactions/components/top-up.button';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useAuthStore } from '@/stores';
 import { formatCurrency } from '@/utils';
-import { SwapOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Skeleton } from 'antd';
+import { CheckCircleFilled, SwapOutlined, UserOutlined } from '@ant-design/icons'; // 🌟 Import CheckCircleFilled
+import { Avatar, Skeleton, Tag, Tooltip } from 'antd'; // 🌟 Import Tag, Tooltip
+import Link from 'next/link'; // 🌟 Import Link
 
 export function UserInfo() {
     const {
@@ -17,7 +19,7 @@ export function UserInfo() {
     const isInitialized = useAuthStore((state) => state.isInitialized);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-    // XỬ LÝ LOADING (Giữ nguyên "thuốc chữa" của ông)
+    // XỬ LÝ LOADING (Giữ nguyên)
     if (!isInitialized) {
         return (
             <div className="flex flex-col gap-5 pb-6">
@@ -56,10 +58,35 @@ export function UserInfo() {
                     icon={!user.avatar && <UserOutlined />}
                     style={{ background: colorPrimaryBg, color: colorPrimary, borderColor: colorPrimaryBg }}
                 />
-                <div className="flex flex-col justify-center h-[48px] overflow-hidden">
-                    <span className="font-semibold text-[15px] truncate leading-[22px]">
-                        {user.name}
-                    </span>
+                {/* 🌟 Thêm flex-1 để nội dung tự co giãn tránh bị tràn */}
+                <div className="flex flex-col justify-center h-[48px] overflow-hidden flex-1">
+
+                    {/* 🌟 Row chứa Tên + Trạng thái xác thực */}
+                    <div className="flex items-center gap-1.5 w-full">
+                        <span className="font-semibold text-[15px] truncate leading-[22px]">
+                            {user.name}
+                        </span>
+
+                        {/* 🌟 Render Trạng thái Xác thực */}
+                        {user.isVerified ? (
+                            <Tooltip title="Tài khoản đã xác thực">
+                                <CheckCircleFilled className="text-[14px] flex-shrink-0" style={{ color: colorPrimary }} />
+                            </Tooltip>
+                        ) : (
+                            <Link href={APP_ROUTES.USER.PROFILE} className="flex-shrink-0 leading-none">
+                                <Tooltip title="Nhấn để cập nhật hồ sơ và xác thực">
+                                    <Tag
+                                        color="warning"
+                                        bordered={false}
+                                        className="m-0 text-[9px] px-1.5 py-[2px] cursor-pointer hover:opacity-80 transition-opacity font-medium"
+                                    >
+                                        Chưa xác thực
+                                    </Tag>
+                                </Tooltip>
+                            </Link>
+                        )}
+                    </div>
+
                     <span className="text-[13px] truncate leading-[20px]" style={{ color: colorTextSecondary }}>
                         {user.email}
                     </span>
@@ -74,7 +101,6 @@ export function UserInfo() {
                     <span className="text-[12px] font-medium uppercase tracking-wider leading-none" style={{ color: colorTextSecondary }}>
                         Số dư hiện tại
                     </span>
-                    {/* 👇 Sử dụng TopUpButton thay vì Button thuần của Antd */}
                     <TopUpButton
                         type="primary"
                         shape="default"

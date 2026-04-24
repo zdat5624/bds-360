@@ -83,7 +83,7 @@ export default function UserDashboard() {
         <div className="flex flex-col gap-6 pb-10">
             {/* --- HEADER --- */}
             <div>
-                <Title level={2} className="!mb-1 !font-bold tracking-tight">Tổng quan tài khoản</Title>
+                <Title level={3} className="!mb-1 !font-bold tracking-tight">Tổng quan tài khoản</Title>
                 <Text type="secondary">Chào mừng bạn! Theo dõi hiệu quả tin đăng và dòng tiền của bạn tại đây.</Text>
             </div>
 

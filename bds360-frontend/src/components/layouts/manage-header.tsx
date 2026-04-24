@@ -3,6 +3,7 @@
 
 import { APP_ROUTES } from '@/config/routes';
 import { getFilteredManageMenu } from '@/constants';
+import { USER_ROLE_COLOR, USER_ROLE_LABEL } from '@/constants/role.constant'; // 🌟 Import thêm cấu hình Role
 import { LogoutConfirmModal } from '@/features/auth/components/logout-confirm.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useAuthStore } from '@/stores/auth.store';
@@ -36,13 +37,11 @@ export function ManageHeader() {
             key: 'mobile-nav-group',
             type: 'group',
             label: 'ĐIỀU HƯỚNG QUẢN TRỊ',
-            className: 'md:hidden', // Chỉ hiển thị trong dropdown khi ở mobile
             children: filteredMenuItems as any,
         },
         {
             key: 'divider-1',
             type: 'divider',
-            className: 'md:hidden',
         },
         {
             key: 'user-group',
@@ -52,24 +51,27 @@ export function ManageHeader() {
                 {
                     key: 'home',
                     icon: <HomeOutlined />,
-                    label: <Link href={APP_ROUTES.PUBLIC.HOME}>Về trang chủ công khai</Link>
+                    label: <Link href={APP_ROUTES.PUBLIC.HOME}>Về trang chủ</Link>
                 },
                 {
                     key: 'user-dashboard',
                     icon: <DashboardOutlined />,
-                    label: <Link href={APP_ROUTES.USER.DASH_BOARD}>Bảng điều khiển cá nhân</Link>
+                    label: <Link href={APP_ROUTES.USER.DASH_BOARD}>Về trang cá nhân</Link>
                 },
                 { key: 'divider-2', type: 'divider' },
                 {
                     key: 'logout',
                     icon: <LogoutOutlined />,
                     danger: true,
-                    label: 'Đăng xuất hệ thống',
+                    label: 'Đăng xuất',
                     onClick: () => setIsLogoutModalOpen(true)
                 },
             ]
         }
     ];
+
+    // 🌟 Helper tính toán màu nền nhạt từ mã HEX cho Badge
+    const getLightColor = (hex: string) => `${hex}15`; // Thêm opacity 15% vào cuối chuỗi hex
 
     return (
         <>
@@ -108,28 +110,39 @@ export function ManageHeader() {
                     <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
                         <div className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80 p-1 rounded-md">
 
-
                             {/* Hiển thị Skeleton khi đang tải thông tin user */}
                             {!isInitialized ? (
-
                                 <div className="flex items-center h-full gap-3">
                                     <Skeleton.Avatar active size="default" shape="circle" style={{ display: 'block', height: 32, minWidth: 0 }} />
                                     <Skeleton.Input active size="default" style={{ display: 'block', width: 100, height: 32, minWidth: 0 }} />
                                 </div>
                             ) : (
-                                <><Avatar
-                                    src={user?.avatar}
-                                    icon={!user?.avatar && <UserOutlined />}
-                                    size="default"
-                                    className="border"
-                                />
+                                <div className="flex items-center justify-center gap-3">
+                                    <Avatar
+                                        src={user?.avatar}
+                                        icon={!user?.avatar && <UserOutlined />}
+                                        size="default"
+                                        className="border shadow-sm"
+                                    />
                                     <div className="hidden md:flex flex-col leading-tight text-left">
-                                        <Text className="font-semibold text-sm line-clamp-1">{user?.name || 'Nhân viên'}</Text>
-                                        <Text type="secondary" className="text-[10px] uppercase font-medium">
-                                            {user?.role === 'ADMIN' ? 'Quản trị viên' : 'Kiểm duyệt viên'}
+                                        <Text className="font-semibold text-[13px] mb-[3px] line-clamp-1">
+                                            {user?.name || 'Chưa xác định'}
                                         </Text>
+                                        {/* 🌟 Thay đổi kiểu hiển thị Role */}
+                                        {user?.role && (
+                                            <span
+                                                className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-[2px] rounded w-fit"
+                                                style={{
+                                                    color: USER_ROLE_COLOR[user.role],
+                                                    backgroundColor: getLightColor(USER_ROLE_COLOR[user.role]),
+                                                    border: `1px solid ${getLightColor(USER_ROLE_COLOR[user.role])}`
+                                                }}
+                                            >
+                                                {USER_ROLE_LABEL[user.role]}
+                                            </span>
+                                        )}
                                     </div>
-                                </>
+                                </div>
                             )}
                         </div>
                     </Dropdown>

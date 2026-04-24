@@ -8,10 +8,13 @@ import { LogoutConfirmModal } from '@/features/auth/components/logout-confirm.mo
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useAuthStore } from '@/stores/auth.store';
 import {
+    CheckCircleFilled,
+    ExclamationCircleFilled, // 🌟 Import thêm icon cảnh báo
     LogoutOutlined,
-    MenuOutlined
+    MenuOutlined,
+    SafetyCertificateTwoTone
 } from '@ant-design/icons';
-import { Avatar, Button, Divider, Drawer, Dropdown, Layout, Menu, Skeleton, Space, Typography } from 'antd';
+import { Avatar, Button, Divider, Drawer, Dropdown, Layout, Menu, Skeleton, Space, Tooltip, Typography } from 'antd'; // Bỏ Tag đi
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -24,12 +27,10 @@ export function Header() {
     const router = useRouter();
     const pathname = usePathname();
 
-    // 1. LẤY THÔNG TIN TỪ GLOBAL STATE (ZUSTAND)
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const user = useAuthStore((state) => state.user);
     const isInitialized = useAuthStore((state) => state.isInitialized);
 
-    // 2. STATES
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
@@ -37,7 +38,6 @@ export function Header() {
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
-    // KIỂM TRA TRẠNG THÁI ACTIVE CỦA ROUTE
     const isSaleActive = pathname.startsWith(APP_ROUTES.PUBLIC.SALE);
     const isRentActive = pathname.startsWith(APP_ROUTES.PUBLIC.RENT);
 
@@ -48,8 +48,17 @@ export function Header() {
         { key: APP_ROUTES.PUBLIC.RENT, label: <Link href={APP_ROUTES.PUBLIC.RENT}>Cho thuê</Link> },
     ];
 
-    // 3. CẤU HÌNH MENU DÀNH CHO USER
+    const canAccessManage = user?.role === 'ADMIN' || user?.role === 'MODERATOR';
+
     const userMenuItems = [
+        ...(canAccessManage ? [
+            {
+                key: 'manage-dashboard',
+                icon: <SafetyCertificateTwoTone twoToneColor={colorPrimary} />,
+                label: <Link href={APP_ROUTES.MANAGE.DASHBOARD}><span className="font-medium text-blue-600">Hệ thống quản trị</span></Link>,
+            },
+            { type: 'divider' as const },
+        ] : []),
         ...(USER_MENU_ITEMS || []),
         { type: 'divider' as const },
         {
@@ -87,10 +96,7 @@ export function Header() {
                             selectedKeys={[activeNavKey]}
                             items={mainNavItems}
                             className="h-full"
-                            style={{
-                                background: 'transparent',
-                                borderBottom: 'none',
-                            }}
+                            style={{ background: 'transparent', borderBottom: 'none' }}
                         />
                     </div>
                 </div>
@@ -99,31 +105,19 @@ export function Header() {
                 <div className="hidden md:flex items-center gap-4 h-full">
                     {!isInitialized ? (
                         <div className="flex items-center h-full">
-                            <Skeleton.Button
-                                active
-                                shape="default"
-                                style={{ display: 'block', width: 200, height: 32, minWidth: 0 }}
-                            />
+                            <Skeleton.Button active shape="default" style={{ display: 'block', width: 200, height: 32, minWidth: 0 }} />
                         </div>
                     ) : !isAuthenticated ? (
-                        // 👇 ĐÃ FIX Ở ĐÂY: Thay Avatar bằng 2 nút Đăng nhập / Đăng ký
                         <Space size="small" align="center" className="h-full">
                             <Link href={APP_ROUTES.AUTH.LOGIN}>
-                                <Button type="primary" className="font-medium shadow-sm">
-
-                                    Đăng nhập
-                                </Button>
+                                <Button type="primary" className="font-medium shadow-sm">Đăng nhập</Button>
                             </Link>
                             <Link href={APP_ROUTES.AUTH.REGISTER}>
-                                <Button type="text" className="font-medium !text-gray-600 hover:text-blue-600">
-                                    Đăng ký
-                                </Button>
+                                <Button type="text" className="font-medium !text-gray-600 hover:text-blue-600">Đăng ký</Button>
                             </Link>
                         </Space>
                     ) : (
                         <Space size="middle" align="center" className="h-full">
-
-                            {/* 🌟 BADGE TIN ĐÃ LƯU DÀNH CHO DESKTOP */}
                             <SavedPostsBadge className="mt-1 mr-2" />
 
                             <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
@@ -137,15 +131,30 @@ export function Header() {
                                     />
 
                                     <div className="flex flex-col leading-tight">
-                                        <Text
-                                            className="font-semibold text-sm transition-colors"
-                                            style={{ color: 'inherit' }}
-                                        >
-                                            {user?.name}
-                                        </Text>
+                                        {/* 🌟 FIX CHIỀU NGANG: Chỉ dùng Icon cố định kích thước */}
+                                        <div className="flex items-center gap-1.5">
+                                            <Text
+                                                className="font-semibold text-sm transition-colors truncate max-w-[120px]"
+                                                style={{ color: 'inherit' }}
+                                            >
+                                                {user?.name}
+                                            </Text>
+
+                                            {user?.isVerified ? (
+                                                <Tooltip title="Tài khoản đã xác thực">
+                                                    <CheckCircleFilled style={{ color: colorPrimary, fontSize: '13px' }} className="mt-[2px]" />
+                                                </Tooltip>
+                                            ) : (
+                                                <Tooltip title="Tài khoản chưa xác thực. Bấm để cập nhật!">
+                                                    <Link href={APP_ROUTES.USER.PROFILE} onClick={(e) => e.stopPropagation()} className="flex mt-[2px]">
+                                                        <ExclamationCircleFilled className="text-amber-500 text-[13px] hover:scale-110 transition-transform" />
+                                                    </Link>
+                                                </Tooltip>
+                                            )}
+                                        </div>
 
                                         <Text
-                                            className="text-xs transition-colors"
+                                            className="text-xs transition-colors truncate max-w-[140px]"
                                             type="secondary"
                                             style={{ color: 'inherit' }}
                                         >
@@ -158,10 +167,8 @@ export function Header() {
                     )}
                 </div>
 
-                {/* ================= MOBILE: BỘ NÚT BÊN PHẢI (BADGE + HAMBURGER) ================= */}
+                {/* ================= MOBILE ================= */}
                 <div className="md:hidden flex items-center gap-3">
-
-                    {/* 🌟 BADGE TIN ĐÃ LƯU DÀNH CHO MOBILE (Chỉ hiện khi đã đăng nhập) */}
                     {isInitialized && isAuthenticated && (
                         <SavedPostsBadge className="mt-1.5" />
                     )}
@@ -169,22 +176,13 @@ export function Header() {
                     <MenuOutlined
                         onClick={() => setIsMobileMenuOpen(true)}
                         style={{
-                            fontSize: 20,
-                            color: colorText,
-                            borderRadius: 6,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
+                            fontSize: 20, color: colorText, borderRadius: 6, cursor: 'pointer', transition: 'all 0.2s',
                         }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = colorBgTextHover;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = colorBgTextHover; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     />
                 </div>
 
-                {/* ================= MOBILE: DRAWER ================= */}
                 <Drawer
                     title="Menu"
                     placement="right"
@@ -192,9 +190,7 @@ export function Header() {
                     open={isMobileMenuOpen}
                     size="default"
                     closable={{ placement: 'end' }}
-                    styles={{
-                        body: { padding: '12px 24px' },
-                    }}
+                    styles={{ body: { padding: '12px 24px' } }}
                 >
                     <div className="flex flex-col h-full">
                         <div className="py-2 border-b" style={{ borderColor: colorBorderSecondary, background: colorBgContainer }}>
@@ -209,7 +205,17 @@ export function Header() {
                                 <div className="flex items-center gap-3">
                                     <Avatar size="large" src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} />
                                     <div className="flex flex-col">
-                                        <Text className="font-semibold text-base">{user?.name}</Text>
+                                        {/* 🌟 MOBILE CŨNG DÙNG ICON ĐỂ ĐỒNG BỘ */}
+                                        <div className="flex items-center gap-1.5">
+                                            <Text className="font-semibold text-base">{user?.name}</Text>
+                                            {user?.isVerified ? (
+                                                <CheckCircleFilled style={{ color: colorPrimary, fontSize: '14px' }} className="mt-[2px]" />
+                                            ) : (
+                                                <Link href={APP_ROUTES.USER.PROFILE} onClick={() => setIsMobileMenuOpen(false)} className="flex mt-[2px]">
+                                                    <ExclamationCircleFilled className="text-amber-500 text-[14px]" />
+                                                </Link>
+                                            )}
+                                        </div>
                                         <Text type="secondary" className="text-sm">{user?.email}</Text>
                                     </div>
                                 </div>
@@ -253,7 +259,6 @@ export function Header() {
                 </Drawer>
             </AntdHeader>
 
-            {/* ================= GẮN MODAL XÁC NHẬN ĐĂNG XUẤT ================= */}
             <LogoutConfirmModal
                 isOpen={isLogoutConfirmOpen}
                 onClose={() => setIsLogoutConfirmOpen(false)}
