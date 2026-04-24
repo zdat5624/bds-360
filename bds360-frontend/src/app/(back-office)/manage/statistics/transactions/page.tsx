@@ -12,7 +12,6 @@ import {
     CloseCircleOutlined,
     FallOutlined,
     RiseOutlined,
-    TransactionOutlined,
     WalletOutlined
 } from '@ant-design/icons';
 import {
@@ -33,6 +32,8 @@ import {
     ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
 
+import { APP_ROUTES } from '@/config';
+import { getPageMeta } from '@/constants';
 import { useGetManageTransactionDashboardStats } from '@/features/statistics/api/manage-transaction-statistics.queries';
 import {
     TRANSACTION_STATUS_COLOR,
@@ -92,13 +93,16 @@ export default function ManageTransactionStatisticsPage() {
         }
     };
 
+    const { icon, title } = getPageMeta(APP_ROUTES.MANAGE.STATISTICS.TRANSACTIONS);
+
     return (
         <Flex vertical gap={20} style={{ background: colorBgLayout, minHeight: '100%' }}>
             <Flex justify="space-between" align="end" wrap="wrap" gap={12}>
                 <Flex vertical>
                     <Flex vertical>
                         <Title level={3} style={{ margin: 0 }}>
-                            <TransactionOutlined style={{ marginRight: 8 }} />  Thống kê dòng tiền
+                            <span style={{ marginRight: 8 }}>{icon}</span>
+                            {title}
                         </Title>
                         <Text type="secondary" style={{ marginTop: 4 }} >
                             Báo cáo chi tiết về tình hình nạp, tiêu dùng và số dư hệ thống.

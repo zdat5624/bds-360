@@ -21,10 +21,11 @@ import { ManagePostFilterModal } from '@/features/posts/components/manage-post-f
 import { PostApprovalModal } from '@/features/posts/components/post-approval.modal';
 import { PostUndoApprovalModal } from '@/features/posts/components/post-undo-approval.modal';
 // 🌟 Import thêm 2 Modal mới
+import { getPageMeta } from '@/constants';
 import { PostBlockModal } from '@/features/posts/components/post-block.modal';
 import { PostUnblockModal } from '@/features/posts/components/post-unblock.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatDateTime, getPageMeta } from '@/utils';
+import { formatDateTime } from '@/utils';
 import { AppstoreOutlined, CheckCircleOutlined, DeleteOutlined, EyeOutlined, MenuOutlined, StopOutlined, UndoOutlined, UnlockOutlined } from '@ant-design/icons';
 import { keepPreviousData } from '@tanstack/react-query';
 import { App, Button, Flex, Segmented, Tag, Tooltip, Typography } from 'antd';
@@ -46,6 +47,7 @@ export default function ManagePostsPage() {
         sortDirection: 'DESC',
         statuses: undefined,
         search: undefined,
+        searchBy: ['id', 'email'], // id - title - description - email
         type: undefined,
         minPrice: undefined,
         maxPrice: undefined,
@@ -54,6 +56,7 @@ export default function ManagePostsPage() {
         categoryId: undefined,
         vipId: undefined,
         isDeleteByUser: undefined,
+        isHidden: undefined,
     }), []);
 
     const [filters, setFilters] = useState<PostFilterParams>(defaultFilters);
@@ -98,6 +101,7 @@ export default function ManagePostsPage() {
         if (filters.categoryId) count++;
         if (filters.vipId !== undefined) count++;
         if (filters.isDeleteByUser) count++;
+        if (filters.isHidden) count++;
         if (filters.statuses && filters.statuses.length > 0) count++;
         return count;
     }, [filters]);

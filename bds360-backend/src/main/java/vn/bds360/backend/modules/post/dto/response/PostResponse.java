@@ -45,6 +45,8 @@ PostResponse {
     private Long wardCode;
     private String wardName;
 
+    private Boolean isHidden;
+
     // --- QUAN HỆ (Dùng Sub-DTO để ngắt vòng lặp) ---
     private CategoryResponse category;
     private AuthorResponse user; // Đổi tên thành user cho khớp Entity, nhưng dùng class AuthorResponse

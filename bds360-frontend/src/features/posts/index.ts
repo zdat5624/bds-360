@@ -19,7 +19,9 @@ export * from './components/post-card';
 export * from './components/post-filter.modal';
 export * from './components/posts-map';
 export * from './components/smart-filter-bar';
+export * from './components/toggle-post-visibility.modal';
 export * from './hooks/use-post-filter-url';
+
 
 
 

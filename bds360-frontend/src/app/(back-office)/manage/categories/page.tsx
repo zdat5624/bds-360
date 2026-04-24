@@ -4,7 +4,7 @@ import { DataTable, TableState } from '@/components/base';
 import { ConfirmModal } from '@/components/base/confirm.modal';
 import { TableActionDropdown } from '@/components/composite';
 import { APP_ROUTES } from '@/config';
-import { LISTING_TYPE_COLOR, LISTING_TYPE_LABEL, ListingType } from '@/constants';
+import { getPageMeta, LISTING_TYPE_COLOR, LISTING_TYPE_LABEL, ListingType } from '@/constants';
 import {
     Category,
     CategoryFilterParams,
@@ -13,7 +13,6 @@ import {
 } from '@/features/categories';
 import { CategoryFormModal } from '@/features/categories/components/category-form.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { getPageMeta } from '@/utils';
 import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { App, Button, Flex, Input, Segmented, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';

@@ -4,10 +4,11 @@ import { DataTable, FilterButton, TableState } from '@/components/base';
 import { TableActionDropdown } from '@/components/composite';
 import { APP_ROUTES } from '@/config/routes';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { DATE_FORMAT, formatCurrency, getSmartRelativeTime } from '@/utils';
+import { DATE_FORMAT, getSmartRelativeTime } from '@/utils';
 import {
     DeleteOutlined,
     EditOutlined,
+    EyeInvisibleOutlined, // 🌟 Import icon
     EyeOutlined,
     FileTextOutlined,
     PlusOutlined,
@@ -26,6 +27,8 @@ import {
     PostDetailModal,
     PostFilterModal,
     PostFilterParams,
+    TogglePostVisibilityModal,
+
     useGetPosts
 } from '@/features/posts';
 
@@ -40,7 +43,6 @@ import {
 const { Title, Text } = Typography;
 
 export default function UserPostsPage() {
-    // --- HOOKS & THEME ---
     const { colorError, colorText, colorBorderSecondary } = useAppTheme();
     const router = useRouter();
 
@@ -55,7 +57,6 @@ export default function UserPostsPage() {
 
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-    // --- TÍNH TOÁN SỐ LƯỢNG FILTER ĐANG ACTIVE ---
     const activeFilterCount = useMemo(() => {
         const excludeFields = ['page', 'size', 'sortBy', 'sortDirection', 'statuses'];
         return Object.keys(filters).filter(
@@ -76,6 +77,12 @@ export default function UserPostsPage() {
         postId: null,
     });
 
+    // 🌟 1. STATE CHO MODAL ẨN/HIỆN
+    const [visibilityModal, setVisibilityModal] = useState<{ isOpen: boolean; post: Post | null }>({
+        isOpen: false,
+        post: null,
+    });
+
     // --- DATA FETCHING ---
     const { data, isFetching } = useGetPosts('my', filters);
 
@@ -92,16 +99,13 @@ export default function UserPostsPage() {
 
     const handleTabChange = (key: string) => {
         let statuses: PostStatus[] | undefined = undefined;
-
         if (key !== 'ALL') {
-            //  TỰ XỬ LÝ LOGIC GỘP TẠI PAGE: APPROVED bao gồm cả REVIEW_LATER
             if (key === 'APPROVED') {
                 statuses = ['APPROVED', 'REVIEW_LATER'];
             } else {
                 statuses = [key as PostStatus];
             }
         }
-
         setFilters((prev) => ({
             ...prev,
             page: 0,
@@ -123,11 +127,10 @@ export default function UserPostsPage() {
             size: 10,
             sortBy: 'createdAt',
             sortDirection: 'DESC',
-            statuses: filters.statuses, // Giữ lại tab hiện tại
+            statuses: filters.statuses,
         });
     };
 
-    // Xác định Tab nào đang active dựa trên mảng statuses
     const activeTabKey = useMemo(() => {
         if (!filters.statuses || filters.statuses.length === 0) return 'ALL';
         if (filters.statuses.includes('APPROVED')) return 'APPROVED';
@@ -140,30 +143,35 @@ export default function UserPostsPage() {
             title: 'Mã tin',
             dataIndex: 'id',
             key: 'id',
-            width: 100,
+            width: 80,
             align: 'center',
             sorter: true,
-            render: (id: number) => <Text strong style={{ color: colorText }}>{id}</Text>,
+            render: (id: number) => <Text strong>{id}</Text>,
         },
         {
             title: 'Thông tin bài đăng',
             dataIndex: 'title',
             key: 'title',
-            width: '35%',
+            width: '30%',
             render: (title: string, record: Post) => (
                 <div className="flex flex-col gap-0.5">
-                    <Text strong className="!line-clamp-1 !break-words">{title}</Text>
-                    <Text type="secondary" className="text-xs !line-clamp-1 !break-words ">
-                        {getFullAddress(record)}
-                    </Text>
+                    <div className="flex items-center gap-2">
+                        <Text strong className="!line-clamp-1">{title}</Text>
+                        {/* 🌟 Hiển thị Badge nếu đang ẩn */}
+                        {record.isHidden && (
+                            <Tag color="warning" icon={<EyeInvisibleOutlined />} className="m-0 text-[10px] leading-4 px-1">Đang ẩn</Tag>
+                        )}
+                    </div>
+                    <Text type="secondary" className="text-xs !line-clamp-1">{getFullAddress(record)}</Text>
                 </div>
             ),
         },
+        // ... (Cột diện tích và giá giữ nguyên)
         {
             title: 'Diện tích',
             dataIndex: 'area',
             key: 'area',
-            width: 120,
+            width: 100,
             align: 'right',
             sorter: true,
             render: (area: number) => <Text>{area} m²</Text>,
@@ -173,16 +181,11 @@ export default function UserPostsPage() {
             dataIndex: 'price',
             key: 'price',
             align: 'right',
-            width: 150,
+            width: 140,
             sorter: true,
             render: (price: number, record: Post) => (
                 <div className="flex flex-col items-end">
-                    <Text strong style={{ color: colorError }}>
-                        {formatPostPrice(price, record.type)}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: '10px' }}>
-                        {formatCurrency(price)}
-                    </Text>
+                    <Text strong style={{ color: colorError }}>{formatPostPrice(price, record.type)}</Text>
                 </div>
             ),
         },
@@ -191,9 +194,8 @@ export default function UserPostsPage() {
             dataIndex: 'status',
             key: 'status',
             align: 'center',
-            width: 140,
+            width: 130,
             render: (status: PostStatus) => {
-                //  TẬN DỤNG CONSTANT ĐỂ HIỂN THỊ: REVIEW_LATER -> APPROVED
                 const displayKey = USER_POST_STATUS_DISPLAY[status];
                 return (
                     <Tag color={POST_STATUS_COLOR[displayKey]} variant="filled">
@@ -207,7 +209,7 @@ export default function UserPostsPage() {
             dataIndex: 'createdAt',
             key: 'createdAt',
             align: 'right',
-            width: 160,
+            width: 150,
             sorter: true,
             render: (date: string) => getSmartRelativeTime(date, DATE_FORMAT.FULL_TIME),
         },
@@ -223,7 +225,24 @@ export default function UserPostsPage() {
                         key: 'view_detail',
                         label: 'Xem chi tiết',
                         icon: <EyeOutlined />,
+                        // Cách 1: Dùng prop color (Component của bạn đã map vào style)
+                        color: '#2563eb', // blue-600
                         onClick: () => setDetailModal({ isOpen: true, postId: record.id }),
+                    },
+                    {
+                        key: 'toggle_visibility',
+                        // Chỉ có 1 key label, giá trị thay đổi dựa theo isHidden
+                        label: record.isHidden
+                            ? <span className="!text-emerald-600 font-medium">Hiển thị tin</span>
+                            : <span className="!text-amber-500 font-medium">Tạm ẩn tin</span>,
+
+                        // Chỉ có 1 key icon, giá trị thay đổi dựa theo isHidden
+                        icon: record.isHidden
+                            ? <EyeOutlined className="!text-emerald-600" />
+                            : <EyeInvisibleOutlined className="!text-amber-500" />,
+
+                        disabled: record.status === 'BLOCKED' || record.status === 'EXPIRED',
+                        onClick: () => setVisibilityModal({ isOpen: true, post: record }),
                     },
                     {
                         key: 'edit_post',
@@ -236,7 +255,7 @@ export default function UserPostsPage() {
                         key: 'delete_post',
                         label: 'Xóa tin',
                         icon: <DeleteOutlined />,
-                        danger: true,
+                        danger: true, // AntD mặc định sẽ tự làm màu đỏ rất mạnh cho danger
                         onClick: () => setDeleteModal({ isOpen: true, post: record }),
                     },
                 ]} />
@@ -246,7 +265,7 @@ export default function UserPostsPage() {
 
     return (
         <div className="w-full flex flex-col gap-4">
-            {/* 1. HEADER SECTION */}
+            {/* Header, Divider, Tabs, DataTable giữ nguyên */}
             <div className="flex flex-wrap justify-between items-start sm:items-center gap-4">
                 <div>
                     <Title level={3} className="!m-0 flex items-center gap-2">
@@ -268,7 +287,6 @@ export default function UserPostsPage() {
 
             <Divider className="!m-0" />
 
-            {/* 2. ACTION BAR & TABS */}
             <div className="w-full overflow-hidden">
                 <Tabs
                     activeKey={activeTabKey}
@@ -288,15 +306,11 @@ export default function UserPostsPage() {
                     }}
                     items={[
                         { key: 'ALL', label: 'Tất cả' },
-                        ...USER_POST_STATUS_OPTIONS.map((o: { value: string; label: string }) => ({
-                            key: o.value,
-                            label: o.label
-                        }))
+                        ...USER_POST_STATUS_OPTIONS.map((o: any) => ({ key: o.value, label: o.label }))
                     ]}
                 />
             </div>
 
-            {/* 3. DATA TABLE */}
             <DataTable<Post>
                 columns={columns}
                 data={data?.content || []}
@@ -314,7 +328,7 @@ export default function UserPostsPage() {
                 scroll={{ x: 800 }}
             />
 
-            {/* 4. MODALS */}
+            {/* --- MODALS --- */}
             <PostFilterModal
                 isOpen={isFilterModalOpen}
                 onClose={() => setIsFilterModalOpen(false)}
@@ -333,6 +347,13 @@ export default function UserPostsPage() {
                 isOpen={detailModal.isOpen}
                 postId={detailModal.postId}
                 onClose={() => setDetailModal({ isOpen: false, postId: null })}
+            />
+
+            {/* 🌟 3. RENDER MODAL ẨN/HIỆN TIN */}
+            <TogglePostVisibilityModal
+                isOpen={visibilityModal.isOpen}
+                post={visibilityModal.post}
+                onClose={() => setVisibilityModal({ isOpen: false, post: null })}
             />
         </div>
     );

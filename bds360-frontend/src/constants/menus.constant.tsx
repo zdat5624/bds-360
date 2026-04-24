@@ -19,7 +19,9 @@ import {
 import type { MenuProps } from 'antd';
 import Link from 'next/link';
 
+import { ADMIN_ONLY_ROUTES } from '@/config/auth-guard.config';
 import { APP_ROUTES } from '@/config/routes';
+import { Role } from './role.constant';
 
 // ==========================================
 // 1. MENU DÀNH CHO USER (Khách hàng)
@@ -74,24 +76,23 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
     {
         key: APP_ROUTES.MANAGE.DASHBOARD,
         icon: <DashboardOutlined />,
-        label: <Link href={APP_ROUTES.MANAGE.DASHBOARD}>Tổng quan</Link>,
+        label: <Link href={APP_ROUTES.MANAGE.DASHBOARD}>Tổng quan hệ thống</Link>,
     },
 
-    // 🌟 THÊM MỚI: Nhóm Thống kê & Báo cáo (SubMenu)
     {
-        key: 'statistics-group', // Key định danh cho submenu
+        key: 'statistics-group',
         icon: <LineChartOutlined />,
         label: 'Thống kê & Báo cáo',
         children: [
             {
                 key: APP_ROUTES.MANAGE.STATISTICS.USERS,
                 icon: <PieChartOutlined />,
-                label: <Link href={APP_ROUTES.MANAGE.STATISTICS.USERS}>Người dùng</Link>,
+                label: <Link href={APP_ROUTES.MANAGE.STATISTICS.USERS}>Thống kê người dùng</Link>,
             },
             {
                 key: APP_ROUTES.MANAGE.STATISTICS.POSTS,
                 icon: <ContainerOutlined />,
-                label: <Link href={APP_ROUTES.MANAGE.STATISTICS.POSTS}>Tin đăng</Link>,
+                label: <Link href={APP_ROUTES.MANAGE.STATISTICS.POSTS}>Thống kê tin đăng</Link>,
             },
             {
                 key: APP_ROUTES.MANAGE.STATISTICS.TRANSACTIONS,
@@ -134,3 +135,60 @@ export const MANAGE_MENU_ITEMS: MenuProps['items'] = [
         label: <Link href={APP_ROUTES.MANAGE.VIPS}>Quản lý gói VIP</Link>,
     },
 ];
+
+
+
+export const getPageMeta = (key: string): { icon: React.ReactNode; title: string } => {
+    const findMeta = (items: any[], searchKey: string): { icon: React.ReactNode; title: string } | null => {
+        if (!items) return null;
+
+        for (const item of items) {
+            if (item?.key === searchKey) {
+                // Rút trích chuỗi text bên trong thẻ <Link> hoặc text thường
+                const title = item.label?.props?.children || (typeof item.label === 'string' ? item.label : '');
+                return { icon: item.icon, title };
+            }
+
+            if (item?.children) {
+                const found = findMeta(item.children, searchKey);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    const foundMeta = findMeta(MANAGE_MENU_ITEMS as any[], key) || findMeta(USER_MENU_ITEMS as any[], key);
+    return foundMeta || { icon: null, title: 'BDS 360' };
+};
+
+/**
+ * Lọc menu dựa trên Role và ADMIN_ONLY_ROUTES
+ */
+export const getFilteredManageMenu = (role: Role | undefined) => {
+    if (!role || role === 'USER') return [];
+    if (role === 'ADMIN') return MANAGE_MENU_ITEMS;
+
+    if (role === 'MODERATOR') {
+        return MANAGE_MENU_ITEMS?.filter((item: any) => {
+            // 1. Nếu menu cha nằm trong danh sách cấm -> Loại bỏ luôn
+            if (ADMIN_ONLY_ROUTES.includes(item.key)) return false;
+
+            // 2. Nếu là nhóm có menu con (ví dụ: statistics-group)
+            if (item.children) {
+                const filteredChildren = item.children.filter(
+                    (child: any) => !ADMIN_ONLY_ROUTES.includes(child.key)
+                );
+
+                // Nếu nhóm cha không bị cấm, nhưng toàn bộ con bị cấm -> Ẩn luôn cha
+                if (filteredChildren.length === 0) return false;
+
+                // Cập nhật lại danh sách con (Dùng spread để tránh thay đổi trực tiếp hỏng menu gốc)
+                return { ...item, children: filteredChildren };
+            }
+
+            return true;
+        });
+    }
+
+    return [];
+};

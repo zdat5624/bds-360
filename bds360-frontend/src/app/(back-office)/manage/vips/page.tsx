@@ -4,12 +4,13 @@ import { DataTable, TableState } from '@/components/base';
 import { TableActionDropdown } from '@/components/composite';
 import { APP_ROUTES } from '@/config';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatCurrency, getPageMeta } from '@/utils';
+import { formatCurrency } from '@/utils';
 import { EditOutlined } from '@ant-design/icons';
 import { Flex, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 
+import { getPageMeta } from '@/constants';
 import { VIP_PACKAGES } from '@/constants/vip-packages.constant';
 import { useGetVips, Vip } from '@/features/vips';
 import { UpdateVipPriceModal } from '@/features/vips/components/update-vip-price.modal';

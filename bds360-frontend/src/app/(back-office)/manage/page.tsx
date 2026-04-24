@@ -10,7 +10,6 @@ import {
     ArrowUpOutlined,
     ContainerOutlined,
     CrownOutlined,
-    DashboardOutlined,
     DollarOutlined,
     TeamOutlined
 } from '@ant-design/icons';
@@ -35,6 +34,7 @@ import {
 
 import { APP_ROUTES } from '@/config/routes';
 import { LISTING_TYPE_LABEL } from '@/constants/listing.constant';
+import { getPageMeta } from '@/constants/menus.constant';
 import { VIP_PACKAGES } from '@/constants/vip-packages.constant';
 import { useGetSystemOverviewStats } from '@/features/statistics/api/manage-overview-statistics.queries';
 
@@ -63,13 +63,17 @@ export default function SystemOverviewPage() {
         });
     }, [dashboardData?.vipDistributions]);
 
+    const { icon, title } = getPageMeta(APP_ROUTES.MANAGE.DASHBOARD);
+
+
     return (
         <Flex vertical gap={20} style={{ background: colorBgLayout, minHeight: '100%' }}>
             <Flex justify="space-between" align="end" wrap="wrap" gap={12}>
                 <Flex vertical>
+
                     <Title level={3} style={{ margin: 0 }}>
-                        <DashboardOutlined style={{ marginRight: 8 }} />
-                        Tổng quan hệ thống
+                        <span style={{ marginRight: 8 }}>{icon}</span>
+                        {title}
                     </Title>
                     <Text type="secondary" style={{ marginTop: 4 }}>
                         Bức tranh toàn cảnh về sức khỏe tài chính, vận hành và người dùng.

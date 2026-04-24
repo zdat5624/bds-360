@@ -4,10 +4,10 @@
 import { DataTable, FilterButton, RefreshButton, TableState } from '@/components/base';
 import { TableActionDropdown } from '@/components/composite';
 import { APP_ROUTES } from '@/config';
-import { GENDER_LABEL, Role, USER_ROLE_COLOR, USER_ROLE_LABEL, USER_ROLE_OPTIONS } from '@/constants';
+import { GENDER_LABEL, getPageMeta, Role, USER_ROLE_COLOR, USER_ROLE_LABEL, USER_ROLE_OPTIONS } from '@/constants';
 import {
-    UserFilterParams,
     useGetUsers,
+    UserFilterParams,
 } from '@/features/users';
 import { UserDeleteModal } from '@/features/users/components/user-delete.modal';
 import { UserDetailModal } from '@/features/users/components/user-detail.modal';
@@ -15,7 +15,7 @@ import { UserFilterModal } from '@/features/users/components/user-filter.modal';
 import { UserFormModal } from '@/features/users/components/user-form.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { User } from '@/types';
-import { formatCurrency, formatDateTime, getPageMeta } from '@/utils';
+import { formatCurrency, formatDateTime } from '@/utils';
 import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { Avatar, Button, Flex, Segmented, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';

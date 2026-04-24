@@ -11,7 +11,6 @@ import {
     CheckCircleOutlined,
     ExclamationCircleOutlined,
     FireOutlined,
-    PieChartOutlined,
     SafetyCertificateOutlined,
     TeamOutlined,
     UserAddOutlined
@@ -34,6 +33,8 @@ import {
     ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
 
+import { APP_ROUTES } from '@/config';
+import { getPageMeta } from '@/constants/menus.constant';
 import { useGetManageUserDashboardStats } from '@/features/statistics/api/manage-user-statistics.queries';
 import { useGetUsers, useGetVerificationRequests } from '@/features/users/api/user.queries';
 
@@ -88,13 +89,15 @@ export default function ManageUserStatisticsPage() {
         { name: 'Đã xác thực', value: dashboardData?.prestigeStats?.verifiedCount || 0 },
         { name: 'Chưa xác thực', value: dashboardData?.prestigeStats?.unverifiedCount || 0 }
     ];
+    const { icon, title } = getPageMeta(APP_ROUTES.MANAGE.STATISTICS.USERS);
 
     return (
         <Flex vertical gap={20} style={{ background: colorBgLayout, minHeight: '100%' }}>
             <Flex justify="space-between" align="end" wrap="wrap" gap={12}>
                 <Flex vertical>
-                    <Title level={3} style={{ margin: 0 }} >
-                        <PieChartOutlined style={{ marginRight: 8 }} />Thống kê người dùng
+                    <Title level={3} style={{ margin: 0 }}>
+                        <span style={{ marginRight: 8 }}>{icon}</span>
+                        {title}
                     </Title>
                     <Text type="secondary" style={{ marginTop: 4 }} >
                         Báo cáo tăng trưởng và chỉ số người dùng trong hệ thống .

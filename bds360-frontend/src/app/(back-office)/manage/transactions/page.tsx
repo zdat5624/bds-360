@@ -4,6 +4,7 @@
 import { DataTable, FilterButton, RefreshButton, TableState } from '@/components/base';
 import { TableActionDropdown } from '@/components/composite';
 import { APP_ROUTES } from '@/config';
+import { getPageMeta } from '@/constants';
 import {
     Transaction,
     TRANSACTION_STATUS_COLOR,
@@ -17,7 +18,7 @@ import {
 } from '@/features/transactions';
 import { TransactionFilterModal } from '@/features/transactions/components/transaction-filter.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatCurrency, formatDateTime, getPageMeta, toApiEndDate, toApiStartDate } from '@/utils';
+import { formatCurrency, formatDateTime, toApiEndDate, toApiStartDate } from '@/utils';
 import { DATE_FORMAT, dayjs } from '@/utils/date.util';
 import { EyeOutlined } from '@ant-design/icons';
 import { DatePicker, Flex, Tag, Typography } from 'antd';

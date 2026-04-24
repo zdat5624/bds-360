@@ -47,7 +47,6 @@ export const APP_ROUTES = {
         CATEGORIES: '/manage/categories',
         POSTS: '/manage/posts',
         TRANSACTIONS: '/manage/transactions',
-
         STATISTICS: {
             USERS: '/manage/statistics/users',
             TRANSACTIONS: '/manage/statistics/transactions',

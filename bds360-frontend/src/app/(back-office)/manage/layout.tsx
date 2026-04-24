@@ -4,17 +4,34 @@
 import { ManageFooter } from '@/components/layouts/manage-footer';
 import { ManageHeader } from '@/components/layouts/manage-header';
 import { ManageSidebar } from '@/components/layouts/manage-sidebar';
-import { APP_ROUTES } from '@/config';
+import { ADMIN_ONLY_ROUTES, APP_ROUTES } from '@/config';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useAuthStore } from '@/stores/auth.store';
 import { LeftOutlined, RightOutlined, SafetyCertificateTwoTone } from '@ant-design/icons';
-import { Button, Layout } from 'antd';
+import { Button, Layout, message } from 'antd';
 import Link from 'next/link';
-import { ReactNode, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+
+import { ReactNode, useEffect, useState } from 'react';
 
 const { Sider, Content } = Layout;
 
 export default function ManageLayout({ children }: { children: ReactNode }) {
-    // Kéo thêm các token cần thiết
+
+    const pathname = usePathname();
+    const user = useAuthStore(state => state.user);
+
+    const router = useRouter();
+    useEffect(() => {
+        if (user && user.role === 'MODERATOR') {
+            const isForbidden = ADMIN_ONLY_ROUTES.some(route => pathname.startsWith(route));
+            if (isForbidden) {
+                router.push(APP_ROUTES.MANAGE.DASHBOARD);
+                message.warning('Bạn không có quyền truy cập khu vực này');
+            }
+        }
+    }, [pathname, user]);
+
     const {
         colorBgContainer,
         colorBorderSecondary,
@@ -105,7 +122,6 @@ export default function ManageLayout({ children }: { children: ReactNode }) {
                 </div>
             </Sider>
 
-            {/* Bỏ class bg-[#f0f2f5], gắn thẳng token màu nền layout */}
             <Layout className="flex flex-col" style={{ background: colorBgLayout }}>
                 <ManageHeader />
 

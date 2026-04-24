@@ -8,7 +8,6 @@ import { formatNumber } from '@/utils/number.util';
 import {
     ArrowDownOutlined,
     ArrowUpOutlined,
-    ContainerOutlined,
     CrownOutlined,
     EyeOutlined,
     FileAddOutlined,
@@ -33,7 +32,9 @@ import {
     ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
 
+import { APP_ROUTES } from '@/config';
 import { LISTING_TYPE_LABEL } from '@/constants/listing.constant';
+import { getPageMeta } from '@/constants/menus.constant';
 import { VIP_PACKAGES } from '@/constants/vip-packages.constant';
 import { useGetManagePostDashboardStats } from '@/features/statistics/api/manage-post-statistics.queries';
 
@@ -68,6 +69,7 @@ export default function ManagePostStatisticsPage() {
         value: item.count || 0,
         color: DEMAND_COLORS[idx % DEMAND_COLORS.length]
     })) || [];
+    const { icon, title } = getPageMeta(APP_ROUTES.MANAGE.STATISTICS.POSTS);
 
     return (
         <Flex vertical gap={20} style={{ background: colorBgLayout, minHeight: '100%' }}>
@@ -75,8 +77,9 @@ export default function ManagePostStatisticsPage() {
 
                 <Flex vertical>
                     <Flex vertical>
-                        <Title level={3} style={{ margin: 0 }} >
-                            <ContainerOutlined style={{ marginRight: 8 }} />Thống kê tin đăng
+                        <Title level={3} style={{ margin: 0 }}>
+                            <span style={{ marginRight: 8 }}>{icon}</span>
+                            {title}
                         </Title>
                         <Text type="secondary" style={{ marginTop: 4 }}>
                             Thống kê tin đắng, tình trạng kiểm duyệt và phân bổ khu vực.

@@ -4,6 +4,7 @@
 import { DataTable, RefreshButton, TableState } from '@/components/base';
 import { TableActionDropdown } from '@/components/composite';
 import { APP_ROUTES } from '@/config';
+import { getPageMeta } from '@/constants';
 import {
     useGetVerificationRequests,
     VerificationFilterParams,
@@ -12,7 +13,7 @@ import {
 import { VerificationReviewModal } from '@/features/users/components/verification-review.modal';
 import { VERIFICATION_STATUS_LABEL } from '@/features/users/users.constant';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatDateTime, getPageMeta } from '@/utils';
+import { formatDateTime, } from '@/utils';
 import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, SearchOutlined, SyncOutlined } from '@ant-design/icons';
 import { Avatar, Flex, Input, Segmented, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
