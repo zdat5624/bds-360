@@ -2,12 +2,12 @@ package vn.bds360.backend.bootstrap;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -398,11 +398,11 @@ public class StartupRunner implements CommandLineRunner {
 
     private void initSamplePosts() {
         if (postRepository.count() > 0) {
-            System.out.println(">>> SKIP! INIT ADDRESS DATA TABLE posts: ALREADY HAVE DATA ... ");
+            System.out.println(">>> SKIP! INIT posts: ALREADY HAVE DATA ... ");
             return;
         }
 
-        // Đọc 1 lần từ Database lên RAM
+        // 1. Đọc dữ liệu nền lên RAM
         List<User> users = userRepository.findAll();
         List<Category> categories = categoryRepository.findAll();
         List<Province> provinces = provinceRepository.findAll();
@@ -420,9 +420,8 @@ public class StartupRunner implements CommandLineRunner {
 
         int totalPost = 5000;
         int batchSize = 1000;
-        int numberOfThreads = totalPost / batchSize; // Sẽ tạo 5 luồng
+        int numberOfThreads = totalPost / batchSize;
 
-        // ⚡ Dùng ConcurrentHashMap để Thread-Safe khi các luồng cùng ghi/đọc Cache
         Map<Long, List<District>> districtCache = new ConcurrentHashMap<>();
         Map<Long, List<Ward>> wardCache = new ConcurrentHashMap<>();
         Map<String, double[]> geocodeCache = new ConcurrentHashMap<>();
@@ -434,7 +433,7 @@ public class StartupRunner implements CommandLineRunner {
             final int threadIndex = t;
 
             executorService.submit(() -> {
-                Random random = new Random(); // Thread-safe Random
+                Random random = new Random();
                 List<Post> posts = new ArrayList<>();
 
                 int clusterSize = 0;
@@ -447,15 +446,16 @@ public class StartupRunner implements CommandLineRunner {
                 for (int i = 1; i <= batchSize; i++) {
                     Post post = new Post();
 
-                    // 1. LOGIC CLUSTER SEEDING
+                    // ====================================================================
+                    // 1. LOGIC CLUSTER SEEDING (10-40 tin/cụm để phủ toàn quốc)
+                    // ====================================================================
                     if (currentClusterCount >= clusterSize) {
-                        clusterSize = 50 + random.nextInt(101);
+                        clusterSize = 10 + random.nextInt(31);
                         currentClusterCount = 0;
 
                         currentClusterCategory = categories.get(random.nextInt(categories.size()));
                         currentClusterProvince = provinces.get(random.nextInt(provinces.size()));
 
-                        // Đọc District từ Cache
                         Long provCode = currentClusterProvince.getCode();
                         List<District> districtsInProvince = districtCache.computeIfAbsent(
                                 provCode, k -> districtRepository.findByProvinceCode(k));
@@ -466,8 +466,6 @@ public class StartupRunner implements CommandLineRunner {
                         if (!districtsInProvince.isEmpty()) {
                             currentClusterDistrict = districtsInProvince
                                     .get(random.nextInt(districtsInProvince.size()));
-
-                            // Đọc Ward từ Cache
                             Long distCode = currentClusterDistrict.getCode();
                             List<Ward> wardsInDistrict = wardCache.computeIfAbsent(
                                     distCode, k -> wardRepository.findByDistrictCode(k));
@@ -479,176 +477,157 @@ public class StartupRunner implements CommandLineRunner {
                     }
                     currentClusterCount++;
 
-                    Category selectedCategory = currentClusterCategory;
-                    Province selectedProvince = currentClusterProvince;
-                    District selectedDistrict = currentClusterDistrict;
-                    Ward selectedWard = currentClusterWard;
                     Vip selectedVip = vips.get(random.nextInt(vips.size()));
 
-                    // 2. XỬ LÝ DIỆN TÍCH & ĐỊA CHỈ
-                    double rawArea = 50 + random.nextDouble() * 2000;
-                    double roundedArea = Math.round(rawArea * 10.0) / 10.0;
+                    // ====================================================================
+                    // 2. DIỆN TÍCH & ĐỊA CHỈ & TỌA ĐỘ
+                    // ====================================================================
+                    double roundedArea = Math.round((50 + random.nextDouble() * 2000) * 10.0) / 10.0;
                     post.setArea(roundedArea);
-
-                    post.setProvince(selectedProvince);
-                    if (selectedDistrict != null)
-                        post.setDistrict(selectedDistrict);
-                    if (selectedWard != null)
-                        post.setWard(selectedWard);
+                    post.setProvince(currentClusterProvince);
+                    if (currentClusterDistrict != null)
+                        post.setDistrict(currentClusterDistrict);
+                    if (currentClusterWard != null)
+                        post.setWard(currentClusterWard);
 
                     String houseNumber = "Số " + (random.nextInt(999) + 1);
                     String street = STREET_NAMES.get(random.nextInt(STREET_NAMES.size()));
                     String detailAddress = houseNumber + " Đường " + street;
+                    post.setStreetAddress(detailAddress);
 
-                    String fullAddress = detailAddress + ", " + (selectedWard != null ? selectedWard.getName() : "") +
-                            (selectedDistrict != null ? ", " + selectedDistrict.getName() : "") +
-                            ", " + selectedProvince.getName();
+                    String geocodeAddress = (currentClusterWard != null ? currentClusterWard.getName() + ", " : "") +
+                            (currentClusterDistrict != null ? currentClusterDistrict.getName() + ", " : "") +
+                            currentClusterProvince.getName();
 
-                    // 3. XỬ LÝ TỌA ĐỘ MAPBOX VỚI CACHE
-                    // Chuỗi address chỉ tới Phường/Huyện/Tỉnh để query Mapbox hiệu quả và dễ trúng
-                    // cache
-                    String geocodeAddress = (selectedWard != null ? selectedWard.getName() + ", " : "") +
-                            (selectedDistrict != null ? selectedDistrict.getName() + ", " : "") +
-                            selectedProvince.getName();
-
-                    double[] coords = geocodeCache.get(geocodeAddress);
-
-                    if (coords == null) {
-                        // Nếu chưa có trong RAM, gọi API Mapbox
-                        Optional<double[]> latLng = mapboxGeocodeService.getLatLngFromAddress(geocodeAddress);
-                        if (latLng.isPresent()) {
-                            coords = latLng.get();
-                            geocodeCache.put(geocodeAddress, coords); // Lưu vào RAM
-                        }
-                    }
+                    double[] coords = geocodeCache.computeIfAbsent(geocodeAddress,
+                            addr -> mapboxGeocodeService.getLatLngFromAddress(addr).orElse(null));
 
                     if (coords != null) {
-                        double baseLongitude = coords[0];
-                        double baseLatitude = coords[1];
-
-                        double radiusInMeters = 1000.0;
-                        double radiusInDegrees = radiusInMeters / 111_000.0;
-                        double u = random.nextDouble();
-                        double v = random.nextDouble();
-                        double w = radiusInDegrees * Math.sqrt(u);
-                        double theta = 2 * Math.PI * v;
-                        double x = w * Math.cos(theta);
-                        double y = w * Math.sin(theta);
-
-                        post.setLongitude(baseLongitude + x / Math.cos(Math.toRadians(baseLatitude)));
-                        post.setLatitude(baseLatitude + y);
+                        double radiusInDegrees = (200.0 + random.nextInt(600)) / 111_000.0;
+                        double u = random.nextDouble(), v = random.nextDouble();
+                        double w = radiusInDegrees * Math.sqrt(u), theta = 2 * Math.PI * v;
+                        post.setLongitude(coords[0] + (w * Math.cos(theta)) / Math.cos(Math.toRadians(coords[1])));
+                        post.setLatitude(coords[1] + (w * Math.sin(theta)));
                     }
 
-                    // 4. XỬ LÝ LISTING DETAIL
-                    ListingDetail detail = new ListingDetail();
-                    String catName = selectedCategory.getName();
-                    boolean isLand = catName.contains("Bán đất") || catName.contains("kho, nhà xưởng");
+                    // ====================================================================
+                    // 3. XỬ LÝ TIME TRAVEL (PHỤC VỤ PRICE HISTORY)
+                    // ====================================================================
+                    // Rải tin trong vòng 1000 ngày. 50% tin rải trong 60 ngày gần nhất để Map
+                    // "đông" điểm xanh.
+                    long randomDaysAgo;
+                    if (random.nextInt(100) < 50) {
+                        randomDaysAgo = random.nextInt(60); // 50% tin mới (0-60 ngày)
+                    } else {
+                        randomDaysAgo = 60 + random.nextInt(940); // 50% tin cũ (60-1000 ngày)
+                    }
 
-                    if (!isLand) {
+                    Instant fakeCreatedAt = Instant.now().minus(randomDaysAgo, ChronoUnit.DAYS);
+                    int durationDays = (random.nextBoolean() ? 30 : (random.nextBoolean() ? 60 : 90));
+                    Instant fakeExpireDate = fakeCreatedAt.plus(durationDays, ChronoUnit.DAYS);
+                    boolean isActuallyExpired = fakeExpireDate.isBefore(Instant.now());
+
+                    // ====================================================================
+                    // 4. XỬ LÝ GIÁ (LẠM PHÁT 8%/NĂM)
+                    // ====================================================================
+                    long basePrice;
+                    if (currentClusterCategory.getType() == ListingType.RENT) {
+                        basePrice = 1_700_000L + (long) (random.nextDouble() * 38_300_000L);
+                    } else {
+                        long pricePerM2 = 5_000_000L + (long) (random.nextDouble() * 95_000_000L);
+                        basePrice = (long) (roundedArea * pricePerM2);
+                    }
+
+                    // Giảm giá ngược về quá khứ: Giá_quá_khứ = Giá_hiện_tại / (1.08 ^ số_năm_trước)
+                    double yearsAgo = randomDaysAgo / 365.0;
+                    double priceReductionFactor = Math.pow(1 - 0.08, yearsAgo);
+                    post.setPrice((long) (basePrice * priceReductionFactor));
+
+                    // ====================================================================
+                    // 5. TRẠNG THÁI & PUSHED_AT
+                    // ====================================================================
+                    Instant fakePushedAt;
+                    if (isActuallyExpired) {
+                        post.setStatus(PostStatus.EXPIRED);
+                        post.setNotifyOnView(false);
+                        // Đã đẩy tin ngẫu nhiên trong vòng đời lúc tin còn sống
+                        long secondsActive = fakeExpireDate.getEpochSecond() - fakeCreatedAt.getEpochSecond();
+                        fakePushedAt = fakeCreatedAt.plusSeconds(random.nextLong(Math.max(1, secondsActive)));
+                    } else {
+                        // Tin còn hạn -> Tỉ lệ Approved cao để hiện lên Map
+                        if (selectedVip.getVipLevel() == 0) {
+                            int statusRand = random.nextInt(100);
+                            if (statusRand < 75)
+                                post.setStatus(PostStatus.APPROVED);
+                            else if (statusRand < 90)
+                                post.setStatus(PostStatus.PENDING);
+                            else
+                                post.setStatus(PostStatus.REVIEW_LATER);
+                        } else {
+                            post.setStatus(PostStatus.APPROVED);
+                        }
+                        // Đẩy tin ngẫu nhiên từ lúc tạo đến nay
+                        long secondsSinceCreated = Instant.now().getEpochSecond() - fakeCreatedAt.getEpochSecond();
+                        fakePushedAt = fakeCreatedAt.plusSeconds(random.nextLong(Math.max(1, secondsSinceCreated)));
+                        post.setNotifyOnView(true);
+                    }
+
+                    post.setCreatedAt(fakeCreatedAt);
+                    post.setExpireDate(fakeExpireDate);
+                    post.setPushedAt(fakePushedAt);
+                    post.setDeletedByUser(false);
+                    post.setView((long) (random.nextInt(1000) + 50));
+
+                    // ====================================================================
+                    // 6. LIÊN KẾT & NỘI DUNG
+                    // ====================================================================
+                    User user = users.get(random.nextInt(users.size()));
+                    post.setUser(user);
+                    post.setCreatedBy(user.getEmail());
+                    post.setCategory(currentClusterCategory);
+                    post.setVip(selectedVip);
+
+                    // Listing Detail
+                    ListingDetail detail = new ListingDetail();
+                    if (!currentClusterCategory.getName().contains("Bán đất")
+                            && !currentClusterCategory.getName().contains("kho")) {
                         detail.setBedrooms(random.nextInt(5) + 1);
                         detail.setBathrooms(random.nextInt(3) + 1);
                         detail.setFurnishing(furnishings[random.nextInt(furnishings.length)]);
                     }
-
                     detail.setHouseDirection(orientations[random.nextInt(orientations.length)]);
                     detail.setBalconyDirection(orientations[random.nextInt(orientations.length)]);
                     detail.setLegalStatus(legalStatuses[random.nextInt(legalStatuses.length)]);
                     detail.setPost(post);
                     post.setListingDetail(detail);
+                    post.setType(currentClusterCategory.getType());
 
-                    post.setType(selectedCategory.getType());
-
-                    // 5. GỌI HÀM HELPER ĐIỀN TIÊU ĐỀ, MÔ TẢ, HÌNH ẢNH
                     int globalIndex = (threadIndex * batchSize) + i;
-                    populateContentAndImages(post, selectedCategory.getName(), roundedArea, fullAddress, random,
+                    String fullAddress = detailAddress + ", "
+                            + (currentClusterWard != null ? currentClusterWard.getName() + ", " : "") +
+                            (currentClusterDistrict != null ? currentClusterDistrict.getName() + ", " : "")
+                            + currentClusterProvince.getName();
+                    populateContentAndImages(post, currentClusterCategory.getName(), roundedArea, fullAddress, random,
                             baseImageUrl, globalIndex);
-
-                    // 6. XỬ LÝ GIÁ TIỀN
-                    if (selectedCategory.getType() == ListingType.RENT) {
-                        long minRentPrice = 1_700_000L;
-                        long maxRentPrice = 40_000_000L;
-                        post.setPrice(minRentPrice + (long) (random.nextDouble() * (maxRentPrice - minRentPrice)));
-                    } else if (selectedCategory.getType() == ListingType.SALE) {
-                        long minPricePerM2 = 100_000L;
-                        long maxPricePerM2 = 10_000_000L;
-                        long pricePerM2 = minPricePerM2
-                                + (long) (random.nextDouble() * (maxPricePerM2 - minPricePerM2));
-                        post.setPrice((long) (roundedArea * pricePerM2));
-                    }
-
-                    // 7. XỬ LÝ TIME TRAVEL
-                    int timeRand = random.nextInt(100);
-                    Instant fakeCreatedAt;
-                    Instant fakeExpireDate;
-                    int[] durationOptions = { 30, 60, 90 };
-                    int durationDays = durationOptions[random.nextInt(durationOptions.length)];
-
-                    if (timeRand < 90) {
-                        long randomDaysInPast = random.nextInt(1065) + 30;
-                        fakeCreatedAt = Instant.now().minus(randomDaysInPast, java.time.temporal.ChronoUnit.DAYS);
-                        fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
-                        post.setStatus(PostStatus.EXPIRED);
-                        post.setNotifyOnView(false);
-                    } else {
-                        long randomRecentDays = random.nextInt(30);
-                        fakeCreatedAt = Instant.now().minus(randomRecentDays, java.time.temporal.ChronoUnit.DAYS);
-                        fakeExpireDate = fakeCreatedAt.plus(durationDays, java.time.temporal.ChronoUnit.DAYS);
-
-                        if (selectedVip.getVipLevel() == 0) {
-                            int statusRand = random.nextInt(100);
-                            if (statusRand < 40)
-                                post.setStatus(PostStatus.APPROVED);
-                            else if (statusRand < 60)
-                                post.setStatus(PostStatus.PENDING);
-                            else if (statusRand < 80)
-                                post.setStatus(PostStatus.REVIEW_LATER);
-                            else if (statusRand < 90)
-                                post.setStatus(PostStatus.REJECTED);
-                            else
-                                post.setStatus(PostStatus.BLOCKED);
-                            post.setNotifyOnView(false);
-                        } else {
-                            post.setStatus(random.nextBoolean() ? PostStatus.APPROVED : PostStatus.REVIEW_LATER);
-                            post.setNotifyOnView(true);
-                        }
-                    }
-
-                    post.setCreatedAt(fakeCreatedAt);
-                    post.setExpireDate(fakeExpireDate);
-                    post.setDeletedByUser(false);
-
-                    // 8. LIÊN KẾT ENTITY
-                    User user = users.get(random.nextInt(users.size()));
-                    post.setUser(user);
-                    post.setCreatedBy(user.getEmail());
-                    post.setCategory(selectedCategory);
-                    post.setVip(selectedVip);
-                    post.setStreetAddress(detailAddress);
-                    post.setView((long) (random.nextInt(1000) + 100));
 
                     posts.add(post);
                 }
 
-                // 9. BATCH INSERT XUỐNG DB (An toàn trong đa luồng)
                 synchronized (postRepository) {
                     postRepository.saveAll(posts);
                 }
-                System.out.println(">>> Luồng " + Thread.currentThread().getName() + " đã seed thành công " + batchSize
-                        + " bài đăng.");
+                System.out.println(">>> Luồng " + Thread.currentThread().getName() + " xong " + batchSize + " tin.");
             });
         }
 
-        // 10. CHỜ CÁC LUỒNG CHẠY XONG
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(15, TimeUnit.MINUTES)) {
+            if (!executorService.awaitTermination(15, TimeUnit.MINUTES))
                 executorService.shutdownNow();
-            }
         } catch (InterruptedException e) {
             executorService.shutdownNow();
         }
-
-        System.out.println(">>> INIT ADDRESS DATA TABLE 'posts' WITH MULTI-THREADING, CACHE AND MAPBOX: SUCCESS");
+        System.out.println(">>> INIT DATA 'posts' SUCCESSFUL WITH PRICE HISTORY LOGIC!");
     }
 
     // ====================================================================
