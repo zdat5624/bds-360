@@ -151,4 +151,23 @@ public class PostController {
         return ApiResponse.success(updatedPost, message);
     }
 
+    @PutMapping("/{id}/renew")
+    @RequireLogin
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PostResponse> renewPost(
+            @CurrentUser User user,
+            @PathVariable Long id,
+            @Valid @RequestBody vn.bds360.backend.modules.post.dto.request.RenewPostRequest request) {
+        return ApiResponse.success(postService.renewPost(user, id, request), "Gia hạn tin đăng thành công");
+    }
+
+    @PutMapping("/{id}/bump")
+    @RequireLogin
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PostResponse> bumpPost(
+            @CurrentUser User user,
+            @PathVariable Long id) {
+        return ApiResponse.success(postService.bumpPost(user, id), "Đẩy tin thành công");
+    }
+
 }

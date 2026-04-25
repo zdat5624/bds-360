@@ -53,6 +53,8 @@ export interface Post {
     createdAt: string;
     updatedAt?: string;
 
+    pushedAt?: string;
+
     isHidden: boolean;
 
     deletedByUser: boolean;
@@ -231,4 +233,11 @@ export interface RelatedPostParams extends BaseFilterParams {
 export interface ForYouPostParams extends BaseFilterParams {
     type?: ListingType;
     excludeIds?: string;
+}
+
+
+export interface RenewPostPayload {
+    id: number;
+    numberOfDays: number;
+    vipId?: number;
 }

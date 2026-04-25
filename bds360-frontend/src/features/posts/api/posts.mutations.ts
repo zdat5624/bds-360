@@ -3,7 +3,7 @@
 import customFetch from '@/lib/custom-fetch';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { POSTS_QUERY_KEYS } from './posts.queries';
-import { Post, PostCreatePayload, PostUpdatePayload, UpdatePostStatusPayload } from './types';
+import { Post, PostCreatePayload, PostUpdatePayload, RenewPostPayload, UpdatePostStatusPayload } from './types';
 
 const createPost = async (payload: PostCreatePayload): Promise<Post> => {
     return customFetch.post('/posts', payload);
@@ -42,6 +42,15 @@ const incrementView = async (id: number): Promise<void> => {
 const togglePostVisibility = async ({ id, isHidden }: { id: number; isHidden: boolean }): Promise<Post> => {
     // Dùng params để truyền isHidden lên URL (vd: /api/v1/posts/1/visibility?isHidden=true)
     return customFetch.put(`/posts/${id}/visibility`, null, { params: { isHidden } });
+};
+
+const renewPost = async ({ id, ...payload }: RenewPostPayload): Promise<Post> => {
+    return customFetch.put(`/posts/${id}/renew`, payload);
+};
+
+// 🌟 THÊM HÀM GỌI API ĐẨY TIN
+const bumpPost = async (id: number): Promise<Post> => {
+    return customFetch.put(`/posts/${id}/bump`);
 };
 
 // --- HOOKS ---
@@ -144,6 +153,33 @@ export const useTogglePostVisibility = () => {
             queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
             // Làm mới lại trang chi tiết tin nếu người dùng đang đứng xem
             queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.detail(variables.id) });
+        },
+    });
+};
+
+
+export const useRenewPost = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: renewPost,
+        onSuccess: (_, variables) => {
+            // Cập nhật lại danh sách bài đăng cá nhân
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
+            // Cập nhật lại cache chi tiết bài đăng đó
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.detail(variables.id) });
+        },
+    });
+};
+
+// 🌟 HOOK ĐẨY TIN (BUMP)
+export const useBumpPost = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: bumpPost,
+        onSuccess: (_, id) => {
+            // Làm mới danh sách để thấy bài đăng nhảy lên top
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.detail(id) });
         },
     });
 };

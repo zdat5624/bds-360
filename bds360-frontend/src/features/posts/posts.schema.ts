@@ -139,3 +139,20 @@ export const togglePostVisibilitySchema = z.object({
 });
 
 export type TogglePostVisibilityFormValues = z.infer<typeof togglePostVisibilitySchema>;
+
+
+
+// @/features/posts/posts.schema.ts
+
+export const renewPostSchema = z.object({
+    id: z.number({ message: 'ID không hợp lệ' }),
+
+    // 👇 Bỏ .coerce đi, chỉ dùng z.number()
+    numberOfDays: z.number({ message: 'Số ngày không hợp lệ' })
+        .min(1, { message: 'Số ngày gia hạn tối thiểu là 1' }),
+
+    // 👇 Tương tự, bỏ .coerce đi
+    vipId: z.number().optional(),
+});
+
+export type RenewPostFormValues = z.infer<typeof renewPostSchema>;

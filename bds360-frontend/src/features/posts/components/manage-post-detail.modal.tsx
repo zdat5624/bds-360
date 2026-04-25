@@ -239,6 +239,13 @@ export function ManagePostDetailModal({ isOpen, postId, onClose }: ManagePostDet
                                 <Descriptions.Item label="Gói hiển thị">{getVipTag(post.vip)}</Descriptions.Item>
 
                                 <Descriptions.Item label="Ngày đăng">{formatDateTime(post.createdAt)}</Descriptions.Item>
+                                <Descriptions.Item label="Đẩy tin lúc">
+                                    {post.pushedAt ? (
+                                        <Text strong className="text-emerald-600">{formatDateTime(post.pushedAt)}</Text>
+                                    ) : (
+                                        <Text type="secondary">Chưa xác định</Text>
+                                    )}
+                                </Descriptions.Item>
                                 <Descriptions.Item label="Lượt xem">{post.view.toLocaleString()} lượt</Descriptions.Item>
 
                                 <Descriptions.Item label="Địa chỉ" span={2}>{getFullAddress(post)}</Descriptions.Item>

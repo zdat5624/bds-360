@@ -1,3 +1,4 @@
+// @/app/(main)/(account)/user/posts/page.tsx
 'use client';
 
 import { DataTable, FilterButton, TableState } from '@/components/base';
@@ -6,9 +7,11 @@ import { APP_ROUTES } from '@/config/routes';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { DATE_FORMAT, getSmartRelativeTime } from '@/utils';
 import {
+    ArrowUpOutlined, // 🌟 Import icon Đẩy tin
+    CalendarOutlined,
     DeleteOutlined,
     EditOutlined,
-    EyeInvisibleOutlined, // 🌟 Import icon
+    EyeInvisibleOutlined,
     EyeOutlined,
     FileTextOutlined,
     PlusOutlined,
@@ -20,6 +23,7 @@ import { useMemo, useState } from 'react';
 
 // Import từ module features/posts
 import {
+    BumpPostModal,
     DeletePostModal,
     formatPostPrice,
     getFullAddress,
@@ -27,8 +31,8 @@ import {
     PostDetailModal,
     PostFilterModal,
     PostFilterParams,
+    RenewPostModal,
     TogglePostVisibilityModal,
-
     useGetPosts
 } from '@/features/posts';
 
@@ -39,6 +43,7 @@ import {
     USER_POST_STATUS_DISPLAY,
     USER_POST_STATUS_OPTIONS,
 } from '@/features/posts/posts.constant';
+import Link from 'next/link';
 
 const { Title, Text } = Typography;
 
@@ -50,7 +55,7 @@ export default function UserPostsPage() {
     const [filters, setFilters] = useState<PostFilterParams>({
         page: 0,
         size: 10,
-        sortBy: 'createdAt',
+        sortBy: 'pushedAt', // 🌟 Sửa mặc định thành pushedAt để đồng bộ với Backend
         sortDirection: 'DESC',
         statuses: undefined,
     });
@@ -77,8 +82,17 @@ export default function UserPostsPage() {
         postId: null,
     });
 
-    // 🌟 1. STATE CHO MODAL ẨN/HIỆN
     const [visibilityModal, setVisibilityModal] = useState<{ isOpen: boolean; post: Post | null }>({
+        isOpen: false,
+        post: null,
+    });
+
+    // 🌟 STATE CHO TÍNH NĂNG BUMP VÀ RENEW
+    const [bumpModal, setBumpModal] = useState<{ isOpen: boolean; post: Post | null }>({
+        isOpen: false,
+        post: null,
+    });
+    const [renewModal, setRenewModal] = useState<{ isOpen: boolean; post: Post | null }>({
         isOpen: false,
         post: null,
     });
@@ -92,7 +106,7 @@ export default function UserPostsPage() {
             ...prev,
             page: newState.currentPage - 1,
             size: newState.pageSize,
-            sortBy: newState.sortBy || 'createdAt',
+            sortBy: newState.sortBy || 'pushedAt', // 🌟 Sửa mặc định thành pushedAt
             sortDirection: newState.sortDirection || 'DESC',
         }));
     };
@@ -125,7 +139,7 @@ export default function UserPostsPage() {
         setFilters({
             page: 0,
             size: 10,
-            sortBy: 'createdAt',
+            sortBy: 'pushedAt', // 🌟 Sửa mặc định thành pushedAt
             sortDirection: 'DESC',
             statuses: filters.statuses,
         });
@@ -146,7 +160,11 @@ export default function UserPostsPage() {
             width: 80,
             align: 'center',
             sorter: true,
-            render: (id: number) => <Text strong>{id}</Text>,
+            render: (id: number) => (
+                <Link href={APP_ROUTES.PUBLIC.POST_DETAIL(id)} target="_blank" className="text-blue-600 hover:underline font-mono">
+                    {id}
+                </Link>
+            ),
         },
         {
             title: 'Thông tin bài đăng',
@@ -157,7 +175,6 @@ export default function UserPostsPage() {
                 <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-2">
                         <Text strong className="!line-clamp-1">{title}</Text>
-                        {/* 🌟 Hiển thị Badge nếu đang ẩn */}
                         {record.isHidden && (
                             <Tag color="warning" icon={<EyeInvisibleOutlined />} className="m-0 text-[10px] leading-4 px-1">Đang ẩn</Tag>
                         )}
@@ -166,7 +183,6 @@ export default function UserPostsPage() {
                 </div>
             ),
         },
-        // ... (Cột diện tích và giá giữ nguyên)
         {
             title: 'Diện tích',
             dataIndex: 'area',
@@ -205,9 +221,9 @@ export default function UserPostsPage() {
             },
         },
         {
-            title: 'Ngày đăng',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
+            title: 'Đẩy tin lúc',
+            dataIndex: 'pushedAt',
+            key: 'pushedAt',
             align: 'right',
             width: 150,
             sorter: true,
@@ -219,53 +235,83 @@ export default function UserPostsPage() {
             width: 50,
             align: 'center',
             fixed: 'right',
-            render: (_, record) => (
-                <TableActionDropdown actions={[
-                    {
-                        key: 'view_detail',
-                        label: 'Xem chi tiết',
-                        icon: <EyeOutlined />,
-                        // Cách 1: Dùng prop color (Component của bạn đã map vào style)
-                        color: '#2563eb', // blue-600
-                        onClick: () => setDetailModal({ isOpen: true, postId: record.id }),
-                    },
-                    {
-                        key: 'toggle_visibility',
-                        // Chỉ có 1 key label, giá trị thay đổi dựa theo isHidden
-                        label: record.isHidden
-                            ? <span className="!text-emerald-600 font-medium">Hiển thị tin</span>
-                            : <span className="!text-amber-500 font-medium">Tạm ẩn tin</span>,
+            render: (_, record) => {
+                // Định nghĩa các cờ (flags) disabled để tái sử dụng
+                const isBumpDisabled = record.status !== 'APPROVED' && record.status !== 'REVIEW_LATER';
+                const isRenewDisabled = record.status === 'BLOCKED';
+                const isEditOrToggleDisabled = record.status === 'BLOCKED' || record.status === 'EXPIRED';
 
-                        // Chỉ có 1 key icon, giá trị thay đổi dựa theo isHidden
-                        icon: record.isHidden
-                            ? <EyeOutlined className="!text-emerald-600" />
-                            : <EyeInvisibleOutlined className="!text-amber-500" />,
+                return (
+                    <TableActionDropdown actions={[
+                        {
+                            key: 'view_detail',
+                            label: 'Xem chi tiết',
+                            icon: <EyeOutlined />,
+                            color: '#2563eb', // blue-600
+                            onClick: () => setDetailModal({ isOpen: true, postId: record.id }),
+                        },
+                        // 🌟 NÚT ĐẨY TIN: Màu Cam/Vàng nổi bật (chỉ khi không bị disable)
+                        {
+                            key: 'bump_post',
+                            label: 'Đẩy lên đầu trang',
+                            icon: <ArrowUpOutlined />,
+                            color: isBumpDisabled ? undefined : '#f59e0b', // amber-500
+                            disabled: isBumpDisabled,
+                            onClick: () => setBumpModal({ isOpen: true, post: record }),
+                        },
+                        // 🌟 NÚT GIA HẠN: Màu Xanh ngọc (chỉ khi không bị disable)
+                        {
+                            key: 'renew_post',
+                            label: 'Gia hạn tin',
+                            icon: <CalendarOutlined />,
+                            color: isRenewDisabled ? undefined : '#10b981', // emerald-500
+                            disabled: isRenewDisabled,
+                            onClick: () => setRenewModal({ isOpen: true, post: record }),
+                        },
+                        {
+                            key: 'toggle_visibility',
+                            // Nếu đang disable thì bọc span lại để bỏ màu xanh/cam đi, trở về text mặc định để Antd tự làm xám
+                            label: isEditOrToggleDisabled ? (
+                                <span>{record.isHidden ? 'Hiển thị tin' : 'Tạm ẩn tin'}</span>
+                            ) : (
+                                record.isHidden
+                                    ? <span className="!text-emerald-600 font-medium">Hiển thị tin</span>
+                                    : <span className="!text-amber-500 font-medium">Tạm ẩn tin</span>
+                            ),
 
-                        disabled: record.status === 'BLOCKED' || record.status === 'EXPIRED',
-                        onClick: () => setVisibilityModal({ isOpen: true, post: record }),
-                    },
-                    {
-                        key: 'edit_post',
-                        label: 'Chỉnh sửa',
-                        icon: <EditOutlined />,
-                        disabled: record.status === 'BLOCKED' || record.status === 'EXPIRED',
-                        onClick: () => router.push(APP_ROUTES.USER.EDIT_POST(record.id)),
-                    },
-                    {
-                        key: 'delete_post',
-                        label: 'Xóa tin',
-                        icon: <DeleteOutlined />,
-                        danger: true, // AntD mặc định sẽ tự làm màu đỏ rất mạnh cho danger
-                        onClick: () => setDeleteModal({ isOpen: true, post: record }),
-                    },
-                ]} />
-            ),
+                            icon: isEditOrToggleDisabled ? (
+                                record.isHidden ? <EyeOutlined /> : <EyeInvisibleOutlined />
+                            ) : (
+                                record.isHidden
+                                    ? <EyeOutlined className="!text-emerald-600" />
+                                    : <EyeInvisibleOutlined className="!text-amber-500" />
+                            ),
+
+                            disabled: isEditOrToggleDisabled,
+                            onClick: () => setVisibilityModal({ isOpen: true, post: record }),
+                        },
+                        {
+                            key: 'edit_post',
+                            label: 'Chỉnh sửa',
+                            icon: <EditOutlined />,
+                            disabled: isEditOrToggleDisabled,
+                            onClick: () => router.push(APP_ROUTES.USER.EDIT_POST(record.id)),
+                        },
+                        {
+                            key: 'delete_post',
+                            label: 'Xóa tin',
+                            icon: <DeleteOutlined />,
+                            danger: true, // Danger tự động handle màu đỏ & mờ xám khi disable bởi hệ thống Antd
+                            onClick: () => setDeleteModal({ isOpen: true, post: record }),
+                        },
+                    ]} />
+                );
+            },
         },
     ];
 
     return (
         <div className="w-full flex flex-col gap-4">
-            {/* Header, Divider, Tabs, DataTable giữ nguyên */}
             <div className="flex flex-wrap justify-between items-start sm:items-center gap-4">
                 <div>
                     <Title level={3} className="!m-0 flex items-center gap-2">
@@ -324,7 +370,6 @@ export default function UserPostsPage() {
                 }}
                 onChangeState={handleTableStateChange}
                 rowKey="id"
-                onRowClick={(record) => setDetailModal({ isOpen: true, postId: record.id })}
                 scroll={{ x: 800 }}
             />
 
@@ -349,11 +394,23 @@ export default function UserPostsPage() {
                 onClose={() => setDetailModal({ isOpen: false, postId: null })}
             />
 
-            {/* 🌟 3. RENDER MODAL ẨN/HIỆN TIN */}
             <TogglePostVisibilityModal
                 isOpen={visibilityModal.isOpen}
                 post={visibilityModal.post}
                 onClose={() => setVisibilityModal({ isOpen: false, post: null })}
+            />
+
+            {/* 🌟 NHÚNG MODAL ĐẨY VÀ GIA HẠN */}
+            <BumpPostModal
+                isOpen={bumpModal.isOpen}
+                post={bumpModal.post}
+                onClose={() => setBumpModal({ isOpen: false, post: null })}
+            />
+
+            <RenewPostModal
+                isOpen={renewModal.isOpen}
+                post={renewModal.post}
+                onClose={() => setRenewModal({ isOpen: false, post: null })}
             />
         </div>
     );

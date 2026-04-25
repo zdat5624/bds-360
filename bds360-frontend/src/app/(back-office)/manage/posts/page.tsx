@@ -227,7 +227,7 @@ export default function ManagePostsPage() {
             ),
         },
         {
-            title: 'Ngày tạo',
+            title: 'Ngày đăng',
             dataIndex: 'createdAt',
             key: 'createdAt',
             width: 140,

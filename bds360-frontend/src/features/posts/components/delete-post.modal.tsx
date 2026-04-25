@@ -10,6 +10,7 @@ interface DeletePostModalProps {
     onClose: () => void;
     postId: number | null;
     postTitle?: string;
+    onSuccess?: () => void;
 }
 
 export function DeletePostModal({
@@ -17,6 +18,7 @@ export function DeletePostModal({
     onClose,
     postId,
     postTitle,
+    onSuccess,
 }: DeletePostModalProps) {
     const { message } = App.useApp(); // Sử dụng App.useApp() của Antd để thông báo đồng bộ với theme
 
@@ -30,6 +32,7 @@ export function DeletePostModal({
             await deletePost(postId);
             message.success('Đã xóa tin đăng thành công');
             onClose();
+            if (onSuccess) onSuccess();
         } catch (error: any) {
             // Error đã được customFetch hoặc React Query bắt, chỉ cần báo chung hoặc lấy message từ backend
             const errorMsg = error?.response?.data?.message || 'Có lỗi xảy ra khi xóa tin đăng';

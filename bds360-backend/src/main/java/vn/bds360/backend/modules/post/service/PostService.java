@@ -99,6 +99,7 @@ public class PostService {
         post.setStatus(isVip ? PostStatus.REVIEW_LATER : PostStatus.PENDING);
         post.setNotifyOnView(isVip);
         post.setCreatedAt(Instant.now());
+        post.setPushedAt(post.getCreatedAt());
         post.setExpireDate(post.getCreatedAt().plus(request.getNumberOfDays(), ChronoUnit.DAYS));
         post.setDeletedByUser(false);
 
@@ -368,23 +369,17 @@ public class PostService {
     // 🌟 HELPER METHOD TẠO CHIẾN LƯỢC SORT DÙNG CHUNG
     // =========================================================
     private Sort buildSortStrategy(PostFilterRequest filter, boolean prioritizeVip) {
-        // 1. Xác định trường cần sort và hướng sort (mặc định là createdAt giảm dần)
-        String sortBy = (filter.getSortBy() != null && !filter.getSortBy().trim().isEmpty())
-                ? filter.getSortBy()
-                : "createdAt";
-        Sort.Direction direction = filter.getSortDirection() != null
-                ? filter.getSortDirection()
-                : Sort.Direction.DESC;
 
-        Sort.Order baseOrder = new Sort.Order(direction, sortBy);
+        // Vì DTO đã chặn lỗi, lấy trực tiếp SortBy và SortDirection ra dùng
+        Sort.Order baseOrder = new Sort.Order(filter.getSortDirection(), filter.getSortBy());
 
-        // 2. Nếu có yêu cầu ưu tiên VIP, gắn Sort VIP lên đầu tiên
+        // Nếu là API Public, gắp VIP lên đầu tiên
         if (prioritizeVip) {
             Sort.Order vipOrder = Sort.Order.desc("vip.vipLevel");
             return Sort.by(vipOrder, baseOrder);
         }
 
-        // 3. Ngược lại, trả về sort bình thường
+        // Nếu là API Manage / My Posts, sort linh hoạt theo user chọn
         return Sort.by(baseOrder);
     }
 
@@ -420,7 +415,7 @@ public class PostService {
 
         // Cấu hình Sort mặc định: VIP giảm dần -> Mới nhất
         Sort sort = Sort.by(Sort.Direction.DESC, "vip.vipLevel")
-                .and(Sort.by(Sort.Direction.DESC, "createdAt"));
+                .and(Sort.by(Sort.Direction.DESC, "pushedAt"));
 
         List<Post> finalPosts = new ArrayList<>();
 
@@ -519,7 +514,7 @@ public class PostService {
         }
 
         Sort sort = Sort.by(Sort.Direction.DESC, "vip.vipLevel")
-                .and(Sort.by(Sort.Direction.DESC, "createdAt"));
+                .and(Sort.by(Sort.Direction.DESC, "pushedAt"));
 
         List<Post> finalPosts = new ArrayList<>();
 
@@ -604,5 +599,116 @@ public class PostService {
         postRepository.save(post);
 
         return postMapper.toResponse(post);
+    }
+
+    @Transactional
+    public PostResponse renewPost(User user, Long postId,
+            vn.bds360.backend.modules.post.dto.request.RenewPostRequest request) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        if (post.getStatus() == PostStatus.BLOCKED || Boolean.TRUE.equals(post.getDeletedByUser())) {
+            throw new AppException(ErrorCode.POST_STATUS_INVALID);
+        }
+
+        long costPerDay = 0;
+        boolean isVip = false;
+        vn.bds360.backend.modules.vip.entity.Vip targetVip = post.getVip();
+
+        if (request.getVipId() != null) {
+            targetVip = vipRepository.findById(request.getVipId())
+                    .orElseThrow(() -> new AppException(ErrorCode.VIP_NOT_FOUND));
+            costPerDay = targetVip.getPricePerDay();
+            isVip = targetVip.getVipLevel() > 0;
+        } else if (post.getVip() != null) {
+            costPerDay = post.getVip().getPricePerDay();
+            isVip = post.getVip().getVipLevel() > 0;
+        }
+
+        long totalCost = request.getNumberOfDays() * costPerDay;
+
+        if (user.getBalance() < totalCost) {
+            throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
+        }
+
+        user.setBalance(user.getBalance() - totalCost);
+        userRepository.save(user);
+
+        post.setVip(targetVip);
+        post.setNotifyOnView(isVip);
+
+        Instant baseDate = (post.getExpireDate() != null && post.getExpireDate().isAfter(Instant.now()))
+                ? post.getExpireDate()
+                : Instant.now();
+
+        post.setExpireDate(baseDate.plus(request.getNumberOfDays(), ChronoUnit.DAYS));
+
+        // Trả về PENDING/REVIEW_LATER để duyệt lại nếu tin đang hết hạn hoặc đổi loại
+        // VIP
+        if (post.getStatus() == PostStatus.EXPIRED
+                || (request.getVipId() != null && !request.getVipId().equals(post.getVip().getId()))) {
+            post.setStatus(isVip ? PostStatus.REVIEW_LATER : PostStatus.PENDING);
+        }
+
+        Post savedPost = postRepository.save(post);
+
+        Transaction transaction = new Transaction();
+        transaction.setAmount(-totalCost);
+        transaction
+                .setDescription("Gia hạn tin #" + savedPost.getId() + " thêm " + request.getNumberOfDays() + " ngày");
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transaction.setUser(user);
+        transaction.setType(TransactionType.PAYMENT);
+        transactionRepository.save(transaction);
+
+        return postMapper.toResponse(savedPost);
+    }
+
+    // ==========================================
+    // TÍNH NĂNG ĐẨY TIN LÊN TOP (BUMP)
+    // ==========================================
+    @Transactional
+    public PostResponse bumpPost(User user, Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        if (post.getStatus() != PostStatus.APPROVED && post.getStatus() != PostStatus.REVIEW_LATER) {
+            throw new AppException(ErrorCode.POST_STATUS_INVALID); // Chỉ tin đang hiển thị mới được đẩy
+        }
+
+        // Cooldown: Không cho phép đẩy liên tục trong 2 giờ
+        if (post.getPushedAt() != null && ChronoUnit.HOURS.between(post.getPushedAt(), Instant.now()) < 2) {
+            throw new AppException(ErrorCode.BUMP_COOLDOWN_ACTIVE); // Cần định nghĩa lỗi này trong ErrorCode
+        }
+
+        long bumpFee = 10000L; // Có thể chuyển thành cấu hình trong Database
+        if (user.getBalance() < bumpFee) {
+            throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
+        }
+
+        user.setBalance(user.getBalance() - bumpFee);
+        userRepository.save(user);
+
+        // Cập nhật thời điểm đẩy tin
+        post.setPushedAt(Instant.now());
+        Post savedPost = postRepository.save(post);
+
+        Transaction transaction = new Transaction();
+        transaction.setAmount(-bumpFee);
+        transaction.setDescription("Phí đẩy tin #" + savedPost.getId() + " lên top");
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transaction.setUser(user);
+        transaction.setType(TransactionType.PAYMENT);
+        transactionRepository.save(transaction);
+
+        return postMapper.toResponse(savedPost);
     }
 }

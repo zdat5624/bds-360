@@ -56,6 +56,8 @@ const getPostViewsMonthly = async (id: number, months: number = 6): Promise<Post
     return customFetch.get(`/posts/${id}/analytics/views/monthly`, { params: { months } });
 };
 
+
+
 // --- HOOKS ---
 
 export const useGetPosts = (scope: 'public' | 'admin' | 'my', filters: PostFilterParams, options?: Omit<
@@ -190,3 +192,5 @@ export const useCheckSavedStatus = (postIds: number[], enabled: boolean = true) 
         refetchOnReconnect: true,
     });
 };
+
+

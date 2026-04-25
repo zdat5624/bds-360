@@ -41,7 +41,8 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(12003, HttpStatus.NOT_FOUND, "Không tìm thấy danh mục bất động sản."),
     POST_SAVED_NOT_FOUND(12003, HttpStatus.NOT_FOUND, "Không tìm thấy tin đã lưu."),
     POST_ALREADY_SAVED(12004, HttpStatus.CONFLICT, "Tin đã được lưu trước đó."),
-
+    BUMP_COOLDOWN_ACTIVE(12006, HttpStatus.TOO_MANY_REQUESTS,
+            "Thao tác quá nhanh. Bạn chỉ được đẩy tin này lại sau 2 giờ."),
     // ==========================================
     // 13. ADDRESS MODULE (Tọa độ, Bản đồ)
     // ==========================================

@@ -4,6 +4,7 @@ package vn.bds360.backend.modules.post.dto.request;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bds360.backend.common.constant.ListingType;
@@ -46,4 +47,7 @@ public class PostFilterRequest extends BaseFilterRequest {
     private List<PostStatus> statuses;
     private String userEmail;
     private Integer userId;
+
+    @Pattern(regexp = "^(id|pushedAt|createdAt|price|area|view|title)$", message = "Trường sắp xếp (sortBy) không hợp lệ đối với tin đăng.")
+    private String sortBy = "pushedAt";
 }

@@ -111,6 +111,9 @@ public class Post {
     @Column(name = "longitude")
     private Double longitude;
 
+    @Column(name = "pushed_at")
+    private Instant pushedAt;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -147,6 +150,10 @@ public class Post {
 
         if (this.createdAt == null) {
             this.createdAt = Instant.now();
+        }
+
+        if (this.pushedAt == null) {
+            this.pushedAt = this.createdAt; // Khi tạo mới, auto được lên top
         }
     }
 
