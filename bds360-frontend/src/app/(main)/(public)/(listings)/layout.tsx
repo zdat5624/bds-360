@@ -7,7 +7,7 @@ import { usePostFilterUrl } from '@/features/posts/hooks/use-post-filter-url'; /
 import { useUIStore } from '@/stores/ui.store';
 import { HeatMapOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 
 export default function ListingsLayout({ children }: { children: ReactNode }) {
@@ -16,7 +16,9 @@ export default function ListingsLayout({ children }: { children: ReactNode }) {
 
     // Lấy TYPE từ URL (SALE hay RENT) để làm gốc
     const searchParams = useSearchParams();
-    const currentType = (searchParams.get('type') as 'RENT' | 'SALE') || 'RENT';
+    const pathname = usePathname();
+    const currentType = (searchParams.get('type') as 'RENT' | 'SALE')
+        || (pathname.includes('/sale') ? 'SALE' : 'RENT');
 
     // Đọc bộ lọc từ URL để truyền cho Bản đồ
     const { filters } = usePostFilterUrl(currentType);

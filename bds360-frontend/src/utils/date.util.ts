@@ -142,6 +142,20 @@ export const isToday = (date: string | Date | number): boolean => {
 };
 
 /**
+ * Tính khoảng thời gian tham gia (Ví dụ: "4 năm trước", "3 tháng trước")
+ * Dùng từ khóa "Đã tham gia" phía trước để tạo cảm giác uy tín.
+ */
+export const getMembershipDuration = (date?: string | Date | number | null): string => {
+    if (!date) return '';
+    const parsedDate = dayjs(date);
+    if (!parsedDate.isValid()) return '';
+
+    // Sử dụng fromNow() của plugin relativeTime (đã được bác init ở trên)
+    // Kết quả sẽ là "4 năm trước", "vài tháng trước", v.v...
+    return parsedDate.fromNow();
+};
+
+/**
  * Xuất luôn object dayjs để những chỗ nào cần xử lý phức tạp có thể dùng trực tiếp
  */
 export { dayjs };

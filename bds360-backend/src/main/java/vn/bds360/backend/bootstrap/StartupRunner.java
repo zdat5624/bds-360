@@ -13,10 +13,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -48,8 +51,6 @@ import vn.bds360.backend.modules.post.constant.PostStatus;
 import vn.bds360.backend.modules.post.entity.Image;
 import vn.bds360.backend.modules.post.entity.ListingDetail;
 import vn.bds360.backend.modules.post.entity.Post;
-import vn.bds360.backend.modules.post.entity.PostViewHistory;
-import vn.bds360.backend.modules.post.entity.SavedPost;
 import vn.bds360.backend.modules.post.repository.PostRepository;
 import vn.bds360.backend.modules.post.repository.PostViewHistoryRepository;
 import vn.bds360.backend.modules.post.repository.SavedPostRepository;
@@ -82,7 +83,7 @@ public class StartupRunner implements CommandLineRunner {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final MapboxGeocodeService mapboxGeocodeService;
-
+    private final JdbcTemplate jdbcTemplate;
     private final PostViewHistoryRepository postViewHistoryRepository;
     private final SavedPostRepository savedPostRepository;
 
@@ -156,7 +157,7 @@ public class StartupRunner implements CommandLineRunner {
         List<User> userList = new ArrayList<>();
         String password = passwordEncoder.encode("123456");
         Random random = new Random();
-
+        Instant now = Instant.now();
         // ===== DATA NAME =====
         String[] lastNames = { "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Đặng" };
         String[] maleMiddleNames = { "Văn", "Hữu", "Đức" };
@@ -177,7 +178,8 @@ public class StartupRunner implements CommandLineRunner {
         admin.setBalance(1_000_000_000L);
         admin.setPhone("0123456789");
         admin.setAddress("TP. Hồ Chí Minh");
-
+        admin.setCreatedAt(now.minus(4 * 365L, java.time.temporal.ChronoUnit.DAYS));
+        userList.add(admin);
         userList.add(admin);
 
         // ===== 2. USERS =====
@@ -213,6 +215,18 @@ public class StartupRunner implements CommandLineRunner {
             user.setBalance(500_000L * i);
             user.setPhone("09" + String.format("%08d", random.nextInt(100_000_000)));
             user.setAddress(addresses[random.nextInt(addresses.length)]);
+
+            long randomDaysAgo = random.nextLong(1, 4 * 365 + 1);
+            // Trừ thêm một lượng giây ngẫu nhiên trong ngày đó cho nó thật
+            long randomSecondsInDay = random.nextLong(86400);
+
+            Instant randomCreatedAt = now
+                    .minus(randomDaysAgo, java.time.temporal.ChronoUnit.DAYS)
+                    .minusSeconds(randomSecondsInDay);
+
+            user.setCreatedAt(randomCreatedAt);
+            // Cập nhật updatedAt bằng createdAt luôn cho logic
+            user.setUpdatedAt(randomCreatedAt);
 
             userList.add(user);
         }
@@ -402,108 +416,134 @@ public class StartupRunner implements CommandLineRunner {
             return;
         }
 
-        // 1. Đọc dữ liệu nền lên RAM
+        // 1. Load dữ liệu nền
         List<User> users = userRepository.findAll();
         List<Category> categories = categoryRepository.findAll();
         List<Province> provinces = provinceRepository.findAll();
         List<Vip> vips = vipRepository.findAll();
 
+        // 🌟 Lấy VIP 0 để ép cho các tin không được duyệt
+        Vip vip0 = vips.stream()
+                .filter(v -> v.getVipLevel() == 0)
+                .findFirst()
+                .orElse(vips.get(0));
+        Vip vip1 = vips.stream()
+                .filter(v -> v.getVipLevel() == 1)
+                .findFirst()
+                .orElse(vips.get(1));
+
         CompassDirection[] orientations = CompassDirection.values();
         LegalStatus[] legalStatuses = LegalStatus.values();
         Furnishing[] furnishings = Furnishing.values();
 
-        String backendUrl = appProperties.getUrl().getBackend();
-        if (backendUrl == null || backendUrl.isEmpty()) {
-            backendUrl = "http://localhost:8080";
-        }
-        String baseImageUrl = backendUrl + "/uploads/";
+        String baseImageUrl = appProperties.getUrl().getBackend() + "/uploads/";
+        int totalPost = 20000;
+        int numberOfThreads = 10;
 
-        int totalPost = 5000;
-        int batchSize = 1000;
-        int numberOfThreads = totalPost / batchSize;
-
+        // 🌟 Khởi tạo Cache (Giống y hệt logic cũ của bác)
         Map<Long, List<District>> districtCache = new ConcurrentHashMap<>();
         Map<Long, List<Ward>> wardCache = new ConcurrentHashMap<>();
         Map<String, double[]> geocodeCache = new ConcurrentHashMap<>();
 
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        System.out.println(">>> Bắt đầu tạo " + totalPost + " bài đăng bằng " + numberOfThreads + " luồng...");
+        System.out.println(">>> SEEDING 20k POSTS: Hybrid Strategy | Status Ratios Fixed | VIP Logic Safe...");
 
         for (int t = 0; t < numberOfThreads; t++) {
             final int threadIndex = t;
-
             executorService.submit(() -> {
-                Random random = new Random();
+                var random = java.util.concurrent.ThreadLocalRandom.current();
                 List<Post> posts = new ArrayList<>();
 
-                int clusterSize = 0;
+                // Khởi tạo cụm ban đầu
+                Category curCat = categories.get(random.nextInt(categories.size()));
+                Province curProv = provinces.get(random.nextInt(provinces.size()));
+                District curDist = null;
+                Ward curWard = null;
+
+                // Lấy địa chỉ ban đầu cho luồng
+                List<District> initialDists = districtCache.computeIfAbsent(curProv.getCode(),
+                        k -> districtRepository.findByProvinceCode(k));
+                if (!initialDists.isEmpty()) {
+                    curDist = initialDists.get(random.nextInt(initialDists.size()));
+                    List<Ward> initialWards = wardCache.computeIfAbsent(curDist.getCode(),
+                            k -> wardRepository.findByDistrictCode(k));
+                    if (!initialWards.isEmpty())
+                        curWard = initialWards.get(random.nextInt(initialWards.size()));
+                }
+
+                int clusterSize = (random.nextInt(100) < 70) ? (130 + random.nextInt(51)) : (10 + random.nextInt(21));
                 int currentClusterCount = 0;
-                Category currentClusterCategory = null;
-                Province currentClusterProvince = null;
-                District currentClusterDistrict = null;
-                Ward currentClusterWard = null;
+                int postsPerThread = totalPost / numberOfThreads;
 
-                for (int i = 1; i <= batchSize; i++) {
-                    Post post = new Post();
-
-                    // ====================================================================
-                    // 1. LOGIC CLUSTER SEEDING (10-40 tin/cụm để phủ toàn quốc)
-                    // ====================================================================
+                for (int i = 1; i <= postsPerThread; i++) {
+                    // 2. LOGIC XOAY CỤM (Giữ nguyên logic của bác)
                     if (currentClusterCount >= clusterSize) {
-                        clusterSize = 10 + random.nextInt(31);
                         currentClusterCount = 0;
-
-                        currentClusterCategory = categories.get(random.nextInt(categories.size()));
-                        currentClusterProvince = provinces.get(random.nextInt(provinces.size()));
-
-                        Long provCode = currentClusterProvince.getCode();
-                        List<District> districtsInProvince = districtCache.computeIfAbsent(
-                                provCode, k -> districtRepository.findByProvinceCode(k));
-
-                        currentClusterDistrict = null;
-                        currentClusterWard = null;
-
-                        if (!districtsInProvince.isEmpty()) {
-                            currentClusterDistrict = districtsInProvince
-                                    .get(random.nextInt(districtsInProvince.size()));
-                            Long distCode = currentClusterDistrict.getCode();
-                            List<Ward> wardsInDistrict = wardCache.computeIfAbsent(
-                                    distCode, k -> wardRepository.findByDistrictCode(k));
-
-                            if (!wardsInDistrict.isEmpty()) {
-                                currentClusterWard = wardsInDistrict.get(random.nextInt(wardsInDistrict.size()));
-                            }
+                        clusterSize = (random.nextInt(100) < 70) ? (130 + random.nextInt(51))
+                                : (10 + random.nextInt(21));
+                        curCat = categories.get(random.nextInt(categories.size()));
+                        curProv = provinces.get(random.nextInt(provinces.size()));
+                        List<District> dists = districtCache.computeIfAbsent(curProv.getCode(),
+                                k -> districtRepository.findByProvinceCode(k));
+                        curDist = dists.isEmpty() ? null : dists.get(random.nextInt(dists.size()));
+                        if (curDist != null) {
+                            List<Ward> wards = wardCache.computeIfAbsent(curDist.getCode(),
+                                    k -> wardRepository.findByDistrictCode(k));
+                            curWard = wards.isEmpty() ? null : wards.get(random.nextInt(wards.size()));
                         }
                     }
                     currentClusterCount++;
+                    if (curDist == null)
+                        continue;
 
-                    Vip selectedVip = vips.get(random.nextInt(vips.size()));
+                    Post post = new Post();
 
-                    // ====================================================================
-                    // 2. DIỆN TÍCH & ĐỊA CHỈ & TỌA ĐỘ
-                    // ====================================================================
-                    double roundedArea = Math.round((50 + random.nextDouble() * 2000) * 10.0) / 10.0;
+                    // 3. LOGIC THỜI GIAN (History vs Active - Giữ nguyên 33 tháng của bác)
+                    long randomDaysAgo;
+                    if (currentClusterCount <= 99 && clusterSize >= 100) {
+                        int monthTarget = (currentClusterCount - 1) / 3;
+                        randomDaysAgo = (monthTarget * 30L) + random.nextInt(28);
+                    } else {
+                        randomDaysAgo = (random.nextInt(100) < 20) ? random.nextLong(60) : random.nextLong(1000);
+                    }
+
+                    Instant fakeCreatedAt = Instant.now().minus(randomDaysAgo, ChronoUnit.DAYS);
+                    int durationDays = (randomDaysAgo < 60) ? 90 : (random.nextBoolean() ? 30 : 60);
+                    Instant fakeExpireDate = fakeCreatedAt.plus(durationDays, ChronoUnit.DAYS);
+                    boolean isActuallyExpired = fakeExpireDate.isBefore(Instant.now());
+
+                    // 4. GIÁ CẢ & DIỆN TÍCH (Giữ nguyên logic của bác)
+                    double roundedArea = Math.round((45 + random.nextDouble() * 180) * 10.0) / 10.0;
                     post.setArea(roundedArea);
-                    post.setProvince(currentClusterProvince);
-                    if (currentClusterDistrict != null)
-                        post.setDistrict(currentClusterDistrict);
-                    if (currentClusterWard != null)
-                        post.setWard(currentClusterWard);
+                    long basePrice = (curCat.getType() == ListingType.RENT)
+                            ? (3_000_000L + random.nextLong(20_000_000L))
+                            : (long) (roundedArea * (20_000_000L + random.nextLong(60_000_000L)));
+                    double priceFactor = Math.pow(1 - 0.08, randomDaysAgo / 365.0) * (0.8 + random.nextDouble() * 0.4);
+                    post.setPrice((long) (basePrice * priceFactor));
 
-                    String houseNumber = "Số " + (random.nextInt(999) + 1);
-                    String street = STREET_NAMES.get(random.nextInt(STREET_NAMES.size()));
-                    String detailAddress = houseNumber + " Đường " + street;
-                    post.setStreetAddress(detailAddress);
+                    // 5. ĐỊA CHỈ & TỌA ĐỘ (🌟 Sử dụng geocodeCache chuẩn xác)
+                    post.setProvince(curProv);
+                    post.setDistrict(curDist);
+                    post.setWard(curWard);
+                    post.setStreetAddress("Số " + (random.nextInt(500) + 1) + " Đường "
+                            + STREET_NAMES.get(random.nextInt(STREET_NAMES.size())));
 
-                    String geocodeAddress = (currentClusterWard != null ? currentClusterWard.getName() + ", " : "") +
-                            (currentClusterDistrict != null ? currentClusterDistrict.getName() + ", " : "") +
-                            currentClusterProvince.getName();
-
-                    double[] coords = geocodeCache.computeIfAbsent(geocodeAddress,
-                            addr -> mapboxGeocodeService.getLatLngFromAddress(addr).orElse(null));
-
+                    String geocodeSearchKey = String.format("%s, %s, %s", (curWard != null ? curWard.getName() : ""),
+                            curDist.getName(), curProv.getName());
+                    double[] coords = geocodeCache.get(geocodeSearchKey);
+                    if (coords == null) {
+                        var latLngOpt = mapboxGeocodeService.getLatLngFromAddress(geocodeSearchKey);
+                        if (latLngOpt.isPresent()) {
+                            coords = latLngOpt.get();
+                            geocodeCache.put(geocodeSearchKey, coords);
+                        } else {
+                            String fallbackKey = curDist.getName() + ", " + curProv.getName();
+                            coords = geocodeCache.computeIfAbsent(fallbackKey,
+                                    k -> mapboxGeocodeService.getLatLngFromAddress(k).orElse(null));
+                        }
+                    }
                     if (coords != null) {
-                        double radiusInDegrees = (200.0 + random.nextInt(600)) / 111_000.0;
+                        double radiusInDegrees = (400.0 + random.nextInt(1500)) / 111_000.0;
                         double u = random.nextDouble(), v = random.nextDouble();
                         double w = radiusInDegrees * Math.sqrt(u), theta = 2 * Math.PI * v;
                         post.setLongitude(coords[0] + (w * Math.cos(theta)) / Math.cos(Math.toRadians(coords[1])));
@@ -511,123 +551,94 @@ public class StartupRunner implements CommandLineRunner {
                     }
 
                     // ====================================================================
-                    // 3. XỬ LÝ TIME TRAVEL (PHỤC VỤ PRICE HISTORY)
+                    // 🌟 6. TRẠNG THÁI & VIP (ĐẢM BẢO TỈ LỆ VÀ ÉP VIP 0)
                     // ====================================================================
-                    // Rải tin trong vòng 1000 ngày. 50% tin rải trong 60 ngày gần nhất để Map
-                    // "đông" điểm xanh.
-                    long randomDaysAgo;
-                    if (random.nextInt(100) < 50) {
-                        randomDaysAgo = random.nextInt(60); // 50% tin mới (0-60 ngày)
-                    } else {
-                        randomDaysAgo = 60 + random.nextInt(940); // 50% tin cũ (60-1000 ngày)
-                    }
-
-                    Instant fakeCreatedAt = Instant.now().minus(randomDaysAgo, ChronoUnit.DAYS);
-                    int durationDays = (random.nextBoolean() ? 30 : (random.nextBoolean() ? 60 : 90));
-                    Instant fakeExpireDate = fakeCreatedAt.plus(durationDays, ChronoUnit.DAYS);
-                    boolean isActuallyExpired = fakeExpireDate.isBefore(Instant.now());
-
-                    // ====================================================================
-                    // 4. XỬ LÝ GIÁ (LẠM PHÁT 8%/NĂM)
-                    // ====================================================================
-                    long basePrice;
-                    if (currentClusterCategory.getType() == ListingType.RENT) {
-                        basePrice = 1_700_000L + (long) (random.nextDouble() * 38_300_000L);
-                    } else {
-                        long pricePerM2 = 5_000_000L + (long) (random.nextDouble() * 95_000_000L);
-                        basePrice = (long) (roundedArea * pricePerM2);
-                    }
-
-                    // Giảm giá ngược về quá khứ: Giá_quá_khứ = Giá_hiện_tại / (1.08 ^ số_năm_trước)
-                    double yearsAgo = randomDaysAgo / 365.0;
-                    double priceReductionFactor = Math.pow(1 - 0.08, yearsAgo);
-                    post.setPrice((long) (basePrice * priceReductionFactor));
-
-                    // ====================================================================
-                    // 5. TRẠNG THÁI & PUSHED_AT
-                    // ====================================================================
-                    Instant fakePushedAt;
                     if (isActuallyExpired) {
                         post.setStatus(PostStatus.EXPIRED);
-                        post.setNotifyOnView(false);
-                        // Đã đẩy tin ngẫu nhiên trong vòng đời lúc tin còn sống
                         long secondsActive = fakeExpireDate.getEpochSecond() - fakeCreatedAt.getEpochSecond();
-                        fakePushedAt = fakeCreatedAt.plusSeconds(random.nextLong(Math.max(1, secondsActive)));
+                        post.setPushedAt(fakeCreatedAt.plusSeconds(random.nextLong(Math.max(1, secondsActive))));
+                        post.setVip(vips.get(random.nextInt(vips.size()))); // Tin hết hạn thì VIP gì cũng được
                     } else {
-                        // Tin còn hạn -> Tỉ lệ Approved cao để hiện lên Map
-                        if (selectedVip.getVipLevel() == 0) {
-                            int statusRand = random.nextInt(100);
-                            if (statusRand < 75)
-                                post.setStatus(PostStatus.APPROVED);
-                            else if (statusRand < 90)
-                                post.setStatus(PostStatus.PENDING);
-                            else
-                                post.setStatus(PostStatus.REVIEW_LATER);
+                        int statusRand = random.nextInt(100);
+                        if (statusRand < 15) {
+                            post.setStatus(PostStatus.APPROVED); // 20%
+                            post.setPushedAt(Instant.now().minusSeconds(random.nextLong(172800)));
+                            post.setVip(vips.get(random.nextInt(vips.size())));
+                        } else if (statusRand < 25) {
+                            post.setStatus(PostStatus.REVIEW_LATER); // 15%
+                            post.setPushedAt(Instant.now().minusSeconds(random.nextLong(432000)));
+                            post.setVip(vip1); // Ưu tiên VIP 1 cho REVIEW_LATER
                         } else {
-                            post.setStatus(PostStatus.APPROVED);
+                            // 🌟 NẾU LÀ PENDING (40%), REJECTED (15%) HOẶC BLOCKED (10%) -> ÉP VIP 0
+                            if (statusRand < 65)
+                                post.setStatus(PostStatus.PENDING);
+                            else if (statusRand < 85)
+                                post.setStatus(PostStatus.REJECTED);
+                            else
+                                post.setStatus(PostStatus.BLOCKED);
+
+                            post.setPushedAt(fakeCreatedAt);
+                            post.setVip(vip0); // <--- Bắt buộc VIP 0
                         }
-                        // Đẩy tin ngẫu nhiên từ lúc tạo đến nay
-                        long secondsSinceCreated = Instant.now().getEpochSecond() - fakeCreatedAt.getEpochSecond();
-                        fakePushedAt = fakeCreatedAt.plusSeconds(random.nextLong(Math.max(1, secondsSinceCreated)));
-                        post.setNotifyOnView(true);
                     }
 
-                    post.setCreatedAt(fakeCreatedAt);
-                    post.setExpireDate(fakeExpireDate);
-                    post.setPushedAt(fakePushedAt);
-                    post.setDeletedByUser(false);
-                    post.setView((long) (random.nextInt(1000) + 50));
+                    // Đặc quyền VIP APPROVED (Thời gian đẩy tin siêu mới trong 2 tiếng qua)
+                    if (post.getStatus() == PostStatus.APPROVED && post.getVip().getVipLevel() > 0) {
+                        post.setPushedAt(Instant.now().minusSeconds(random.nextLong(7200)));
+                    }
 
-                    // ====================================================================
-                    // 6. LIÊN KẾT & NỘI DUNG
-                    // ====================================================================
+                    // 7. Metadata & Detail
                     User user = users.get(random.nextInt(users.size()));
                     post.setUser(user);
                     post.setCreatedBy(user.getEmail());
-                    post.setCategory(currentClusterCategory);
-                    post.setVip(selectedVip);
+                    post.setCategory(curCat);
+                    post.setType(curCat.getType());
+                    post.setCreatedAt(fakeCreatedAt);
+                    post.setExpireDate(fakeExpireDate);
+                    post.setUpdatedAt(post.getPushedAt());
+                    post.setDeletedByUser(false);
+                    post.setView((long) (random.nextInt(3000) + 50));
 
-                    // Listing Detail
                     ListingDetail detail = new ListingDetail();
-                    if (!currentClusterCategory.getName().contains("Bán đất")
-                            && !currentClusterCategory.getName().contains("kho")) {
-                        detail.setBedrooms(random.nextInt(5) + 1);
-                        detail.setBathrooms(random.nextInt(3) + 1);
+                    if (!curCat.getName().toLowerCase().contains("đất")) {
+                        detail.setBedrooms(random.nextInt(4) + 1);
+                        detail.setBathrooms(random.nextInt(2) + 1);
                         detail.setFurnishing(furnishings[random.nextInt(furnishings.length)]);
                     }
                     detail.setHouseDirection(orientations[random.nextInt(orientations.length)]);
-                    detail.setBalconyDirection(orientations[random.nextInt(orientations.length)]);
                     detail.setLegalStatus(legalStatuses[random.nextInt(legalStatuses.length)]);
                     detail.setPost(post);
                     post.setListingDetail(detail);
-                    post.setType(currentClusterCategory.getType());
 
-                    int globalIndex = (threadIndex * batchSize) + i;
-                    String fullAddress = detailAddress + ", "
-                            + (currentClusterWard != null ? currentClusterWard.getName() + ", " : "") +
-                            (currentClusterDistrict != null ? currentClusterDistrict.getName() + ", " : "")
-                            + currentClusterProvince.getName();
-                    populateContentAndImages(post, currentClusterCategory.getName(), roundedArea, fullAddress, random,
-                            baseImageUrl, globalIndex);
+                    String fullAddr = post.getStreetAddress() + ", " + (curWard != null ? curWard.getName() + ", " : "")
+                            + curProv.getName();
+                    populateContentAndImages(post, curCat.getName(), roundedArea, fullAddr, random, baseImageUrl,
+                            (threadIndex * postsPerThread) + i);
 
                     posts.add(post);
-                }
 
-                synchronized (postRepository) {
-                    postRepository.saveAll(posts);
+                    if (posts.size() >= 100) {
+                        synchronized (postRepository) {
+                            postRepository.saveAll(posts);
+                        }
+                        posts.clear();
+                    }
                 }
-                System.out.println(">>> Luồng " + Thread.currentThread().getName() + " xong " + batchSize + " tin.");
+                if (!posts.isEmpty()) {
+                    synchronized (postRepository) {
+                        postRepository.saveAll(posts);
+                    }
+                }
             });
         }
 
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(15, TimeUnit.MINUTES))
-                executorService.shutdownNow();
+            executorService.awaitTermination(30, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             executorService.shutdownNow();
         }
-        System.out.println(">>> INIT DATA 'posts' SUCCESSFUL WITH PRICE HISTORY LOGIC!");
+        System.out.println(">>> SEEDING POSTS COMPLETED!");
     }
 
     // ====================================================================
@@ -943,9 +954,6 @@ public class StartupRunner implements CommandLineRunner {
         post.setImages(images);
     }
 
-    // ====================================================================
-    // 🌟 SEED DATA TƯƠNG TÁC (MULTI-THREADING)
-    // ====================================================================
     private void initSampleInteractions() {
         if (postViewHistoryRepository.count() > 0 || savedPostRepository.count() > 0) {
             System.out.println(">>> SKIP! INTERACTION DATA ALREADY EXISTS...");
@@ -954,134 +962,94 @@ public class StartupRunner implements CommandLineRunner {
 
         List<Post> allPosts = postRepository.findAll();
         List<User> allUsers = userRepository.findAll();
+        if (allPosts.isEmpty() || allUsers.isEmpty())
+            return;
+
+        List<Post> activePosts = allPosts.stream()
+                .filter(p -> p.getStatus() == PostStatus.APPROVED || p.getStatus() == PostStatus.REVIEW_LATER)
+                .collect(Collectors.toList());
+
         Instant now = Instant.now();
+        // Dùng số luồng vừa phải để dễ kiểm soát
+        ExecutorService executor = Executors.newFixedThreadPool(4);
 
-        System.out.println(">>> SEEDING INTERACTIONS: This may take a moment...");
+        System.out.println(">>> START SEEDING INTERACTIONS...");
 
-        // Khởi tạo ThreadPool (Sử dụng số luồng tùy theo số core CPU của máy)
-        int numThreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        // 1. SEED LƯỢT XEM
+        executor.submit(() -> {
+            try {
+                // Lưu ý: Đảm bảo tên bảng là post_view_histories khớp với Entity
+                String sql = "INSERT INTO post_view_histories (post_id, user_id, ip_address, viewed_at) VALUES (?, ?, ?, ?)";
+                List<Object[]> batchArgs = new ArrayList<>();
+                ThreadLocalRandom random = ThreadLocalRandom.current();
 
-        // ==========================================================
-        // 1. SEED LƯỢT XEM (Chia nhỏ danh sách Post cho các luồng)
-        // ==========================================================
-        int postBatchSize = (int) Math.ceil((double) allPosts.size() / numThreads);
+                for (Post post : allPosts) {
+                    int views = random.nextInt(101) + 50;
+                    for (int j = 0; j < views; j++) {
+                        User randomUser = allUsers.get(random.nextInt(allUsers.size()));
+                        Long viewerId = (random.nextInt(100) < 30) ? randomUser.getId() : null;
+                        Instant randomViewedAt = now.minusSeconds(random.nextLong(90L * 24 * 60 * 60));
 
-        for (int i = 0; i < allPosts.size(); i += postBatchSize) {
-            int start = i;
-            int end = Math.min(i + postBatchSize, allPosts.size());
-            List<Post> postChunk = allPosts.subList(start, end);
+                        batchArgs.add(new Object[] { post.getId(), viewerId, "192.168.1." + random.nextInt(255),
+                                randomViewedAt });
 
-            executor.submit(() -> {
-                Random random = new Random(); // Thread-safe Random
-                List<PostViewHistory> viewHistories = new ArrayList<>();
-
-                for (Post post : postChunk) {
-                    // Mỗi bài đăng có từ 50 đến 300 lượt xem lịch sử
-                    int viewsToGenerate = random.nextInt(251) + 50;
-
-                    for (int j = 0; j < viewsToGenerate; j++) {
-                        // Ngẫu nhiên thời gian xem trong 90 ngày qua
-                        long randomSecondsAgo = (long) random.nextInt(90 * 24 * 60 * 60);
-                        Instant viewedAt = now.minusSeconds(randomSecondsAgo);
-
-                        // 70% là khách (User null), 30% là User đăng nhập
-                        User viewer = (random.nextInt(100) < 30) ? allUsers.get(random.nextInt(allUsers.size())) : null;
-
-                        PostViewHistory history = PostViewHistory.builder()
-                                .post(post)
-                                .user(viewer)
-                                .ipAddress("192.168.1." + random.nextInt(255))
-                                .viewedAt(viewedAt)
-                                .build();
-                        viewHistories.add(history);
-
-                        // Lưu theo batch để tránh tràn bộ nhớ
-                        if (viewHistories.size() >= 5000) {
-                            synchronized (postViewHistoryRepository) {
-                                postViewHistoryRepository.saveAll(viewHistories);
-                            }
-                            viewHistories.clear();
+                        if (batchArgs.size() >= 1000) {
+                            jdbcTemplate.batchUpdate(sql, batchArgs);
+                            batchArgs.clear();
                         }
                     }
                 }
-                // Lưu nốt phần còn lại của luồng
-                if (!viewHistories.isEmpty()) {
-                    synchronized (postViewHistoryRepository) {
-                        postViewHistoryRepository.saveAll(viewHistories);
-                    }
-                }
-            });
-        }
-
-        // ==========================================================
-        // 2. SEED TIN ĐÃ LƯU (Chia nhỏ danh sách User cho các luồng)
-        // ==========================================================
-        if (!allUsers.isEmpty()) {
-            int userBatchSize = (int) Math.ceil((double) allUsers.size() / numThreads);
-
-            for (int i = 0; i < allUsers.size(); i += userBatchSize) {
-                int start = i;
-                int end = Math.min(i + userBatchSize, allUsers.size());
-                List<User> userChunk = allUsers.subList(start, end);
-
-                executor.submit(() -> {
-                    Random random = new Random();
-                    List<SavedPost> savedPosts = new ArrayList<>();
-
-                    for (User user : userChunk) {
-                        int postsToSave = random.nextInt(16) + 5;
-                        // Sử dụng Set để tránh trùng lặp post_id
-                        Set<Long> savedPostIds = new HashSet<>();
-
-                        for (int k = 0; k < postsToSave; k++) {
-                            Post targetPost = allPosts.get(random.nextInt(allPosts.size()));
-
-                            if (!savedPostIds.contains(targetPost.getId())) {
-                                long randomSecondsAgo = (long) random.nextInt(30 * 24 * 60 * 60); // Lưu trong 30 ngày
-                                                                                                  // qua
-
-                                SavedPost saved = SavedPost.builder()
-                                        .user(user)
-                                        .post(targetPost)
-                                        .savedAt(now.minusSeconds(randomSecondsAgo))
-                                        .build();
-
-                                savedPosts.add(saved);
-                                savedPostIds.add(targetPost.getId());
-                            }
-
-                            if (savedPosts.size() >= 1000) {
-                                synchronized (savedPostRepository) {
-                                    savedPostRepository.saveAll(savedPosts);
-                                }
-                                savedPosts.clear();
-                            }
-                        }
-                    }
-                    if (!savedPosts.isEmpty()) {
-                        synchronized (savedPostRepository) {
-                            savedPostRepository.saveAll(savedPosts);
-                        }
-                    }
-                });
+                if (!batchArgs.isEmpty())
+                    jdbcTemplate.batchUpdate(sql, batchArgs);
+                System.out.println(">>> SEEDING VIEWS: SUCCESSFUL!");
+            } catch (Exception e) {
+                System.err.println(">>> LỖI SEED VIEWS: " + e.getMessage());
+                e.printStackTrace();
             }
-        }
+        });
 
-        // ==========================================================
-        // 3. CHỜ CÁC LUỒNG HOÀN THÀNH
-        // ==========================================================
+        // 2. SEED TIN ĐÃ LƯU
+        executor.submit(() -> {
+            try {
+                if (activePosts.isEmpty())
+                    return;
+                String sql = "INSERT INTO saved_posts (user_id, post_id, saved_at) VALUES (?, ?, ?)";
+                List<Object[]> batchArgs = new ArrayList<>();
+                ThreadLocalRandom random = ThreadLocalRandom.current();
+
+                for (User user : allUsers) {
+                    int toSave = random.nextInt(6) + 3;
+                    Set<Long> pickedPostIds = new HashSet<>();
+                    for (int k = 0; k < toSave; k++) {
+                        Long postId = activePosts.get(random.nextInt(activePosts.size())).getId();
+                        if (pickedPostIds.add(postId)) {
+                            Instant randomSavedAt = now.minusSeconds(random.nextLong(30L * 24 * 60 * 60));
+                            batchArgs.add(new Object[] { user.getId(), postId, randomSavedAt });
+                        }
+                        if (batchArgs.size() >= 500) {
+                            jdbcTemplate.batchUpdate(sql, batchArgs);
+                            batchArgs.clear();
+                        }
+                    }
+                }
+                if (!batchArgs.isEmpty())
+                    jdbcTemplate.batchUpdate(sql, batchArgs);
+                System.out.println(">>> SEEDING SAVED POSTS: SUCCESSFUL!");
+            } catch (Exception e) {
+                System.err.println(">>> LỖI SEED SAVED POSTS: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+
         executor.shutdown();
         try {
-            // Cho phép chờ tối đa 15 phút, nếu quá giờ sẽ ép dừng
             if (!executor.awaitTermination(15, TimeUnit.MINUTES)) {
                 executor.shutdownNow();
             }
         } catch (InterruptedException e) {
             executor.shutdownNow();
+            Thread.currentThread().interrupt();
         }
-
-        System.out.println(">>> SEEDING INTERACTIONS: SUCCESSFUL!");
     }
 
     private void initSampleTransactions() {

@@ -33,6 +33,7 @@ PostResponse {
     private Instant expireDate;
     private Instant createdAt;
     private Instant updatedAt;
+    private Instant pushedAt;
 
     // --- THÔNG TIN ĐỊA CHỈ (Đã được làm phẳng) ---
     private String streetAddress;
@@ -73,6 +74,8 @@ PostResponse {
         private String phone; // Quan trọng để khách hàng gọi điện
         private String avatar;
         private Boolean isVerified;
+        private Instant createdAt;
+
     }
 
     @Data

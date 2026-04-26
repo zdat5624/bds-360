@@ -78,9 +78,9 @@ export function UserInfo() {
                                     <Tag
                                         color="warning"
                                         bordered={false}
-                                        className="m-0 text-[9px] px-1.5 py-[2px] cursor-pointer hover:opacity-80 transition-opacity font-medium"
+                                        className=" !m-0 !text-[10px] !px-1 !py-[1px] cursor-pointer hover:!opacity-80 transition-opacity !font-medium"
                                     >
-                                        Chưa xác thực
+                                        Chưa X.T
                                     </Tag>
                                 </Tooltip>
                             </Link>

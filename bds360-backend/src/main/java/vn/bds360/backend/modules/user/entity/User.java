@@ -102,7 +102,9 @@ public class User {
             this.avatar = "http://localhost:8080/uploads/avatar-default.webp";
         }
 
-        this.createdAt = Instant.now();
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
     }
 
     @PreUpdate

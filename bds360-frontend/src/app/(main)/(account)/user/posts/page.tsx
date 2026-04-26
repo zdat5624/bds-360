@@ -36,6 +36,7 @@ import {
     useGetPosts
 } from '@/features/posts';
 
+import { VIP_TAG_COLOR_MAP } from '@/constants';
 import {
     POST_STATUS_COLOR,
     POST_STATUS_LABEL,
@@ -55,7 +56,7 @@ export default function UserPostsPage() {
     const [filters, setFilters] = useState<PostFilterParams>({
         page: 0,
         size: 10,
-        sortBy: 'pushedAt', // 🌟 Sửa mặc định thành pushedAt để đồng bộ với Backend
+        sortBy: 'pushedAt',
         sortDirection: 'DESC',
         statuses: undefined,
     });
@@ -106,7 +107,7 @@ export default function UserPostsPage() {
             ...prev,
             page: newState.currentPage - 1,
             size: newState.pageSize,
-            sortBy: newState.sortBy || 'pushedAt', // 🌟 Sửa mặc định thành pushedAt
+            sortBy: newState.sortBy || 'pushedAt',
             sortDirection: newState.sortDirection || 'DESC',
         }));
     };
@@ -139,7 +140,7 @@ export default function UserPostsPage() {
         setFilters({
             page: 0,
             size: 10,
-            sortBy: 'pushedAt', // 🌟 Sửa mặc định thành pushedAt
+            sortBy: 'pushedAt',
             sortDirection: 'DESC',
             statuses: filters.statuses,
         });
@@ -170,18 +171,58 @@ export default function UserPostsPage() {
             title: 'Thông tin bài đăng',
             dataIndex: 'title',
             key: 'title',
-            width: '30%',
-            render: (title: string, record: Post) => (
-                <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-2">
-                        <Text strong className="!line-clamp-1">{title}</Text>
-                        {record.isHidden && (
-                            <Tag color="warning" icon={<EyeInvisibleOutlined />} className="m-0 text-[10px] leading-4 px-1">Đang ẩn</Tag>
-                        )}
+            width: '35%',
+            render: (title: string, record: Post) => {
+                const vipColor = VIP_TAG_COLOR_MAP[record.vip?.id];
+                const isVip = record.vip?.vipLevel > 0;
+
+                return (
+                    <div className="flex flex-col gap-0.5" style={{ maxWidth: '100%' }}>
+                        {/* --- DÒNG 1: TIÊU ĐỀ & TAGS --- */}
+                        <div className="flex items-center gap-1.5 w-full">
+                            {/* flex-1 và min-w-0 ép Text phải co lại và hiện dấu ... nếu quá dài */}
+                            <Text
+                                strong
+                                className="text-[14px] flex-1 min-w-0"
+                                ellipsis={{ tooltip: title }}
+                            >
+                                {title}
+                            </Text>
+
+                            {/* shrink-0 đảm bảo các Tag luôn giữ nguyên kích thước, không bị ép bẹp */}
+                            <div className="flex items-center gap-1 shrink-0">
+                                {isVip && (
+                                    <Tag
+                                        color={vipColor}
+                                        className="m-0 border-none px-1.5 py-0 text-[10px] font-bold uppercase leading-5 shadow-sm"
+                                    >
+                                        {record.vip.name}
+                                    </Tag>
+                                )}
+
+                                {record.isHidden && (
+                                    <Tag
+                                        color="default"
+                                        icon={<EyeInvisibleOutlined />}
+                                        className="m-0 text-[10px] leading-4 px-1"
+                                    >
+                                        Ẩn
+                                    </Tag>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* --- DÒNG 2: ĐỊA CHỈ --- */}
+                        <Text
+                            type="secondary"
+                            className="text-[12px] opacity-70 w-full"
+                            ellipsis={{ tooltip: getFullAddress(record) }}
+                        >
+                            {getFullAddress(record)}
+                        </Text>
                     </div>
-                    <Text type="secondary" className="text-xs !line-clamp-1">{getFullAddress(record)}</Text>
-                </div>
-            ),
+                );
+            },
         },
         {
             title: 'Diện tích',
@@ -227,7 +268,7 @@ export default function UserPostsPage() {
             align: 'right',
             width: 150,
             sorter: true,
-            render: (date: string) => getSmartRelativeTime(date, DATE_FORMAT.FULL_TIME),
+            render: (_, record) => getSmartRelativeTime(record.pushedAt, DATE_FORMAT.FULL_TIME),
         },
         {
             title: '',

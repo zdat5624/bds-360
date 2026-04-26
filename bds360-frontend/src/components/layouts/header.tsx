@@ -141,11 +141,11 @@ export function Header() {
                                             </Text>
 
                                             {user?.isVerified ? (
-                                                <Tooltip title="Tài khoản đã xác thực">
+                                                <Tooltip getPopupContainer={(trigger) => trigger.parentElement!} placement="topLeft" title="Tài khoản đã xác thực">
                                                     <CheckCircleFilled style={{ color: colorPrimary, fontSize: '13px' }} className="mt-[2px]" />
                                                 </Tooltip>
                                             ) : (
-                                                <Tooltip title="Tài khoản chưa xác thực. Bấm để cập nhật!">
+                                                <Tooltip getPopupContainer={(trigger) => trigger.parentElement!} placement="topLeft" title="Tài khoản chưa xác thực. Bấm để cập nhật!">
                                                     <Link href={APP_ROUTES.USER.PROFILE} onClick={(e) => e.stopPropagation()} className="flex mt-[2px]">
                                                         <ExclamationCircleFilled className="text-amber-500 text-[13px] hover:scale-110 transition-transform" />
                                                     </Link>

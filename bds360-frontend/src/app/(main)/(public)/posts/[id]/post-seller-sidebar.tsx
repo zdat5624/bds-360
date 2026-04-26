@@ -5,28 +5,22 @@ import { RevealPhoneButton } from '@/components/composite';
 import { ChevronRightIcon, ZaloIcon } from '@/components/icons/custom-icons';
 import { PostAuthor } from '@/features/posts/api/types';
 import { cn } from '@/lib/utils';
-import { CheckCircleFilled } from '@ant-design/icons';
+import { getMembershipDuration } from '@/utils/date.util';
+import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { Tooltip } from 'antd';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React from 'react';
 
 interface PostSellerSidebarProps {
     user: PostAuthor & { isVerified?: boolean };
     className?: string;
-    postId?: number
+    postId?: number;
 }
-
 export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, className, postId }) => {
-    const [showPhone, setShowPhone] = useState(false);
-
-    // Xử lý logic hiển thị số điện thoại an toàn
     const safePhone = user?.phone || '';
-
-    // Link chuyển hướng Zalo (Zalo hỗ trợ link zalo.me/SĐT)
     const zaloLink = safePhone ? `https://zalo.me/${safePhone}` : '#';
-
-    // GIẢ LẬP: Mặc định cho true để bạn xem UI, thực tế lấy từ user.isVerified
     const isVerified = user?.isVerified ?? true;
+    const memberSince = getMembershipDuration(user?.createdAt);
 
     return (
         <div className={cn(
@@ -51,41 +45,44 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
                 )}
             </div>
 
-            {/* --- USER INFO & VERIFIED UI --- */}
             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
                 Được đăng bởi
             </span>
 
-            <div className="flex items-center gap-1.5 justify-center mb-1.5">
+            <div className="flex items-center gap-1.5 justify-center mb-1">
                 <h3 className="text-base font-bold text-gray-900 line-clamp-1 text-center">
                     {user?.name || 'Người dùng ẩn danh'}
                 </h3>
-
                 {isVerified && (
                     <Tooltip title="Đã xác thực">
-                        <CheckCircleFilled
-                            className="!text-[#0068FF] !text-[13px] shrink-0"
-                        />
+                        <CheckCircleFilled className="!text-[#0068FF] !text-[13px] shrink-0" />
                     </Tooltip>
                 )}
-
             </div>
-            {isVerified && (
-                <span className="mb-1.5 text-[10px] font-medium text-[#0068FF] bg-[#e5f0ff] px-2.5 py-0.5 rounded-full border border-[#b3d4ff]">
-                    Tài khoản đã xác thực
-                </span>
-            )}
+
+            {/* --- MEMBER SINCE & STATUS --- */}
+            <div className="flex flex-col items-center gap-1.5 mb-3">
+                {isVerified && (
+                    <span className="text-[10px] font-medium text-[#0068FF] bg-[#e5f0ff] px-2.5 py-0.5 rounded-full border border-[#b3d4ff]">
+                        Tài khoản đã xác thực
+                    </span>
+                )}
+
+                <div className="flex items-center gap-1 text-gray-500 text-[11px]">
+                    <ClockCircleOutlined className="text-[10px]" />
+                    <span>Đã tham gia {memberSince}</span>
+                </div>
+            </div>
 
             {/* --- ACTIONS --- */}
             <div className="w-full flex flex-col gap-2">
-
-                {/* 👇 ĐÃ FIX: Truyền thêm recipientId={user?.id} */}
                 <RevealPhoneButton
                     postId={postId}
                     phone={safePhone}
                     recipientId={user?.id}
                 />
 
+                {/* Trả lại đúng style cũ của bác: nền trắng, viền xanh */}
                 <a
                     href={zaloLink}
                     target="_blank"
@@ -104,17 +101,15 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
             </div>
 
             {/* --- XEM THÊM TIN KHÁC --- */}
-            {postId && (
-                <div className="w-full mt-3 pt-2.5 border-t border-gray-100">
-                    <Link
-                        href={`#`}
-                        className="group w-full flex items-center justify-center gap-1 text-[12px] font-medium text-gray-500 hover:text-[#0068FF] transition-colors"
-                    >
-                        Xem thêm tin khác
-                        <ChevronRightIcon className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                    </Link>
-                </div>
-            )}
+            <div className="w-full mt-3 pt-2.5 border-t border-gray-100">
+                <Link
+                    href={`/profile/${user?.id}`}
+                    className="group w-full flex items-center justify-center gap-1 text-[12px] font-medium text-gray-500 hover:text-[#0068FF] transition-colors"
+                >
+                    Xem thêm tin khác
+                    <ChevronRightIcon className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+            </div>
         </div>
     );
 };

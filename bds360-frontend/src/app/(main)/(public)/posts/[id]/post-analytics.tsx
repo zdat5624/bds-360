@@ -192,7 +192,7 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
             {(isLoadingNearby || (nearbyData && nearbyData.length > 0)) && (
                 <div className="w-full">
                     <div className="mb-4">
-                        <Title level={4} className="!m-0 !text-base !font-semibold text-gray-700">So sánh giá khu vực lân cận</Title>
+                        <Title level={4} className="!m-0 !text-base !font-semibold text-gray-700">So sánh giá cùng một khu vực Quận/Huyện</Title>
                         <Text type="secondary" className="text-[12px]">Tại {post.districtName}</Text>
                     </div>
 

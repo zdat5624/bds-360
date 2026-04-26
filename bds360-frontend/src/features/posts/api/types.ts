@@ -17,6 +17,7 @@ export interface PostAuthor {
     phone: string;
     avatar?: string; // Full url
     isVerified: boolean;
+    createdAt: string;
 }
 
 export interface PostVip {
