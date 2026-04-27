@@ -175,7 +175,7 @@ export function Footer() {
                             Chịu trách nhiệm nội dung GP ICP: Nguyễn Văn A<br />
                             Chịu trách nhiệm sàn GDTMĐT: Trần Thị B<br />
                             Quy chế, quy định giao dịch có hiệu lực từ 08/08/2024<br />
-                            Ghi rõ nguồn "BDS360.vn" khi phát hành lại thông tin từ website này.
+                            {`Ghi rõ nguồn "BDS360.vn" khi phát hành lại thông tin từ website này.`}
                         </div>
                     </div>
 

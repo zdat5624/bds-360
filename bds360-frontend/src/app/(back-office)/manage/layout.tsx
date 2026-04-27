@@ -30,7 +30,7 @@ export default function ManageLayout({ children }: { children: ReactNode }) {
                 message.warning('Bạn không có quyền truy cập khu vực này');
             }
         }
-    }, [pathname, user]);
+    }, [pathname, user, router]);
 
     const {
         colorBgContainer,
@@ -38,7 +38,6 @@ export default function ManageLayout({ children }: { children: ReactNode }) {
         colorBgLayout,
         colorPrimary,
         colorTextSecondary,
-        colorBorder
     } = useAppTheme();
 
     const [collapsed, setCollapsed] = useState(false);
