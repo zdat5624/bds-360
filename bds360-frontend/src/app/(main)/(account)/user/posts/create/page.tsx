@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { AUTH_QUERY_KEYS } from '@/features/auth';
 import { getErrorMessage } from '@/utils/error.util';
 import { useQueryClient } from '@tanstack/react-query';
+import { CancelPostCreationModal } from './CancelPostCreationModal';
 import { ConfirmPostCreationModal } from './confirm-post-creation.modal';
 import CreatePostSuccessModal from './create-post-success.modal';
 import { Step1General } from './step-1-general';
@@ -167,7 +168,7 @@ export default function CreatePostPage() {
                 <div className="bg-gray-50/50 py-4 border-b border-gray-100">
                     <Steps
                         current={currentStep}
-                        size={isMobile ? "small" : "default"}
+                        size={isMobile ? "small" : "medium"}
                         className=" !mx-auto !w-full"
                         items={isMobile
                             ? STEPS.map(s => ({ title: s.title }))
@@ -253,6 +254,12 @@ export default function CreatePostPage() {
                 isOpen={isSuccessModalOpen}
                 onContinue={handleContinuePosting}
                 onManage={handleGoToManage}
+            />
+
+            <CancelPostCreationModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirm={handleConfirmCancel}
             />
         </div>
     );
