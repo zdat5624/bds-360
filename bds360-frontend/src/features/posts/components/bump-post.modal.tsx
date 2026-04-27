@@ -28,8 +28,9 @@ export function BumpPostModal({ isOpen, onClose, post }: BumpPostModalProps) {
             await bumpPostMutation.mutateAsync(post.id);
             message.success('Đã đẩy tin lên top thành công!');
             onClose();
-        } catch (error: any) {
+        } catch (error) {
             console.error('Lỗi đẩy tin:', error);
+
         }
     };
 

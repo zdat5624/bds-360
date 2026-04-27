@@ -13,6 +13,7 @@ import {
 } from '@/features/categories';
 import { CategoryFormModal } from '@/features/categories/components/category-form.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getErrorMessage } from '@/utils/error.util';
 import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { App, Button, Flex, Input, Segmented, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -64,8 +65,8 @@ export default function ManageCategoriesPage() {
             await deleteCategory(deleteModal.id);
             message.success('Đã xóa danh mục thành công');
             setDeleteModal({ isOpen: false, id: null });
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Không thể xóa danh mục này');
+        } catch (error) {
+            message.error(getErrorMessage(error) || 'Xóa danh mục thất bại');
         }
     };
 

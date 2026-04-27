@@ -20,6 +20,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 // Import lại các Step từ thư mục create để tái sử dụng
+import { getErrorMessage } from '@/utils/error.util';
 import { Step1General } from '../../create/step-1-general';
 import { Step2Location } from '../../create/step-2-location';
 import { Step3DetailsMedia } from '../../create/step-3-details-media';
@@ -139,8 +140,7 @@ export default function EditPostPage() {
                 message.error('Dữ liệu chưa hợp lệ, vui lòng kiểm tra lại các trường báo đỏ.');
                 return;
             }
-            const apiMessage = error?.response?.data?.message;
-            message.error(apiMessage || 'Đã xảy ra lỗi khi cập nhật bài viết.');
+            message.error(getErrorMessage(error));
         }
     };
 

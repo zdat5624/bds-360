@@ -2,6 +2,7 @@
 
 import { AppModal } from '@/components/base/app.modal';
 import { LISTING_TYPE_OPTIONS } from '@/constants';
+import { getErrorMessage } from '@/utils/error.util';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { App, Form, Input, Select } from 'antd';
 import { useEffect } from 'react';
@@ -45,8 +46,9 @@ export function CategoryFormModal({ isOpen, onClose, category }: CategoryFormMod
                 message.success('Thêm danh mục mới thành công');
             }
             onClose();
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+        } catch (error) {
+            message.error(getErrorMessage(error));
+
         }
     };
 

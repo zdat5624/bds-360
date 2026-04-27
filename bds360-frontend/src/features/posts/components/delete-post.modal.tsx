@@ -2,6 +2,7 @@
 'use client';
 
 import { ConfirmModal } from '@/components/base/confirm.modal';
+import { getErrorMessage } from '@/utils/error.util';
 import { App } from 'antd';
 import { useDeletePost } from '../api/posts.mutations';
 
@@ -33,10 +34,9 @@ export function DeletePostModal({
             message.success('Đã xóa tin đăng thành công');
             onClose();
             if (onSuccess) onSuccess();
-        } catch (error: any) {
-            // Error đã được customFetch hoặc React Query bắt, chỉ cần báo chung hoặc lấy message từ backend
-            const errorMsg = error?.response?.data?.message || 'Có lỗi xảy ra khi xóa tin đăng';
-            message.error(errorMsg);
+        } catch (error) {
+            message.error(getErrorMessage(error) || 'Có lỗi xảy ra khi xóa tin đăng');
+
         }
     };
 

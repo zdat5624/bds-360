@@ -10,6 +10,7 @@ import { useState } from 'react';
 
 // Import các bước và Modal
 import { AUTH_QUERY_KEYS } from '@/features/auth';
+import { getErrorMessage } from '@/utils/error.util';
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmPostCreationModal } from './confirm-post-creation.modal';
 import CreatePostSuccessModal from './create-post-success.modal';
@@ -120,10 +121,12 @@ export default function CreatePostPage() {
             setIsConfirmModalOpen(false);
             setIsSuccessModalOpen(true);
 
-        } catch (error: any) {
+        } catch (error) {
             console.error('Submit Error:', error);
-            const apiMessage = error?.response?.data?.message;
-            message.error(apiMessage || 'Đã xảy ra lỗi khi tạo bài viết.');
+            // const apiMessage = error?.response?.data?.message;
+            // message.error(apiMessage || 'Đã xảy ra lỗi khi tạo bài viết.');
+            message.error(getErrorMessage(error));
+
         }
     };
 
