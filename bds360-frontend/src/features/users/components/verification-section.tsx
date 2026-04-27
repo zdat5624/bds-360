@@ -96,7 +96,7 @@ export function VerificationSection() {
             {/* TRẠNG THÁI 1: ĐÃ XÁC THỰC */}
             {isVerified && (
                 <Alert
-                    message={<span className="font-bold text-green-700">Tài khoản đã được xác thực</span>}
+                    title={<span className="font-bold text-green-700">Tài khoản đã được xác thực</span>}
                     description="Hồ sơ của bạn đã được kiểm duyệt. Dấu tích xanh uy tín đã được cấp cho tài khoản của bạn."
                     type="success"
                     showIcon
@@ -108,7 +108,7 @@ export function VerificationSection() {
             {/* TRẠNG THÁI 2: ĐANG CHỜ DUYỆT */}
             {!isVerified && status === 'PENDING' && (
                 <Alert
-                    message={<span className="font-bold text-blue-700">Hồ sơ đang được chờ duyệt</span>}
+                    title={<span className="font-bold text-blue-700">Hồ sơ đang được chờ duyệt</span>}
                     description="Yêu cầu xác thực của bạn đã được gửi và đang chờ ban quản trị kiểm duyệt. Vui lòng quay lại sau."
                     type="info"
                     showIcon

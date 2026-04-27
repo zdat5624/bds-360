@@ -69,7 +69,7 @@ export function VerificationHistoryModal({ isOpen, onClose }: VerificationHistor
             width: 40,
             align: 'center' as const,
             fixed: 'right' as const,
-            render: (_: any, record: VerificationSubmission) => (
+            render: (_: unknown, record: VerificationSubmission) => (
                 <TableActionDropdown
                     actions={[
                         {
@@ -92,7 +92,7 @@ export function VerificationHistoryModal({ isOpen, onClose }: VerificationHistor
                 onCancel={onClose}
                 footer={null}
                 width={800}
-                destroyOnClose
+                destroyOnHidden
                 centered
             >
                 <div className="mt-4">

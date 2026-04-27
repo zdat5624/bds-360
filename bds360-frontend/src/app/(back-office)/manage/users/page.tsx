@@ -23,14 +23,14 @@ import { useMemo, useState } from 'react';
 
 const { Title, Text } = Typography;
 
-const ROLE_COLOR: Record<string, string> = {
-    ADMIN: 'red',
-    MODERATOR: 'purple',
-    USER: 'blue',
-};
+// const ROLE_COLOR: Record<string, string> = {
+//     ADMIN: 'red',
+//     MODERATOR: 'purple',
+//     USER: 'blue',
+// };
 
 export default function ManageUsersPage() {
-    const { colorBgContainer, colorBorderSecondary, colorSuccess, colorTextSecondary } = useAppTheme();
+    const { colorBgContainer, colorBorderSecondary, colorSuccess } = useAppTheme();
     const { icon, title } = getPageMeta(APP_ROUTES.MANAGE.USERS);
 
     const defaultFilters = useMemo<UserFilterParams>(() => ({

@@ -168,6 +168,7 @@ export interface PostFilterParams extends BaseFilterParams {
     furnishing?: Furnishing;
 }
 
+//eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SavedPostFilterParams extends BaseFilterParams {
     // Thêm các field đặc thù nếu cần, BaseFilterParams đã có page, size, sortBy, sortDirection
 }

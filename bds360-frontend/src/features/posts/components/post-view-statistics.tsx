@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { useGetPostViewsDaily, useGetPostViewsMonthly } from '../api/posts.queries';
+import { PostViewChartResponse } from '../api/types';
 
 const { Title } = Typography;
 
@@ -44,7 +45,7 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
         const rawData = viewMode === 'daily' ? dailyData : monthlyData;
         if (!rawData || rawData.length === 0) return [];
 
-        return rawData.map((item: any) => {
+        return rawData.map((item: PostViewChartResponse) => {
             const formattedLabel =
                 viewMode === 'daily'
                     ? formatDate(item.date, DATE_FORMAT.SHORT_DATE)
@@ -163,8 +164,10 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
                                     boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                                     padding: '10px'
                                 }}
-                                formatter={(value: ValueType | undefined) => [
-                                    <span style={{ color: '#1677ff', fontWeight: 'bold' }}>{value ?? 0} lượt</span>,
+                                formatter={(value: ValueType | undefined, name, props) => [
+                                    <span key={`count-${props?.dataKey}`} style={{ color: '#1677ff', fontWeight: 'bold' }}>
+                                        {value ?? 0} lượt
+                                    </span>,
                                     'Lượt xem'
                                 ]}
                                 labelStyle={{ color: '#6B7280', marginBottom: '4px' }}
@@ -201,25 +204,3 @@ export function PostViewStatistics({ postId }: PostViewStatisticsProps) {
     );
 }
 
-const CustomDot = (props: any) => {
-    const { cx, cy, value } = props;
-
-    if (value === 0) return null; // ẩn nếu = 0 (tuỳ)
-
-    return (
-        <g>
-            {/* vòng ngoài */}
-            <circle cx={cx} cy={cy} r={6} fill="#1677ff" opacity={0.15} />
-
-            {/* dot chính */}
-            <circle
-                cx={cx}
-                cy={cy}
-                r={3}
-                fill="#1677ff"
-                stroke="#fff"
-                strokeWidth={2}
-            />
-        </g>
-    );
-};

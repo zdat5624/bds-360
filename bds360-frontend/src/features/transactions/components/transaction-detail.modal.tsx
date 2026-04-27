@@ -28,13 +28,13 @@ export function TransactionDetailModal({ isOpen, onClose, transactionId }: Trans
 
     // 1. Lấy thông tin giao dịch
     const { data: transaction, isFetching: isFetchingTrans } = useGetTransactionById(
-        transactionId!,
+        transactionId ?? 0,
         !!transactionId && isOpen
     );
 
-    // 2. Lấy chi tiết người dùng (Chỉ chạy khi đã có transaction.user.id)
+    // 2. Lấy chi tiết người dùng
     const { data: user, isFetching: isFetchingUser } = useGetUserById(
-        transaction?.user?.id!,
+        transaction?.user?.id ?? 0,
         !!transaction?.user?.id && isOpen
     );
 

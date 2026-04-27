@@ -202,7 +202,7 @@ export default function SystemOverviewPage() {
                         isLoading={isLoading}
                         footer={
                             <Flex align="center" style={{ height: 32, width: '100%' }}>
-                                <Progress percent={kpis?.vipConversionRate || 0} size="small" showInfo={false} strokeColor="#eb2f96" trailColor="#f0f0f0" strokeWidth={6} />
+                                <Progress percent={kpis?.vipConversionRate || 0} size="small" showInfo={false} strokeColor="#eb2f96" railColor="#f0f0f0" strokeWidth={6} />
                             </Flex>
                         }
                     />

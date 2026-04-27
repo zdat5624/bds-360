@@ -8,16 +8,20 @@ import React, { useEffect, useState } from 'react';
 import { CompassSelector } from './compass-selector';
 
 type ModalView = 'MAIN' | 'LOCATION' | 'PRICE' | 'AREA';
-
+export interface AddressItem {
+    code: number;
+    name: string;
+}
 interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
     draftFilters: Partial<PostFilterParams>;
     setDraftFilters: (filters: Partial<PostFilterParams>) => void;
     onApply: () => void;
-    provinces?: any[];
-    districts?: any[];
-    wards?: any[];
+    // ✅ FIX: Thay any[] bằng AddressItem[]
+    provinces?: AddressItem[];
+    districts?: AddressItem[];
+    wards?: AddressItem[];
     currentProvince?: number;
     currentDistrict?: number;
     setTempLocation: (province?: number, district?: number) => void;

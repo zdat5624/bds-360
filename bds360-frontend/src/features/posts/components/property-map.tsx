@@ -1,15 +1,15 @@
 // @/features/posts/components/property-map.tsx
-
 'use client';
 
 import { envConfig } from '@/config/env';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import { Button } from 'antd';
+import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Image from 'next/image';
 import { CSSProperties, useCallback, useState } from 'react';
-import Map, { Marker, NavigationControl } from 'react-map-gl';
+import Map, { MapboxEvent, Marker, NavigationControl, ViewStateChangeEvent } from 'react-map-gl';
 
 interface PropertyMapProps {
     latitude: number;
@@ -33,22 +33,28 @@ export function PropertyMap({
         zoom: 14,
     });
 
+
+
     const handleViewGoogleMap = () => {
-        //  FIX: URL chuẩn
         const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+
         window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
     };
+    // ✅ FIX: Thay 'any' bằng 'MapboxEvent'
+    const handleMapLoad = useCallback((event: MapboxEvent) => {
+        const map = event.target as mapboxgl.Map;
 
-    const handleMapLoad = useCallback((event: any) => {
-        const map = event.target;
         // Đổi ngôn ngữ bản đồ sang Tiếng Việt
         const language = new MapboxLanguage({
             defaultLanguage: 'vi',
         });
+
         map.addControl(language);
-        // Lưu ý: setStyle có thể ném lỗi nếu style chưa load xong, nên bọc trong try-catch
+
         try {
-            map.setStyle(language.setLanguage(map.getStyle(), 'vi'));
+            // Ép kiểu 'any' ở đây vì thư viện plugin này đôi khi không khớp hoàn toàn với Mapbox v2/v3
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            map.setStyle(language.setLanguage(map.getStyle(), 'vi') as any);
         } catch (error) {
             console.warn('Mapbox Language styling failed', error);
         }
@@ -62,31 +68,21 @@ export function PropertyMap({
             <Map
                 mapboxAccessToken={envConfig.NEXT_PUBLIC_MAPBOX_KEY}
                 {...viewState}
-                onMove={(evt: any) => setViewState(evt.viewState)}
+                onMove={(evt: ViewStateChangeEvent) => setViewState(evt.viewState)}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle="mapbox://styles/mapbox/streets-v11"
                 onLoad={handleMapLoad}
                 cooperativeGestures={true}
             >
-                {/* Marker vị trí BĐS */}
                 <Marker
                     latitude={latitude}
                     longitude={longitude}
                     anchor="bottom"
                 >
-                    {/* Bọc thêm một div relative ở ngoài để chứa cả Icon và hiệu ứng Pulse */}
                     <div className="relative flex items-center justify-center">
-
-                        {/*  VÒNG SÁNG PULSE  
-                        - animate-ping: Tạo hiệu ứng tỏa ra
-                        - absolute inset-1: Kích thước nhỏ hơn khung bao một chút để lúc nhịp đập trông tự nhiên
-                        - bg-red-500: Tông xuyệt tông với màu đỏ của SVG (có thể đổi sang colorPrimary tùy ý)
-                    */}
+                        {/* VÒNG SÁNG PULSE */}
                         <div className="absolute inset-1 rounded-full bg-red-500 animate-ping opacity-70 [animation-duration:1.5s]" />
 
-                        {/* ICON ĐỊA ĐIỂM CŨ 
-                            - Thêm relative và z-10 để đảm bảo Icon luôn nổi lên trên vòng sáng
-                        */}
                         <svg
                             width="40"
                             height="40"
@@ -103,11 +99,9 @@ export function PropertyMap({
                     </div>
                 </Marker>
 
-                {/* Các nút điều khiển zoom (+/-) */}
                 <NavigationControl position="top-right" />
             </Map>
 
-            {/* Nút mở Google Maps - Sử dụng Antd Button thay vì button thuần để chuẩn style */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
                 <Button
                     type="primary"
@@ -121,10 +115,9 @@ export function PropertyMap({
                     }}
                     className="flex items-center gap-2 px-4 py-2 font-semibold"
                 >
-                    {/* Thẻ Image của Next.js để tối ưu hình ảnh */}
                     <div className="relative w-4 h-4 sm:w-5 sm:h-5">
                         <Image
-                            src="/google-maps.png" // Đảm bảo file này có sẵn trong folder `public/`
+                            src="/google-maps.png"
                             alt="Google Maps"
                             fill
                             sizes="(max-width: 768px) 16px, 20px"

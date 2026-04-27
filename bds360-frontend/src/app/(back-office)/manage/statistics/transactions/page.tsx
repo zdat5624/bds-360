@@ -190,7 +190,7 @@ export default function ManageTransactionStatisticsPage() {
                         isLoading={isLoading}
                         footer={
                             <Flex align="center" style={{ height: 32, width: '100%' }}>
-                                <Progress percent={kpis?.failedDepositRate} size="small" showInfo={false} strokeColor="#ff4d4f" trailColor="#f0f0f0" strokeWidth={6} />
+                                <Progress percent={kpis?.failedDepositRate} size="small" showInfo={false} strokeColor="#ff4d4f" railColor="#f0f0f0" strokeWidth={6} />
                             </Flex>
                         }
                     />

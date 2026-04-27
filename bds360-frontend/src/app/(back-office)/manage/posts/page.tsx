@@ -25,7 +25,7 @@ import { getPageMeta } from '@/constants';
 import { PostBlockModal } from '@/features/posts/components/post-block.modal';
 import { PostUnblockModal } from '@/features/posts/components/post-unblock.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatDateTime } from '@/utils';
+import { formatDateTime, getErrorMessage } from '@/utils';
 import { AppstoreOutlined, CheckCircleOutlined, DeleteOutlined, EyeOutlined, MenuOutlined, StopOutlined, UndoOutlined, UnlockOutlined } from '@ant-design/icons';
 import { keepPreviousData } from '@tanstack/react-query';
 import { App, Button, Flex, Segmented, Tag, Tooltip, Typography } from 'antd';
@@ -140,8 +140,8 @@ export default function ManagePostsPage() {
             await deletePost(deleteModal.id);
             message.success('Đã xóa tin đăng thành công');
             setDeleteModal({ isOpen: false, id: null });
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Không thể xóa tin đăng này');
+        } catch (error) {
+            message.error(getErrorMessage(error) || 'Không thể xóa tin đăng này');
         }
     };
 
@@ -154,7 +154,7 @@ export default function ManagePostsPage() {
             sorter: true,
             render: (id) => (
                 <Link href={APP_ROUTES.PUBLIC.POST_DETAIL(id)} target="_blank" className="text-blue-600 hover:underline font-mono">
-                    #{id}
+                    1{id}
                 </Link>
             ),
         },
@@ -188,6 +188,23 @@ export default function ManagePostsPage() {
             ),
         },
         {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            key: 'status',
+            width: 130,
+            sorter: true,
+            render: (status: PostStatus, record) => (
+                <Flex vertical align="flex-start" gap={4}>
+                    <Tag color={POST_STATUS_COLOR[status]} variant="filled" className="border-none m-0">
+                        {POST_STATUS_LABEL[status]}
+                    </Tag>
+                    {record.deletedByUser && (
+                        <Tag color="error" className="m-0 text-[10px] py-0 px-1 border-none">Đã bị xóa</Tag>
+                    )}
+                </Flex>
+            ),
+        },
+        {
             title: 'Giá',
             dataIndex: 'price',
             key: 'price',
@@ -210,22 +227,7 @@ export default function ManagePostsPage() {
             width: 110,
             sorter: true,
         },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            width: 130,
-            render: (status: PostStatus, record) => (
-                <Flex vertical align="flex-start" gap={4}>
-                    <Tag color={POST_STATUS_COLOR[status]} variant="filled" className="border-none m-0">
-                        {POST_STATUS_LABEL[status]}
-                    </Tag>
-                    {record.deletedByUser && (
-                        <Tag color="error" className="m-0 text-[10px] py-0 px-1 border-none">Đã bị xóa</Tag>
-                    )}
-                </Flex>
-            ),
-        },
+
         {
             title: 'Ngày đăng',
             dataIndex: 'createdAt',

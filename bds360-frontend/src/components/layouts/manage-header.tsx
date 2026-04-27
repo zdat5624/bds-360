@@ -113,8 +113,8 @@ export function ManageHeader() {
                             {/* Hiển thị Skeleton khi đang tải thông tin user */}
                             {!isInitialized ? (
                                 <div className="flex items-center h-full gap-3">
-                                    <Skeleton.Avatar active size="default" shape="circle" style={{ display: 'block', height: 32, minWidth: 0 }} />
-                                    <Skeleton.Input active size="default" style={{ display: 'block', width: 100, height: 32, minWidth: 0 }} />
+                                    <Skeleton.Avatar active size="medium" shape="circle" style={{ display: 'block', height: 32, minWidth: 0 }} />
+                                    <Skeleton.Input active size="medium" style={{ display: 'block', width: 100, height: 32, minWidth: 0 }} />
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center gap-3">

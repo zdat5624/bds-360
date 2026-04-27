@@ -19,6 +19,7 @@ interface ManagePostFilterModalProps {
     onApply: (values: Partial<PostFilterParams>) => void;
 }
 
+
 // 🌟 Định nghĩa các tùy chọn tìm kiếm để gửi lên Backend
 const SEARCH_BY_OPTIONS = [
     { label: 'Mã tin (ID)', value: 'id' },
@@ -59,6 +60,7 @@ export function ManagePostFilterModal({ isOpen, onClose, filters, onApply }: Man
         }
     }, [isOpen, filters, form]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleFinish = (values: any) => {
         onApply({
             search: values.search?.trim() || undefined,

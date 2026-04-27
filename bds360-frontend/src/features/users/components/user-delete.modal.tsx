@@ -2,6 +2,7 @@
 'use client';
 
 import { ConfirmModal } from '@/components/base/confirm.modal';
+import { getErrorMessage } from '@/utils';
 import { App } from 'antd';
 import { useDeleteUser } from '../api/user.mutations';
 
@@ -21,8 +22,9 @@ export function UserDeleteModal({ isOpen, onClose, userId }: UserDeleteModalProp
             await deleteUser(userId);
             message.success('Đã xóa người dùng thành công');
             onClose();
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Không thể xóa người dùng này');
+        } catch (error) {
+
+            message.error(getErrorMessage(error) || 'Xóa người dùng thất bại!');
         }
     };
 

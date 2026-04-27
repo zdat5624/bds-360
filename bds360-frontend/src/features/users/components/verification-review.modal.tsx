@@ -4,7 +4,7 @@
 import { AppModal } from '@/components/base/app.modal';
 import { GENDER_LABEL, USER_ROLE_COLOR, USER_ROLE_LABEL } from '@/constants';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatDateTime } from '@/utils';
+import { formatDateTime, getErrorMessage } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { App, Avatar, Button, Descriptions, Flex, Form, Image, Input, Radio, Skeleton, Tag, Typography } from 'antd';
 import { useEffect } from 'react';
@@ -65,8 +65,10 @@ export function VerificationReviewModal({ isOpen, onClose, submission }: Verific
             await reviewVerification(data);
             message.success('Đã cập nhật trạng thái xác thực');
             onClose();
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Có lỗi xảy ra khi duyệt');
+        } catch (error) {
+            // Tận dụng hàm getErrorMessage cực gọn gàng
+            const errorMsg = getErrorMessage(error);
+            message.error(errorMsg);
         }
     };
 

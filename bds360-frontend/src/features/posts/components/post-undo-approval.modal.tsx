@@ -4,6 +4,7 @@
 import { AppModal } from '@/components/base/app.modal';
 import { Post, POST_STATUS_COLOR, POST_STATUS_LABEL } from '@/features/posts';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getErrorMessage } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { App, Button, Form, Input, Radio, Switch, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
@@ -15,7 +16,6 @@ const { Text } = Typography;
 
 interface PostUndoApprovalModalProps {
     isOpen: boolean;
-    // eslint-disable-next-line @typescript-eslint/ban-types
     onClose: () => void;
     post: Post | null;
 }
@@ -95,8 +95,8 @@ export function PostUndoApprovalModal({ isOpen, onClose, post }: PostUndoApprova
             await updatePostStatus(finalPayload);
             message.success('Hoàn tác trạng thái tin đăng thành công!');
             onClose();
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+        } catch (error) {
+            message.error(getErrorMessage(error));
         }
     };
 

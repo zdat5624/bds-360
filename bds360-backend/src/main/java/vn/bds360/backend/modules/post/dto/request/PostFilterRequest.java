@@ -48,6 +48,6 @@ public class PostFilterRequest extends BaseFilterRequest {
     private String userEmail;
     private Integer userId;
 
-    @Pattern(regexp = "^(id|pushedAt|createdAt|price|area|view|title)$", message = "Trường sắp xếp (sortBy) không hợp lệ đối với tin đăng.")
+    @Pattern(regexp = "^(id|pushedAt|createdAt|price|area|view|title|status|expireDate)$", message = "Trường sắp xếp (sortBy) không hợp lệ đối với tin đăng.")
     private String sortBy = "pushedAt";
 }

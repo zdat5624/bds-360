@@ -12,7 +12,7 @@ import { App, Form, Input, Select, Upload } from 'antd';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { useEffect, useState } from 'react';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, Resolver, SubmitHandler, useForm } from 'react-hook-form';
 import { useCreateUser, useUpdateUser } from '../api/user.mutations';
 import {
     CreateUserFormValues,
@@ -26,6 +26,7 @@ interface UserFormModalProps {
     onClose: () => void;
     user: User | null;
 }
+type FormValues = CreateUserFormValues & Partial<UpdateUserFormValues>;
 
 export function UserFormModal({ isOpen, onClose, user }: UserFormModalProps) {
     const { message } = App.useApp();
@@ -46,8 +47,8 @@ export function UserFormModal({ isOpen, onClose, user }: UserFormModalProps) {
         reset,
         setValue,
         formState: { errors },
-    } = useForm<any>({
-        resolver: zodResolver(isEdit ? updateUserSchema : createUserSchema),
+    } = useForm<FormValues>({
+        resolver: zodResolver(isEdit ? updateUserSchema : createUserSchema) as unknown as Resolver<FormValues>,
         defaultValues: {
             name: '',
             email: '',
@@ -103,7 +104,7 @@ export function UserFormModal({ isOpen, onClose, user }: UserFormModalProps) {
                     setValue('avatar', newAvatarUrl, { shouldValidate: true });
                     message.success('Tải ảnh lên thành công');
                 }
-            } catch (error) {
+            } catch {
                 message.error('Lỗi khi tải ảnh lên');
             } finally {
                 setIsUploading(false);
@@ -123,7 +124,7 @@ export function UserFormModal({ isOpen, onClose, user }: UserFormModalProps) {
         return isJpgOrPngOrWebp && isLt5M;
     };
 
-    const onSubmit: SubmitHandler<any> = async (data) => {
+    const onSubmit: SubmitHandler<FormValues> = async (data) => {
         try {
             if (isEdit && user) {
                 await updateUser(data as UpdateUserFormValues);
@@ -135,6 +136,7 @@ export function UserFormModal({ isOpen, onClose, user }: UserFormModalProps) {
             onClose();
         } catch (error) {
             const err = getErrorMessage(error);
+            message.error(err);
         }
     };
 
@@ -167,7 +169,7 @@ export function UserFormModal({ isOpen, onClose, user }: UserFormModalProps) {
                                 listType="picture-circle"
                                 className="avatar-uploader"
                                 showUploadList={false}
-                                customRequest={({ file, onSuccess }) => {
+                                customRequest={({ onSuccess }) => {
                                     setTimeout(() => {
                                         onSuccess?.("ok");
                                     }, 0);
@@ -177,6 +179,7 @@ export function UserFormModal({ isOpen, onClose, user }: UserFormModalProps) {
                                 disabled={isUploading}
                             >
                                 {avatarUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
                                     <img
                                         src={avatarUrl}
                                         alt="avatar"

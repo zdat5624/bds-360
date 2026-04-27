@@ -19,11 +19,19 @@ interface UserFilterModalProps {
     filters: UserFilterParams;
     onApply: (values: Partial<UserFilterParams>) => void;
 }
+interface FilterFormValues {
+    searchValue?: string;
+    role?: string;
+    gender?: string;
+    dateRange?: [dayjs.Dayjs, dayjs.Dayjs] | null;
+}
+
+type SearchField = 'name' | 'email' | 'phone';
 
 export function UserFilterModal({ isOpen, onClose, filters, onApply }: UserFilterModalProps) {
     const { colorTextSecondary } = useAppTheme();
     const [form] = Form.useForm();
-    const [searchField, setSearchField] = useState<'name' | 'email' | 'phone'>('name');
+    const [searchField, setSearchField] = useState<SearchField>('name');
 
     useEffect(() => {
         if (isOpen) {
@@ -38,7 +46,7 @@ export function UserFilterModal({ isOpen, onClose, filters, onApply }: UserFilte
                 currentSearchValue = filters.phone;
             }
 
-            setSearchField(currentSearchField as any);
+            setSearchField(currentSearchField as SearchField);
 
             form.setFieldsValue({
                 searchValue: currentSearchValue,
@@ -51,8 +59,38 @@ export function UserFilterModal({ isOpen, onClose, filters, onApply }: UserFilte
         }
     }, [isOpen, filters, form]);
 
-    const handleFinish = (values: any) => {
-        const searchParams: any = { name: undefined, email: undefined, phone: undefined };
+    // const handleFinish = (values: any) => {
+    //     const searchParams: any = { name: undefined, email: undefined, phone: undefined };
+    //     if (values.searchValue) {
+    //         searchParams[searchField] = values.searchValue;
+    //     }
+
+    //     const dateParams = values.dateRange ? {
+    //         createdFrom: toApiStartDate(values.dateRange[0]),
+    //         createdTo: toApiEndDate(values.dateRange[1]),
+    //     } : {
+    //         createdFrom: undefined,
+    //         createdTo: undefined,
+    //     };
+
+    //     onApply({
+    //         ...searchParams,
+    //         role: values.role === 'ALL' ? undefined : values.role,
+    //         gender: values.gender || undefined,
+    //         ...dateParams,
+    //     });
+    //     onClose();
+    // };
+
+
+    const handleFinish = (values: FilterFormValues) => {
+        // Khai báo chuẩn Partial<UserFilterParams> thay vì any
+        const searchParams: Partial<UserFilterParams> = {
+            name: undefined,
+            email: undefined,
+            phone: undefined
+        };
+
         if (values.searchValue) {
             searchParams[searchField] = values.searchValue;
         }
@@ -67,13 +105,13 @@ export function UserFilterModal({ isOpen, onClose, filters, onApply }: UserFilte
 
         onApply({
             ...searchParams,
-            role: values.role === 'ALL' ? undefined : values.role,
-            gender: values.gender || undefined,
+            // Ép kiểu nhẹ nhàng để khớp với UserFilterParams
+            role: values.role === 'ALL' ? undefined : (values.role as UserFilterParams['role']),
+            gender: (values.gender as UserFilterParams['gender']) || undefined,
             ...dateParams,
         });
         onClose();
     };
-
     return (
         <AppModal
             isOpen={isOpen}

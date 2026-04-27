@@ -36,13 +36,13 @@ export function UserDetailModal({ isOpen, onClose, userId }: UserDetailModalProp
         if (user?.isVerified) {
             return {
                 label: 'Xem hồ sơ',
-                type: 'link',
+                type: 'link' as const,
             };
         }
 
         return {
             label: 'Duyệt hồ sơ',
-            type: 'primary',
+            type: 'primary' as const,
         };
     };
 
@@ -104,7 +104,7 @@ export function UserDetailModal({ isOpen, onClose, userId }: UserDetailModalProp
                                 )} */}
                                 {verificationAction && (
                                     <Button
-                                        type={verificationAction.type as any}
+                                        type={verificationAction.type}
                                         size="small"
                                         onClick={() => setIsVerificationModalOpen(true)}
                                         className="p-0 h-auto text-[13px]"

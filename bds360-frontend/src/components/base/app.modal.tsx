@@ -1,7 +1,6 @@
 // @/components/base/app.modal.tsx
 'use client';
 
-import { useAppTheme } from '@/hooks/use-app-theme';
 import { Modal, ModalProps, Typography } from 'antd';
 import React from 'react';
 
@@ -24,7 +23,6 @@ export function AppModal({
     width = 650, // Chiều rộng tiêu chuẩn cho các form nhập liệu
     ...restProps
 }: AppModalProps) {
-    const { colorText } = useAppTheme();
 
     return (
         <Modal

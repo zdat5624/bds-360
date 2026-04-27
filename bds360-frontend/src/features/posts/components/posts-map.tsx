@@ -5,12 +5,14 @@ import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { useCallback, useRef, useState } from 'react';
-import Map, { MapRef, Marker } from 'react-map-gl';
+import Map, { MapboxEvent, MapRef, Marker, NavigationControl } from 'react-map-gl';
 
 import { useGetPostsForMap } from '@/features/posts/api/posts.queries';
 import { MapPost, PostFilterParams } from '@/features/posts/api/types';
 
 import { envConfig } from '@/config';
+import { HomeOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
 import { MapDotMarker } from './map-dot-marker';
 import { PostPopup } from './post-popup';
 import { PriceMarker } from './price-marker';
@@ -19,6 +21,12 @@ import { VipMarker } from './vip-marker';
 interface PostsMapProps {
     filters: PostFilterParams;
 }
+
+const INITIAL_VIEW_STATE = {
+    longitude: 106.71431894973796,
+    latitude: 15.986268771732355,
+    zoom: 4.5,
+};
 
 export function PostsMap({ filters }: PostsMapProps) {
     const { data: posts = [] } = useGetPostsForMap(filters);
@@ -29,23 +37,42 @@ export function PostsMap({ filters }: PostsMapProps) {
 
     const mapRef = useRef<MapRef>(null);
 
-    const handleMapLoad = useCallback((event: any) => {
-        const map = event.target;
-        // @ts-ignore
+    const handleMapLoad = useCallback((event: MapboxEvent) => {
+        const map = event.target as mapboxgl.Map;
+
+        // 1. Nếu dòng này không báo lỗi, cứ để tự nhiên
         const language = new MapboxLanguage({ defaultLanguage: 'vi' });
-        map.addControl(language);
-        map.setStyle(language.setLanguage(map.getStyle(), 'vi'));
+
+        // 2. Thêm control vào bản đồ
+        map.addControl(language as unknown as mapboxgl.IControl);
+
+        try {
+            // 3. Thiết lập ngôn ngữ
+            const style = map.getStyle();
+            if (style) {
+                map.setStyle(language.setLanguage(style, 'vi'));
+            }
+        } catch (error) {
+            console.warn('Mapbox language setup failed:', error);
+        }
     }, []);
+
+    const handleResetView = () => {
+        if (mapRef.current) {
+            mapRef.current.flyTo({
+                center: [INITIAL_VIEW_STATE.longitude, INITIAL_VIEW_STATE.latitude],
+                zoom: INITIAL_VIEW_STATE.zoom,
+                duration: 1000, // Thời gian bay (ms)
+                essential: true // Đảm bảo hiệu ứng chạy ngay cả khi user chọn 'reduce motion'
+            });
+        }
+    };
 
     return (
         <div className="w-full h-full relative">
             <Map
                 ref={mapRef}
-                initialViewState={{
-                    longitude: 106.71431894973796,
-                    latitude: 15.986268771732355,
-                    zoom: 4.5,
-                }}
+                initialViewState={INITIAL_VIEW_STATE}
                 minZoom={4}
                 maxZoom={16}
                 maxBounds={[
@@ -102,10 +129,34 @@ export function PostsMap({ filters }: PostsMapProps) {
                     );
                 })}
 
+
                 <PostPopup
                     post={selectedMarker}
                     onClose={() => setSelectedMarker(null)}
                 />
+                <NavigationControl
+                    position="top-right" // Vị trí: top-right, top-left, bottom-right, bottom-left
+                    showCompass={true}   // Hiện/ẩn la bàn
+                    showZoom={true}      // Hiện/ẩn nút +/-
+                />
+
+                <div className="absolute top-[105px] right-[10px] z-10">
+                    <Tooltip title="Về vị trí mặc định" placement="left">
+                        <Button
+                            icon={<HomeOutlined />}
+                            onClick={handleResetView}
+                            className="flex items-center justify-center shadow-md"
+                            style={{
+                                width: '29px',
+                                height: '29px',
+                                padding: 0,
+                                backgroundColor: '#fff',
+                                border: 'none',
+                                color: '#333'
+                            }}
+                        />
+                    </Tooltip>
+                </div>
             </Map>
         </div>
     );

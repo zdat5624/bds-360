@@ -4,12 +4,13 @@
 import { AppModal } from '@/components/base/app.modal';
 import { Post, POST_STATUS_COLOR, POST_STATUS_LABEL } from '@/features/posts';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getErrorMessage } from '@/utils/error.util';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { App, Button, Form, Input, Radio, Switch, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { useUpdatePostStatus } from '../api/posts.mutations';
-import { updatePostStatusSchema } from '../posts.schema';
+import { UpdatePostStatusFormValues, updatePostStatusSchema } from '../posts.schema';
 
 const { Text } = Typography;
 
@@ -33,7 +34,7 @@ export function PostUnblockModal({ isOpen, onClose, post }: PostUnblockModalProp
         watch,
         setValue,
         formState: { errors },
-    } = useForm<any>({
+    } = useForm<UpdatePostStatusFormValues>({
         resolver: zodResolver(updatePostStatusSchema),
         defaultValues: {
             postId: 0,
@@ -80,7 +81,7 @@ export function PostUnblockModal({ isOpen, onClose, post }: PostUnblockModalProp
             : defaultMessage;
     };
 
-    const onSubmit: SubmitHandler<any> = async (data) => {
+    const onSubmit: SubmitHandler<UpdatePostStatusFormValues> = async (data) => {
         try {
             if (customMessageEnabled && data.sendNotification && !data.message?.trim()) {
                 message.error('Vui lòng nhập nội dung tùy chỉnh nếu gửi thông báo');
@@ -96,8 +97,8 @@ export function PostUnblockModal({ isOpen, onClose, post }: PostUnblockModalProp
             await updatePostStatus(finalPayload);
             message.success('Mở khóa tin đăng thành công!');
             onClose();
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+        } catch (error) {
+            message.error(getErrorMessage(error) || 'Mở khóa tin đăng thất bại');
         }
     };
 

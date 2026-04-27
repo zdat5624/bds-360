@@ -4,12 +4,13 @@
 import { AppModal } from '@/components/base/app.modal';
 import { Post, POST_STATUS_COLOR, POST_STATUS_LABEL } from '@/features/posts';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getErrorMessage } from '@/utils/error.util';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { App, Button, Form, Input, Switch, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { useUpdatePostStatus } from '../api/posts.mutations';
-import { updatePostStatusSchema } from '../posts.schema';
+import { UpdatePostStatusFormValues, updatePostStatusSchema } from '../posts.schema';
 
 const { Text } = Typography;
 
@@ -33,7 +34,7 @@ export function PostBlockModal({ isOpen, onClose, post }: PostBlockModalProps) {
         watch,
         setValue,
         formState: { errors },
-    } = useForm<any>({
+    } = useForm<UpdatePostStatusFormValues>({
         resolver: zodResolver(updatePostStatusSchema),
         defaultValues: {
             postId: 0,
@@ -70,7 +71,7 @@ export function PostBlockModal({ isOpen, onClose, post }: PostBlockModalProps) {
             : defaultMessage;
     };
 
-    const onSubmit: SubmitHandler<any> = async (data) => {
+    const onSubmit: SubmitHandler<UpdatePostStatusFormValues> = async (data) => {
         try {
             // Khi khóa bài, nên khuyến khích/bắt buộc Admin nhập lý do rõ ràng
             if (customMessageEnabled && data.sendNotification && !data.message?.trim()) {
@@ -87,8 +88,8 @@ export function PostBlockModal({ isOpen, onClose, post }: PostBlockModalProps) {
             await updatePostStatus(finalPayload);
             message.success('Khóa tin đăng thành công!');
             onClose();
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+        } catch (error) {
+            message.error(getErrorMessage(error) || 'Có lỗi xảy ra');
         }
     };
 

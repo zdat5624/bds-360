@@ -29,7 +29,6 @@ export function TopUpModal({ open, onClose }: TopUpModalProps) {
     const [form] = Form.useForm<CreatePaymentFormValues>();
     const { mutateAsync: createPayment, isPending } = useCreatePayment();
 
-    // 👇 Theo dõi giá trị amount realtime để update UI của các Tag gợi ý
     const currentAmount = Form.useWatch('amount', form);
 
     const handleFinish = async (values: CreatePaymentFormValues) => {
@@ -40,25 +39,32 @@ export function TopUpModal({ open, onClose }: TopUpModalProps) {
 
             if (data.paymentLink && newTab) {
                 newTab.location.href = data.paymentLink;
-
-                // 👇 THÊM DÒNG NÀY ĐỂ ĐÓNG MODAL
                 onClose();
             } else {
-                // Đóng tab rỗng nếu không có link (đề phòng API trả về lỗi nhưng không nhảy vào catch)
                 newTab?.close();
             }
-        } catch (error) {
+        } catch (error: unknown) { // 🌟 Thêm unknown ở đây cho chuẩn bài
             newTab?.close();
             console.error('TopUp failed:', error);
-            message.error('Không thể tạo giao dịch. Vui lòng thử lại!'); // Thêm thông báo cho xịn
+            message.error('Không thể tạo giao dịch. Vui lòng thử lại!');
         }
     };
 
-    const validateAmount = async (_: any, value: number) => {
+    // 🌟 Đổi any thành unknown để chiều lòng ESLint
+    const validateAmount = async (_: unknown, value: number) => {
+        // Nếu giá trị trống, trả về resolve để rule 'required' bên ngoài xử lý
+        if (value === null || value === undefined) {
+            return Promise.resolve();
+        }
+
+        // Chỉ validate bằng Zod khi đã có con số cụ thể
         const result = createPaymentSchema.safeParse({ amount: value });
         if (!result.success) {
+            // Lấy câu thông báo lỗi từ Zod (ví dụ: "Số tiền nạp tối thiểu...")
             throw new Error(result.error.issues[0].message);
         }
+
+        return Promise.resolve();
     };
 
     return (
@@ -80,23 +86,23 @@ export function TopUpModal({ open, onClose }: TopUpModalProps) {
                 <Form.Item
                     name="amount"
                     label={<span className="font-medium">Số tiền cần nạp</span>}
-                    rules={[{ validator: validateAmount }]}
+                    // Dùng rules của Form để bắt lỗi trống (required)
+                    rules={[{ required: true, message: 'Vui lòng nhập số tiền nạp' }, { validator: validateAmount }]}
                 >
                     <InputNumber<number>
-                        rootClassName="!w-full" // Ép cái vỏ bọc chứa addon bung 100%
-                        className="!w-full"     // Ép cái lõi input bên trong bung 100%
+                        rootClassName="!w-full"
+                        className="!w-full"
                         size="large"
                         placeholder="Nhập số tiền..."
                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         parser={(value) => Number(value?.replace(/\$\s?|(,*)/g, ''))}
-                        min={10000}
+
+                        // 🚩 XÓA DÒNG NÀY: min={10000} 
+                        // Nếu để min ở đây, Antd sẽ tự sửa giá trị null về 10000 ngay lập tức
+
                         step={10000}
                         disabled={isPending}
-                        addonAfter={
-                            <span className="font-semibold text-[13px]" style={{ color: colorTextSecondary }}>
-                                VNĐ
-                            </span>
-                        }
+                        addonAfter={<span className="font-semibold text-[13px]">VNĐ</span>}
                     />
                 </Form.Item>
 
@@ -113,21 +119,14 @@ export function TopUpModal({ open, onClose }: TopUpModalProps) {
                                     key={amount}
                                     checked={isSelected}
                                     onChange={() => form.setFieldsValue({ amount })}
-                                    // 👇 FIX 2: Bỏ flex, dùng text-center kết hợp display block
                                     className="!m-0 transition-all duration-200 rounded-md text-center"
                                     style={{
                                         height: '38px',
-                                        // 👇 FIX 2: Dùng lineHeight bằng (height - 2px viền) để căn giữa dọc tuyệt đối
                                         lineHeight: '36px',
-                                        display: 'block', // Ép full width của grid column
-
-                                        // Màu nền và viền
+                                        display: 'block',
                                         border: `1px solid ${isSelected ? colorPrimary : colorBorder}`,
                                         background: isSelected ? colorPrimaryBg : colorBgContainer,
-
-                                        // 👇 FIX 1: Ép lại màu chữ. Nếu đang chọn thì dùng màu Primary (xanh đậm), bình thường thì dùng màu Text chuẩn
                                         color: isSelected ? colorPrimary : colorText,
-
                                         fontSize: '13.5px',
                                         fontWeight: isSelected ? 600 : 400,
                                     }}

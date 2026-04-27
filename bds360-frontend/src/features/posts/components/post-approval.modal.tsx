@@ -2,20 +2,19 @@
 'use client';
 
 import { AppModal } from '@/components/base/app.modal';
-import { Post, POST_STATUS_COLOR, POST_STATUS_LABEL } from '@/features/posts';
+import { Post, POST_STATUS_COLOR, POST_STATUS_LABEL, UpdatePostStatusFormValues, updatePostStatusSchema } from '@/features/posts';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getErrorMessage } from '@/utils/error.util';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { App, Button, Form, Input, Radio, Switch, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { useUpdatePostStatus } from '../api/posts.mutations';
-import { updatePostStatusSchema } from '../posts.schema';
 
 const { Text } = Typography;
 
 interface PostApprovalModalProps {
     isOpen: boolean;
-    // eslint-disable-next-line @typescript-eslint/ban-types
     onClose: () => void;
     post: Post | null;
 }
@@ -34,7 +33,7 @@ export function PostApprovalModal({ isOpen, onClose, post }: PostApprovalModalPr
         watch,
         setValue,
         formState: { errors },
-    } = useForm<any>({
+    } = useForm<UpdatePostStatusFormValues>({
         resolver: zodResolver(updatePostStatusSchema),
         defaultValues: {
             postId: 0,
@@ -87,7 +86,7 @@ export function PostApprovalModal({ isOpen, onClose, post }: PostApprovalModalPr
             : defaultMessage;
     };
 
-    const onSubmit: SubmitHandler<any> = async (data) => {
+    const onSubmit: SubmitHandler<UpdatePostStatusFormValues> = async (data) => {
         try {
             if (!data.status) {
                 message.error('Vui lòng chọn hành động Chấp nhận hoặc Từ chối!');
@@ -108,8 +107,8 @@ export function PostApprovalModal({ isOpen, onClose, post }: PostApprovalModalPr
             await updatePostStatus(finalPayload);
             message.success('Cập nhật trạng thái tin đăng thành công!');
             onClose();
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+        } catch (error) {
+            message.error(getErrorMessage(error) || 'Có lỗi xảy ra');
         }
     };
 

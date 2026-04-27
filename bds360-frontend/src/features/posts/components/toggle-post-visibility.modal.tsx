@@ -3,6 +3,7 @@
 
 import { AppModal } from '@/components/base/app.modal';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getErrorMessage } from '@/utils/error.util';
 import { EyeInvisibleOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { App, Button, Flex, Typography } from 'antd';
 import { useTogglePostVisibility } from '../api/posts.mutations';
@@ -35,8 +36,8 @@ export function TogglePostVisibilityModal({ isOpen, onClose, post }: TogglePostV
                     message.success(isHiding ? 'Đã tạm ẩn tin đăng thành công' : 'Đã hiển thị lại tin đăng thành công');
                     onClose();
                 },
-                onError: (error: any) => {
-                    message.error(error?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                onError: (error) => {
+                    message.error(getErrorMessage(error));
                 }
             }
         );
@@ -59,7 +60,7 @@ export function TogglePostVisibilityModal({ isOpen, onClose, post }: TogglePostV
                 <Paragraph>
                     Bạn có chắc chắn muốn {isHiding ? <Text strong type="warning">tạm ẩn</Text> : <Text strong color="processing">hiển thị lại</Text>} tin đăng:
                     <br />
-                    <Text strong>"{post.title}"</Text>?
+                    <Text strong>{`"${post.title}"`}</Text>?
                 </Paragraph>
 
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">

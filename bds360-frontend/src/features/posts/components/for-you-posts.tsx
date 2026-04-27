@@ -2,7 +2,7 @@
 'use client';
 
 import { useGetForYouPosts } from '@/features/posts/api/posts.queries';
-import { Post } from '@/features/posts/api/types';
+import { ForYouPostParams, Post } from '@/features/posts/api/types';
 import { cn } from '@/lib/utils';
 import { Skeleton, Typography } from 'antd';
 import { useMemo } from 'react';
@@ -26,9 +26,13 @@ export function ForYouPosts({
     excludePostIds = []
 }: ForYouPostsProps) {
 
-    const queryParams = useMemo(() => {
-        const params: any = { size: 4 };
+    const queryParams = useMemo((): ForYouPostParams => {
         const excludes = new Set<number>(excludePostIds);
+
+        // Khởi tạo object với type chuẩn
+        const params: ForYouPostParams = {
+            size: 4
+        };
 
         if (type) {
             params.type = type;
@@ -40,6 +44,7 @@ export function ForYouPosts({
         }
 
         if (excludes.size > 0) {
+            // Chuyển Set thành chuỗi "id1,id2,id3" đúng với kiểu string trong interface
             params.excludeIds = Array.from(excludes).join(',');
         }
 

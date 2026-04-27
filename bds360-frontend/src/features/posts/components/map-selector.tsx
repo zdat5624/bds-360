@@ -1,14 +1,13 @@
 'use client';
 
-import "mapbox-gl/dist/mapbox-gl.css";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import Map, { MapRef, MapboxEvent, Marker, NavigationControl, ViewStateChangeEvent } from "react-map-gl";
-// @ts-ignore - plugin này thường không có type definition sẵn
 import { envConfig } from "@/config";
 import { useAppTheme } from "@/hooks";
 import MapboxLanguage from "@mapbox/mapbox-gl-language";
 import { Button } from "antd";
+import "mapbox-gl/dist/mapbox-gl.css";
 import Image from "next/image";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Map, { MapRef, MapboxEvent, Marker, NavigationControl, ViewStateChangeEvent } from "react-map-gl";
 
 interface Coordinates {
     latitude: number;

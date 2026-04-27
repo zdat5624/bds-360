@@ -1,9 +1,10 @@
 // File: @/features/posts/hooks/use-post-filter-url.ts
+import { ListingType } from '@/constants';
 import { PostFilterParams } from '@/features/posts/api/types';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 
-export function usePostFilterUrl(defaultType: 'RENT' | 'SALE') {
+export function usePostFilterUrl(defaultType: ListingType) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -14,30 +15,42 @@ export function usePostFilterUrl(defaultType: 'RENT' | 'SALE') {
     const filters = useMemo(() => {
         const params: Partial<PostFilterParams> = {};
 
-        // Mặc định ép kiểu type theo trang (Trừ khi user cố tình gõ url khác)
-        params.type = (searchParams.get('type') as 'RENT' | 'SALE') || defaultType;
+        // Giữ nguyên logic ép kiểu type hoặc dùng default
+        params.type = (searchParams.get('type') as ListingType) || defaultType;
 
-        if (searchParams.has('search')) params.search = searchParams.get('search') as string;
-        if (searchParams.has('searchBy')) params.searchBy = searchParams.getAll('searchBy'); // Dùng getAll vì nó là Mảng
+        if (searchParams.has('search')) params.search = searchParams.get('search')!;
 
-        // Chuyển đổi các trường dạng Số (Number)
-        ['minPrice', 'maxPrice', 'minArea', 'maxArea', 'bedrooms', 'bathrooms', 'provinceCode', 'districtCode', 'wardCode'].forEach(key => {
+        // Giữ nguyên logic getAll cho mảng searchBy
+        if (searchParams.has('searchBy')) params.searchBy = searchParams.getAll('searchBy');
+
+        // Logic cũ: Chuyển đổi các trường dạng Số
+        const numberFields = [
+            'minPrice', 'maxPrice', 'minArea', 'maxArea',
+            'bedrooms', 'bathrooms', 'provinceCode', 'districtCode', 'wardCode',
+            'categoryId', 'vipId' // Tôi bổ sung thêm 2 trường này vì có trong Type của bác
+        ] as const;
+
+        numberFields.forEach(key => {
             if (searchParams.has(key)) {
-                (params as any)[key] = Number(searchParams.get(key));
+                // Fix lỗi any bằng cách ép kiểu keyof PostFilterParams
+                (params[key as keyof PostFilterParams] as number) = Number(searchParams.get(key));
             }
         });
 
-        // Chuyển đổi các trường dạng Chuỗi (String/Enum)
-        ['houseDirection', 'balconyDirection', 'legalStatus', 'furnishing'].forEach(key => {
+        // Logic cũ: Chuyển đổi các trường dạng Chuỗi (Enum)
+        const stringFields = [
+            'houseDirection', 'balconyDirection', 'legalStatus', 'furnishing'
+        ] as const;
+
+        stringFields.forEach(key => {
             if (searchParams.has(key)) {
-                (params as any)[key] = searchParams.get(key);
+                (params[key as keyof PostFilterParams] as string) = searchParams.get(key)!;
             }
         });
 
         return params;
     }, [searchParams, defaultType]);
 
-    // Trích xuất số trang (Mặc định là 1)
     const page = Number(searchParams.get('page')) || 1;
 
     // ==========================================
@@ -46,7 +59,7 @@ export function usePostFilterUrl(defaultType: 'RENT' | 'SALE') {
     const updateUrl = (newFilters: Partial<PostFilterParams>, newPage: number = 1) => {
         const params = new URLSearchParams();
 
-        // Nạp tất cả bộ lọc vào URL
+        // Giữ nguyên logic duyệt Entries và xử lý Array.append / Single.set
         Object.entries(newFilters).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
                 if (Array.isArray(value)) {
@@ -57,19 +70,21 @@ export function usePostFilterUrl(defaultType: 'RENT' | 'SALE') {
             }
         });
 
-        // Luôn nạp tham số phân trang
         if (newPage > 1) {
             params.set('page', String(newPage));
         }
 
-        // Logic điều hướng thông minh: Chuyển trang Sale/Rent nếu người dùng đổi Type ở thanh tìm kiếm
+        const queryString = params.toString();
+        const url = queryString ? `?${queryString}` : '';
+
+        // ĐỐI CHIẾU CHÍNH XÁC LOGIC ĐIỀU HƯỚNG CŨ CỦA BÁC:
         if (newFilters.type === 'SALE' && pathname !== '/sale') {
-            router.push(`/sale?${params.toString()}`);
+            router.push(`/sale${url}`);
         } else if (newFilters.type === 'RENT' && pathname !== '/rent') {
-            router.push(`/rent?${params.toString()}`);
+            router.push(`/rent${url}`);
         } else {
-            // Cùng trang thì chỉ đẩy tham số (Không load lại toàn bộ trang - scroll: false)
-            router.push(`${pathname}?${params.toString()}`, { scroll: false });
+            // Cùng trang thì dùng shallow route (scroll: false)
+            router.push(`${pathname}${url}`, { scroll: false });
         }
     };
 

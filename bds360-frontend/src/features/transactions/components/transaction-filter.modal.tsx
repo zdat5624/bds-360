@@ -20,15 +20,24 @@ interface TransactionFilterModalProps {
     onApply: (values: Partial<TransactionFilterParams>) => void;
 }
 
+type SearchField = 'email' | 'transactionId' | 'txnId';
+
+interface FilterFormValues {
+    searchValue?: string;
+    status?: string;
+    type?: string;
+    dateRange?: [dayjs.Dayjs, dayjs.Dayjs] | null;
+}
+
 export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: TransactionFilterModalProps) {
     const { colorTextSecondary } = useAppTheme();
     const [form] = Form.useForm();
-    const [searchField, setSearchField] = useState<'email' | 'transactionId' | 'txnId'>('email');
+    const [searchField, setSearchField] = useState<SearchField>('email');
 
     useEffect(() => {
         if (isOpen) {
-            let currentSearchField = 'email';
-            let currentSearchValue = filters.email;
+            let currentSearchField: SearchField = 'email';
+            let currentSearchValue: string | undefined = filters.email;
 
             if (filters.transactionId) {
                 currentSearchField = 'transactionId';
@@ -38,7 +47,7 @@ export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: Tr
                 currentSearchValue = filters.txnId;
             }
 
-            setSearchField(currentSearchField as any);
+            setSearchField(currentSearchField);
 
             form.setFieldsValue({
                 searchValue: currentSearchValue,
@@ -51,10 +60,22 @@ export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: Tr
         }
     }, [isOpen, filters, form]);
 
-    const handleFinish = (values: any) => {
-        const searchParams: any = { email: undefined, transactionId: undefined, txnId: undefined };
+    const handleFinish = (values: FilterFormValues) => {
+        // 🌟 Khai báo object params chuẩn type của API
+        const searchParams: Partial<TransactionFilterParams> = {
+            email: undefined,
+            transactionId: undefined,
+            txnId: undefined
+        };
+
         if (values.searchValue) {
-            searchParams[searchField] = values.searchValue;
+            if (searchField === 'transactionId') {
+                // Ép kiểu về number vì Backend yêu cầu số, UI trả về string
+                searchParams.transactionId = Number(values.searchValue) || undefined;
+            } else {
+                // email và txnId vẫn là string
+                searchParams[searchField] = values.searchValue;
+            }
         }
 
         const dateParams = values.dateRange ? {
@@ -67,10 +88,12 @@ export function TransactionFilterModal({ isOpen, onClose, filters, onApply }: Tr
 
         onApply({
             ...searchParams,
-            status: values.status || undefined,
-            type: values.type || undefined,
+            status: (values.status === '' ? undefined : values.status) as TransactionFilterParams['status'],
+            type: (values.type === '' ? undefined : values.type) as TransactionFilterParams['type'],
             ...dateParams,
         });
+
+        onClose();
     };
 
     return (

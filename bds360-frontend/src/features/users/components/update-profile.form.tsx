@@ -90,7 +90,7 @@ export function UpdateProfileForm() {
                     }
                 },
                 onError: (err) => {
-                    onError?.(err as any);
+                    onError?.(err as unknown as Error);
                     // Lỗi từ backend đã được axios lo việc toast, không cần message.error ở đây
                 }
             });

@@ -5,12 +5,9 @@ import { Button, ButtonProps } from 'antd';
 import { useState } from 'react';
 import { TopUpModal } from './top-up.modal';
 
-// Component này kế thừa toàn bộ thuộc tính (props) của Antd Button
-interface TopUpButtonProps extends ButtonProps {
-    // Bạn có thể định nghĩa thêm các props đặc thù ở đây nếu cần
-}
 
-export function TopUpButton(props: TopUpButtonProps) {
+
+export function TopUpButton(props: ButtonProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (

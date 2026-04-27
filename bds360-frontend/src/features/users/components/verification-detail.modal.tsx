@@ -30,7 +30,7 @@ export function VerificationDetailModal({ submission, onClose }: VerificationDet
             onCancel={onClose}
             footer={null}
             width={700}
-            destroyOnClose
+            destroyOnHidden
             centered
         >
             <div className="flex flex-col gap-6 mt-4">

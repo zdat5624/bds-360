@@ -77,7 +77,7 @@ export function UserInfo() {
                                 <Tooltip title="Nhấn để cập nhật hồ sơ và xác thực">
                                     <Tag
                                         color="warning"
-                                        bordered={false}
+                                        variant="filled"
                                         className=" !m-0 !text-[10px] !px-1 !py-[1px] cursor-pointer hover:!opacity-80 transition-opacity !font-medium"
                                     >
                                         Chưa X.T
