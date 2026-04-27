@@ -1,13 +1,12 @@
 // @/utils/error.util.ts
+
+import { ApiError } from '@/types';
 import { isAxiosError } from 'axios';
 
-/**
- * Bóc tách câu thông báo lỗi từ phía Backend trả về
- */
 export const getErrorMessage = (error: unknown): string => {
     if (isAxiosError(error)) {
-        // Tùy chỉnh theo cấu trúc JSON mà Spring Boot của bạn trả về
-        return error.response?.data?.message || error.response?.data?.error || 'Có lỗi xảy ra kết nối mạng!';
+        const data = error.response?.data as ApiError | undefined;
+        return data?.message || 'Có lỗi xảy ra kết nối mạng!';
     }
 
     if (error instanceof Error) {

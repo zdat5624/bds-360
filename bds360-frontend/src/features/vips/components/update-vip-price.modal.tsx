@@ -2,10 +2,11 @@
 'use client';
 
 import { AppModal } from '@/components/base/app.modal';
+import { getErrorMessage } from '@/utils/error.util';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { App, Form, InputNumber } from 'antd';
 import { useEffect } from 'react';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, Resolver, SubmitHandler, useForm } from 'react-hook-form';
 import { UpdateVipPricePayload, Vip } from '../api/types';
 import { useUpdateVipPrice } from '../api/vips.mutations';
 import { updateVipPriceSchema } from '../vips.schema';
@@ -26,7 +27,7 @@ export function UpdateVipPriceModal({ isOpen, onClose, vip }: UpdateVipPriceModa
         reset,
         formState: { errors }
     } = useForm<UpdateVipPricePayload>({
-        resolver: zodResolver(updateVipPriceSchema) as any,
+        resolver: zodResolver(updateVipPriceSchema) as Resolver<UpdateVipPricePayload>,
         defaultValues: {
             id: 0,
             newPrice: 0
@@ -47,9 +48,8 @@ export function UpdateVipPriceModal({ isOpen, onClose, vip }: UpdateVipPriceModa
             await updatePrice(values);
             message.success(`Đã cập nhật giá cho ${vip?.name} thành công`);
             onClose();
-        } catch (error: any) {
-            const errorMsg = error?.response?.data?.message || 'Không thể cập nhật giá';
-            message.error(errorMsg);
+        } catch (error: unknown) {
+            message.error(getErrorMessage(error));
         }
     };
 

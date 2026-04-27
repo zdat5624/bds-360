@@ -5,15 +5,17 @@ import { useUploadImages } from '@/features/media';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useAuthStore } from '@/stores/auth.store';
 import { CheckCircleFilled, ClockCircleFilled, CloseCircleFilled, HistoryOutlined, InboxOutlined } from '@ant-design/icons';
+import type { UploadProps } from 'antd';
 import { Alert, Button, Card, Col, Form, message, Row, Spin, Typography, Upload } from 'antd';
 import { useState } from 'react';
 import { useSubmitVerification } from '../api/user.mutations';
 import { useGetLatestVerification } from '../api/user.queries';
 import { VerificationHistoryModal } from './verification-history.modal';
-
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const { Dragger } = Upload;
-
+type CustomRequestOptions = Parameters<
+    NonNullable<UploadProps['customRequest']>
+>[0];
 export function VerificationSection() {
     const { colorPrimary } = useAppTheme();
     const user = useAuthStore((state) => state.user);
@@ -32,7 +34,10 @@ export function VerificationSection() {
     if (!user) return null;
 
     // --- HANDLERS ---
-    const handleCustomUpload = async (options: any, type: 'front' | 'back') => {
+    const handleCustomUpload = async (
+        options: CustomRequestOptions,
+        type: 'front' | 'back'
+    ) => {
         const { file, onSuccess, onError } = options;
         const uploadFile = file as File;
 

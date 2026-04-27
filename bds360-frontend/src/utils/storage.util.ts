@@ -13,13 +13,13 @@ const coreStorage = {
         try {
             // Cố gắng parse JSON (dành cho Object/Array như user_info)
             return JSON.parse(item);
-        } catch (error) {
+        } catch {
             // FIX: Nếu lỗi parse JSON, chứng tỏ đây là chuỗi thuần (như access_token)
             // Trả về thẳng chuỗi đó ép kiểu sang T
             return item as unknown as T;
         }
     },
-    set: (key: string, value: any) => {
+    set: <T>(key: string, value: T) => {
         if (typeof window !== 'undefined') {
             // Nếu là string thì lưu chuỗi thuần, ngược lại thì stringify
             localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));

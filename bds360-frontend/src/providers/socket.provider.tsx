@@ -29,11 +29,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             connectHeaders: {
                 Authorization: `Bearer ${token}`,
             },
-            debug: (str) => {
-                // if (process.env.NODE_ENV !== 'production') {
-                //     console.log('STOMP: ', str);
-                // }
-            },
+
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
