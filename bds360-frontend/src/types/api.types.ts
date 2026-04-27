@@ -10,7 +10,7 @@ export interface FieldErrorDetail {
 export interface ApiResponse<T = unknown> {
     code: number;
     message: string;
-    data: T;
+    data?: T;
     validationErrors?: FieldErrorDetail[];
 }
 

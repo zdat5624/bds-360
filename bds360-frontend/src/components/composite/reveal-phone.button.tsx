@@ -21,7 +21,7 @@ export function RevealPhoneButton({ phone, postId, recipientId, className }: Rev
     const [showPhone, setShowPhone] = useState(false);
     const [copied, setCopied] = useState(false);
     const router = useRouter(); // 👈 Khởi tạo router
-    console.log("recipientId:", recipientId)
+    // console.log("recipientId:", recipientId)
     // Khởi tạo mutation để gửi thông báo
     const notifyViewPhoneMutation = useNotifyViewPhone();
 
