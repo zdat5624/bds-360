@@ -12,6 +12,7 @@ export const APP_ROUTES = {
         RENT: '/rent',
         // Sử dụng function cho các route động (Dynamic Routes)
         POST_DETAIL: (id: string | number) => `/posts/${id}`,
+        USER_PROFILE: (userId: string | number) => `/u/${userId}`,
     },
 
     // 2. AUTH ROUTES (Xác thực)

@@ -226,7 +226,7 @@ export default function ManagePostStatisticsPage() {
                     >
                         <Table
                             tableLayout="fixed"
-                            scroll={{ x: 500 }}
+                            scroll={{ x: 400 }}
                             dataSource={dashboardData?.topViewedPosts || []}
                             loading={isLoading}
                             pagination={false}
@@ -249,7 +249,7 @@ export default function ManagePostStatisticsPage() {
                                     }
                                 },
                                 {
-                                    title: 'Lượt xem', dataIndex: 'views', key: 'views', align: 'center', width: 100,
+                                    title: 'Lượt xem', dataIndex: 'views', key: 'views', align: 'center', width: 90,
                                     render: (val) => <Text strong style={{ color: '#ff4d4f' }}>{formatNumber(val)}</Text>
                                 },
                                 {
@@ -290,7 +290,7 @@ export default function ManagePostStatisticsPage() {
                     >
                         <Table
                             tableLayout="fixed"
-                            scroll={{ x: 500 }}
+                            scroll={{ x: 400 }}
                             dataSource={dashboardData?.latestVipPosts || []}
                             loading={isLoading}
                             pagination={false}
@@ -313,7 +313,7 @@ export default function ManagePostStatisticsPage() {
                                     }
                                 },
                                 {
-                                    title: 'Lượt xem', dataIndex: 'views', key: 'views', align: 'center', width: 100,
+                                    title: 'Lượt xem', dataIndex: 'views', key: 'views', align: 'center', width: 90,
                                     render: (val) => <Text strong style={{ color: '#ff4d4f' }}>{formatNumber(val)}</Text>
                                 },
                                 {

@@ -316,7 +316,7 @@ export default function SystemOverviewPage() {
                         <Table
                             tableLayout="fixed"
 
-                            scroll={{ x: 500 }}
+                            scroll={{ x: 490 }}
                             dataSource={dashboardData?.topPosts || []}
                             loading={isLoading}
                             pagination={false}
@@ -329,7 +329,7 @@ export default function SystemOverviewPage() {
                                         const pkg = VIP_PACKAGES.find(p => p.vipLevel === record.vipLevel);
                                         return (
                                             <>
-                                                <Text style={{ fontWeight: 500, fontSize: 13 }} ellipsis={{ tooltip: val }}>{val}</Text>
+                                                <Text style={{ fontWeight: 500, fontSize: 12 }} ellipsis={{ tooltip: val }}>{val}</Text>
                                                 <br />
                                                 <Tag className='mr-1' color={record.listingType === 'SALE' ? 'blue' : 'cyan'} style={{ marginTop: 4 }}>
                                                     {LISTING_TYPE_LABEL[record.listingType as keyof typeof LISTING_TYPE_LABEL] || record.listingType}
@@ -341,7 +341,7 @@ export default function SystemOverviewPage() {
                                 },
                                 {
                                     title: 'Lượt xem', dataIndex: 'views', key: 'views', align: 'center', width: 100,
-                                    render: (val) => <Text strong style={{ color: '#ff4d4f', fontSize: 14 }}>{formatNumber(val)}</Text>
+                                    render: (val) => <Text strong style={{ color: '#ff4d4f', fontSize: 10 }}>{formatNumber(val)}</Text>
                                 },
                                 {
                                     title: 'Người đăng', dataIndex: 'userName', key: 'userName', width: 150, align: 'right',

@@ -272,7 +272,7 @@ export function FilterModal({ isOpen, onClose, draftFilters, setDraftFilters, on
                 .no-arrow-scroll::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }
             `}} />
 
-            <div className="max-h-[65vh] overflow-y-auto overflow-x-hidden -mx-6 px-6 pb-2 no-arrow-scroll">
+            <div className="max-h-[65vh] overflow-y-auto overflow-x-hidden -mx-4 px-4 pb-2 no-arrow-scroll">
                 {activeView === 'MAIN' && renderMainView()}
                 {activeView === 'LOCATION' && renderLocationView()}
                 {activeView === 'PRICE' && renderPriceView()}

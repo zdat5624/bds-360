@@ -6,7 +6,9 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:file": "next lint --file",
+    "lint:dir": "next lint --dir"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",

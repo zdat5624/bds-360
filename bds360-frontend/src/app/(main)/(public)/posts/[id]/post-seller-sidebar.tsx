@@ -3,6 +3,7 @@
 
 import { RevealPhoneButton } from '@/components/composite';
 import { ChevronRightIcon, ZaloIcon } from '@/components/icons/custom-icons';
+import { APP_ROUTES } from '@/config/routes';
 import { PostAuthor } from '@/features/posts/api/types';
 import { cn } from '@/lib/utils';
 import { getMembershipDuration } from '@/utils/date.util';
@@ -103,7 +104,7 @@ export const PostSellerSidebar: React.FC<PostSellerSidebarProps> = ({ user, clas
             {/* --- XEM THÊM TIN KHÁC --- */}
             <div className="w-full mt-3 pt-2.5 border-t border-gray-100">
                 <Link
-                    href={`/profile/${user?.id}`}
+                    href={APP_ROUTES.PUBLIC.USER_PROFILE(user.id)}
                     className="group w-full flex items-center justify-center gap-1 text-[12px] font-medium text-gray-500 hover:text-[#0068FF] transition-colors"
                 >
                     Xem thêm tin khác
