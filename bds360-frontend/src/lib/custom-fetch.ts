@@ -34,9 +34,9 @@ axiosInstance.interceptors.request.use(
         }
 
         // Delay test loading trong môi trường dev (Có thể xóa nếu không cần)
-        if (isDev) {
-            await new Promise((resolve) => setTimeout(resolve, 300));
-        }
+        // if (isDev) {
+        //     await new Promise((resolve) => setTimeout(resolve, 300));
+        // }
 
         return config;
     },
