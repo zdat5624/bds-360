@@ -1,5 +1,6 @@
 // @/features/posts/components/filter-tags.tsx
 import { PostFilterParams } from '@/features/posts/api/types';
+import { formatCompactMoney } from '@/utils/number.util';
 
 interface FilterTagsProps {
     appliedKeyword: string;
@@ -58,8 +59,16 @@ export function FilterTags({ appliedKeyword, appliedFilters, locationLabel, onRe
 
             {(appliedFilters.minPrice || appliedFilters.maxPrice) && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-md text-[0.8rem] font-medium shadow-sm">
-                    Giá: {appliedFilters.minPrice || 0} - {appliedFilters.maxPrice || 'Max'} Tr
-                    <button onClick={() => onRemoveTags(['minPrice', 'maxPrice'])} className="hover:bg-gray-200 text-gray-500 rounded-full w-4 h-4 flex items-center justify-center ml-1 transition-colors">✕</button>
+                    Giá: {(() => {
+                        const minStr = formatCompactMoney(appliedFilters.minPrice);
+                        const maxStr = formatCompactMoney(appliedFilters.maxPrice);
+
+                        if (minStr && maxStr) return `${minStr} - ${maxStr}`;
+                        if (minStr) return `Trên ${minStr}`;
+                        if (maxStr) return `Dưới ${maxStr}`;
+                        return 'Tất cả';
+                    })()}
+                    <button onClick={() => onRemoveTags(['minPrice', 'maxPrice'])} className="...">✕</button>
                 </span>
             )}
 

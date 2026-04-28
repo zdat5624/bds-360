@@ -1,17 +1,18 @@
 // @/app/(main)/(account)/user/payments/result/page.tsx
 'use client';
 
+import { APP_ROUTES } from '@/config/routes';
 import { useAppTheme } from '@/hooks/use-app-theme';
-// 👇 Tận dụng triệt để các util đã định nghĩa
 import { DATE_FORMAT, dayjs, formatCurrency } from '@/utils';
 import { CheckCircleOutlined, CloseCircleOutlined, WarningOutlined } from '@ant-design/icons';
-import { Button, Descriptions, Result, Typography } from 'antd';
+import { Button, Descriptions, Result, Skeleton, Typography } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 const { Title, Text } = Typography;
 
-export default function PaymentResultPage() {
-    // --- HOOKS & THEME ---
+// 1. TÁCH LOGIC XỬ LÝ URL VÀO COMPONENT CON
+function PaymentResultContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -24,9 +25,6 @@ export default function PaymentResultPage() {
         colorFillAlter,
     } = useAppTheme();
 
-    // --- XỬ LÝ DỮ LIỆU ĐỒNG BỘ TRỰC TIẾP TỪ URL ---
-    // Không cần useState/useEffect vì dữ liệu đã có sẵn để render ngay
-
     const status = searchParams.get('status');
     const orderInfo = searchParams.get('orderInfo') ? decodeURIComponent(searchParams.get('orderInfo')!) : '--';
     const transactionId = searchParams.get('transactionId') || '--';
@@ -34,24 +32,23 @@ export default function PaymentResultPage() {
     const totalPriceRaw = searchParams.get('totalPrice');
     const paymentTimeRaw = searchParams.get('paymentTime');
 
-    // 1. Xử lý thời gian VNPAY (YYYYMMDDHHmmss) sử dụng dayjs từ util
+    // Xử lý thời gian VNPAY
     let formattedPaymentTime = '--';
     if (paymentTimeRaw) {
         const parsedDate = dayjs(paymentTimeRaw, 'YYYYMMDDHHmmss');
         if (parsedDate.isValid()) {
-            // Dùng định dạng chuẩn hệ thống đã cấu hình: 'HH:mm DD/MM/YYYY'
             formattedPaymentTime = parsedDate.format(DATE_FORMAT.FULL_TIME);
         } else {
             formattedPaymentTime = paymentTimeRaw;
         }
     }
 
-    // 2. Format số tiền sử dụng formatCurrency từ number.util.ts
+    // Format số tiền
     const displayAmount = totalPriceRaw
         ? formatCurrency(parseInt(totalPriceRaw) / 100)
         : '0 ₫';
 
-    // --- KIỂM TRA TRẠNG THÁI ---
+    // Kiểm tra trạng thái
     const isSuccess = status === '1';
     const isCancelled = transactionStatus === '02';
 
@@ -78,17 +75,16 @@ export default function PaymentResultPage() {
         statusThemeColor = colorWarning;
     }
 
-    // --- RENDER GIAO DIỆN CHÍNH ---
     return (
         <div
-            className="max-w-3xl mx-auto p-2 md:p-4 shadow-sm"
+            className="max-w-3xl mx-auto p-2 md:p-4 shadow-sm rounded-lg"
             style={{
                 backgroundColor: colorBgContainer,
-                borderColor: colorBorderSecondary
+                border: `1px solid ${colorBorderSecondary}`
             }}
         >
             <Result
-                className="!p-0 !m-0 mb-8"
+                className="!p-0 !m-0 mb-8 mt-6"
                 status={resultStatus}
                 icon={
                     <div style={{ color: statusThemeColor, fontSize: '60px' }}>
@@ -101,17 +97,17 @@ export default function PaymentResultPage() {
                     <Button
                         key="transactions"
                         type="primary"
-                        size="medium"
+                        size="large"
                         className="px-8 font-medium"
-                        onClick={() => router.push('/user/transactions')}
+                        onClick={() => router.push(APP_ROUTES.USER.PAYMENTS)}
                     >
                         Lịch sử giao dịch
                     </Button>,
                     <Button
                         key="home"
-                        size="medium"
+                        size="large"
                         className="px-8"
-                        onClick={() => router.push('/')}
+                        onClick={() => router.push(APP_ROUTES.PUBLIC.HOME)}
                     >
                         Về trang chủ
                     </Button>,
@@ -166,6 +162,46 @@ export default function PaymentResultPage() {
                     {formattedPaymentTime}
                 </Descriptions.Item>
             </Descriptions>
+        </div>
+    );
+}
+
+// 2. KHUNG XƯƠNG CHỜ (FALLBACK) CHỐNG VỠ LAYOUT
+function PaymentResultFallback() {
+    const { colorBgContainer, colorBorderSecondary } = useAppTheme();
+
+    return (
+        <div
+            className="max-w-3xl mx-auto p-4 md:p-8 shadow-sm rounded-lg flex flex-col items-center gap-6"
+            style={{
+                backgroundColor: colorBgContainer,
+                border: `1px solid ${colorBorderSecondary}`
+            }}
+        >
+            <div className="flex flex-col items-center gap-4 w-full mt-6">
+                <Skeleton.Avatar active size={72} shape="circle" />
+                <Skeleton active paragraph={{ rows: 2 }} title={{ width: 250 }} className="text-center flex flex-col items-center" />
+                <div className="flex gap-4 mt-4">
+                    <Skeleton.Button active size="large" style={{ width: 160 }} />
+                    <Skeleton.Button active size="large" style={{ width: 140 }} />
+                </div>
+            </div>
+
+            <div className="w-full mt-8">
+                <Skeleton.Input active size="small" style={{ width: 150, marginBottom: 16 }} />
+                <Skeleton active paragraph={{ rows: 4 }} title={false} />
+            </div>
+        </div>
+    );
+}
+
+// 3. PAGE CHÍNH BỌC SUSPENSE
+export default function PaymentResultPage() {
+    return (
+        <div className="w-full py-8 px-4">
+            <Suspense fallback={<PaymentResultFallback />}>
+                <PaymentResultContent />
+            </Suspense>
         </div>
     );
 }

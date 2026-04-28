@@ -9,7 +9,6 @@ export const VIP_PACKAGES = [
         features: [
             { text: 'Hiển thị ngay không chờ duyệt', available: false },
             { text: 'Hiển thị nổi bật', available: false },
-            { text: 'Thông báo xem tin', available: false },
             { text: 'Thông báo xem số điện thoại', available: false },
         ],
         tagColor: 'default',
@@ -28,8 +27,7 @@ export const VIP_PACKAGES = [
         features: [
             { text: 'Hiển thị ngay không chờ duyệt', available: true },
             { text: 'Hiển thị nổi bật', available: true },
-            { text: 'Thông báo xem tin', available: true },
-            { text: 'Thông báo xem số điện thoại', available: true },
+            { text: 'Thông báo xem số điện thoại', available: false },
         ],
         tagColor: 'gold',
         buttonText: 'Đăng tin VIP 1',
@@ -48,7 +46,6 @@ export const VIP_PACKAGES = [
         features: [
             { text: 'Hiển thị ngay không chờ duyệt', available: true },
             { text: 'Hiển thị nổi bật & ưu tiên nhất', available: true },
-            { text: 'Thông báo xem tin', available: true },
             { text: 'Thông báo xem số điện thoại', available: true },
         ],
         tagColor: 'volcano',

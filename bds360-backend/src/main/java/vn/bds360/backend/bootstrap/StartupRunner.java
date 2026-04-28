@@ -180,7 +180,6 @@ public class StartupRunner implements CommandLineRunner {
         admin.setAddress("TP. Hồ Chí Minh");
         admin.setCreatedAt(now.minus(4 * 365L, java.time.temporal.ChronoUnit.DAYS));
         userList.add(admin);
-        userList.add(admin);
 
         // ===== 2. USERS =====
         for (int i = 1; i <= 50; i++) {

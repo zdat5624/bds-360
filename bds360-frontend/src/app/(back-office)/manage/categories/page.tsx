@@ -171,6 +171,7 @@ export default function ManageCategoriesPage() {
                             type="primary"
                             icon={<PlusOutlined />}
                             className="w-full sm:w-auto"
+                            onClick={() => setFormModal({ isOpen: true, data: null })}
                         >
                             Tạo mới
                         </Button>

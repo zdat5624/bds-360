@@ -44,7 +44,7 @@ export function TransactionDetailModal({ isOpen, onClose, transactionId }: Trans
         <AppModal
             isOpen={isOpen}
             onClose={onClose}
-            title="Chi tiết giao dịch & Khách hàng"
+            title="Chi tiết giao dịch"
             width={650}
         >
             {isLoading || !transaction ? (
@@ -92,9 +92,16 @@ export function TransactionDetailModal({ isOpen, onClose, transactionId }: Trans
                             content: { fontWeight: 500, color: colorText }
                         }}
                     >
-                        <Descriptions.Item label="Mã giao dịch">
-                            <Text copyable className="font-mono">{transaction.txnId || '--'}</Text>
+                        <Descriptions.Item label="Mã giao dịch HT">
+                            <Text copyable={!!transaction.id} className="font-mono">{transaction.id || '--'}</Text>
                         </Descriptions.Item>
+
+                        {transaction.txnId && (
+                            <Descriptions.Item label="Mã giao dịch VNPAY">
+                                <Text copyable={!!transaction.txnId} className="font-mono">{transaction.txnId || '--'}</Text>
+                            </Descriptions.Item>
+                        )}
+
 
                         <Descriptions.Item label="Loại giao dịch">
                             {TRANSACTION_TYPE_LABEL[transaction.type]}

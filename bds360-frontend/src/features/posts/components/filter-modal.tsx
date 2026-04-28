@@ -3,6 +3,7 @@ import { AppModal } from '@/components/base/app.modal';
 import { AreaIcon, ArrowLeftIcon, ChevronRightIcon, LocationIcon, MoneyIcon } from '@/components/icons/custom-icons';
 import { PostFilterParams } from '@/features/posts/api/types';
 import { Furnishing, LegalStatus } from '@/features/posts/posts.constant';
+import { formatCompactMoney } from '@/utils/number.util';
 import { Select, Slider } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { CompassSelector } from './compass-selector';
@@ -104,7 +105,25 @@ export function FilterModal({ isOpen, onClose, draftFilters, setDraftFilters, on
             </div>
 
             <SelectRow icon={<LocationIcon />} label="Khu vực & Dự án" value={getSelectedLocationLabel()} onClick={() => openNestedView('LOCATION')} />
-            <SelectRow icon={<MoneyIcon />} label="Khoảng giá" value={(draftFilters.minPrice || draftFilters.maxPrice) ? `${draftFilters.minPrice || 0} - ${draftFilters.maxPrice ? draftFilters.maxPrice + ' Tr' : 'Trở lên'}` : 'Tất cả'} onClick={() => openNestedView('PRICE')} />
+
+            {/* <SelectRow
+                icon={<MoneyIcon />}
+                label="Khoảng giá"
+                value={(draftFilters.minPrice || draftFilters.maxPrice) ? `${draftFilters.minPrice || 0} - ${draftFilters.maxPrice ? draftFilters.maxPrice + ' Tr' : 'Trở lên'}` : 'Tất cả'}
+                onClick={() => openNestedView('PRICE')}
+            /> */}
+
+            <SelectRow
+                icon={<MoneyIcon />}
+                label="Khoảng giá"
+                value={
+                    (draftFilters.minPrice || draftFilters.maxPrice)
+                        ? `${formatCompactMoney(draftFilters.minPrice) || 0} - ${draftFilters.maxPrice ? formatCompactMoney(draftFilters.maxPrice) : 'Trở lên'}`
+                        : 'Tất cả'
+                }
+                onClick={() => openNestedView('PRICE')}
+            />
+
             <SelectRow icon={<AreaIcon />} label="Diện tích" value={(draftFilters.minArea || draftFilters.maxArea) ? `${draftFilters.minArea || 0} - ${draftFilters.maxArea ? draftFilters.maxArea + ' m²' : 'Trở lên'}` : 'Tất cả'} onClick={() => openNestedView('AREA')} />
 
             <hr className="border-gray-100" />
@@ -180,34 +199,117 @@ export function FilterModal({ isOpen, onClose, draftFilters, setDraftFilters, on
         );
     }
 
+    // const renderPriceView = () => {
+    //     const priceOptions = [
+    //         { label: 'Tất cả khoảng giá', min: undefined, max: undefined },
+    //         { label: 'Dưới 500 triệu', min: 0, max: 500 },
+    //         { label: '500 - 800 triệu', min: 500, max: 800 },
+    //         { label: '800 triệu - 1 tỷ', min: 800, max: 1000 },
+    //         { label: '1 - 2 tỷ', min: 1000, max: 2000 },
+    //         { label: '2 - 3 tỷ', min: 2000, max: 3000 },
+    //         { label: 'Trên 3 tỷ', min: 3000, max: undefined }
+    //     ];
+    //     const minP = tempFilters.minPrice ?? 0;
+    //     const maxP = tempFilters.maxPrice ?? 5000;
+
+    //     return (
+    //         <div className="flex flex-col gap-5 p-1 mt-2">
+    //             <div className="flex items-center gap-3">
+    //                 <div className="flex-1 border border-gray-300 rounded-lg p-2 text-center text-[0.85rem]"><span className="text-gray-400 text-xs block mb-0.5">Giá thấp nhất</span>{tempFilters.minPrice ? `${tempFilters.minPrice} triệu` : 'Từ'}</div>
+    //                 <span className="text-gray-400">→</span>
+    //                 <div className="flex-1 border border-gray-300 rounded-lg p-2 text-center text-[0.85rem]"><span className="text-gray-400 text-xs block mb-0.5">Giá cao nhất</span>{tempFilters.maxPrice ? `${tempFilters.maxPrice} triệu` : 'Đến'}</div>
+    //             </div>
+    //             <div className="px-2 mt-2">
+    //                 <Slider range min={0} max={5000} step={100} value={[minP, maxP]} onChange={([min, max]) => setTempFilters({ ...tempFilters, minPrice: min === 0 ? undefined : min, maxPrice: max === 5000 ? undefined : max })} tooltip={{ formatter: (val) => `${val} triệu` }} />
+    //             </div>
+    //             <div className="flex flex-col gap-1">
+    //                 {priceOptions.map((opt, i) => {
+    //                     const isActive = tempFilters.minPrice === opt.min && tempFilters.maxPrice === opt.max;
+    //                     return (
+    //                         <label key={i} className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-gray-50 px-2 rounded-lg" onClick={() => setTempFilters({ ...tempFilters, minPrice: opt.min, maxPrice: opt.max })}>
+    //                             <span className={`text-[0.85rem] ${isActive ? 'text-[#1677ff] font-medium' : 'text-gray-700'}`}>{opt.label}</span>
+    //                             <input type="radio" checked={isActive} readOnly className="w-4 h-4 accent-[#1677ff]" />
+    //                         </label>
+    //                     );
+    //                 })}
+    //             </div>
+    //         </div>
+    //     );
+    // };
+
+    // --- File: filter-modal.tsx ---
+
     const renderPriceView = () => {
-        const priceOptions = [
+        const isRent = draftFilters.type === 'RENT';
+
+        // 1. Định nghĩa options phù hợp cho từng loại hình
+        const priceOptions = isRent ? [
             { label: 'Tất cả khoảng giá', min: undefined, max: undefined },
-            { label: 'Dưới 500 triệu', min: 0, max: 500 },
-            { label: '500 - 800 triệu', min: 500, max: 800 },
-            { label: '800 triệu - 1 tỷ', min: 800, max: 1000 },
-            { label: '1 - 2 tỷ', min: 1000, max: 2000 },
-            { label: '2 - 3 tỷ', min: 2000, max: 3000 },
-            { label: 'Trên 3 tỷ', min: 3000, max: undefined }
+            { label: 'Dưới 5 triệu', min: 0, max: 3000000 },
+            { label: '3 - 10 triệu', min: 3000000, max: 10000000 },
+            { label: '10 - 20 triệu', min: 10000000, max: 20000000 },
+            { label: '20 - 50 triệu', min: 20000000, max: 50000000 },
+            { label: 'Trên 50 triệu', min: 50000000, max: undefined }
+        ] : [
+            { label: 'Tất cả khoảng giá', min: undefined, max: undefined },
+            { label: 'Dưới 500 triệu', min: 0, max: 500000000 },
+            { label: '500 - 800 triệu', min: 500000000, max: 800000000 },
+            { label: '800 triệu - 1 tỷ', min: 800000000, max: 1000000000 },
+            { label: '1 - 2 tỷ', min: 1000000000, max: 2000000000 },
+            { label: '2 - 3 tỷ', min: 2000000000, max: 3000000000 },
+            { label: 'Trên 3 tỷ', min: 3000000000, max: undefined }
         ];
-        const minP = tempFilters.minPrice ?? 0;
-        const maxP = tempFilters.maxPrice ?? 5000;
+
+
+
+        // 3. Cấu hình cho Slider (Đơn vị nội bộ tính bằng triệu cho mượt)
+        // Thuê: max 100tr, Bước nhảy 1tr. Bán: max 10 tỷ, Bước nhảy 100tr.
+        const sliderConfig = isRent
+            ? { min: 0, max: 100, step: 1, multiplier: 1000000, unit: 'tr' }
+            : { min: 0, max: 10000, step: 100, multiplier: 1000000, unit: 'tr' };
+
+        const minS = (tempFilters.minPrice || 0) / sliderConfig.multiplier;
+        const maxS = (tempFilters.maxPrice || (sliderConfig.max * sliderConfig.multiplier)) / sliderConfig.multiplier;
 
         return (
             <div className="flex flex-col gap-5 p-1 mt-2">
+                {/* Hiển thị giá đang chọn */}
                 <div className="flex items-center gap-3">
-                    <div className="flex-1 border border-gray-300 rounded-lg p-2 text-center text-[0.85rem]"><span className="text-gray-400 text-xs block mb-0.5">Giá thấp nhất</span>{tempFilters.minPrice ? `${tempFilters.minPrice} triệu` : 'Từ'}</div>
+                    <div className="flex-1 border border-gray-300 rounded-lg p-2 text-center text-[0.85rem]">
+                        <span className="text-gray-400 text-xs block mb-0.5">Giá thấp nhất</span>
+                        {tempFilters.minPrice ? formatCompactMoney(tempFilters.minPrice) : 'Không giới hạn'}
+                    </div>
                     <span className="text-gray-400">→</span>
-                    <div className="flex-1 border border-gray-300 rounded-lg p-2 text-center text-[0.85rem]"><span className="text-gray-400 text-xs block mb-0.5">Giá cao nhất</span>{tempFilters.maxPrice ? `${tempFilters.maxPrice} triệu` : 'Đến'}</div>
+                    <div className="flex-1 border border-gray-300 rounded-lg p-2 text-center text-[0.85rem]">
+                        <span className="text-gray-400 text-xs block mb-0.5">Giá cao nhất</span>
+                        {tempFilters.maxPrice ? formatCompactMoney(tempFilters.maxPrice) : 'không giới hạn'}
+                    </div>
                 </div>
+
+                {/* Slider */}
                 <div className="px-2 mt-2">
-                    <Slider range min={0} max={5000} step={100} value={[minP, maxP]} onChange={([min, max]) => setTempFilters({ ...tempFilters, minPrice: min === 0 ? undefined : min, maxPrice: max === 5000 ? undefined : max })} tooltip={{ formatter: (val) => `${val} triệu` }} />
+                    <Slider
+                        range
+                        min={sliderConfig.min}
+                        max={sliderConfig.max}
+                        step={sliderConfig.step}
+                        value={[minS, maxS]}
+                        onChange={([min, max]) => setTempFilters({
+                            ...tempFilters,
+                            minPrice: min === 0 ? undefined : min * sliderConfig.multiplier,
+                            maxPrice: max === sliderConfig.max ? undefined : max * sliderConfig.multiplier
+                        })}
+                        tooltip={{ formatter: (val) => `${val} ${sliderConfig.unit}` }}
+                    />
                 </div>
+
+                {/* Danh sách Radio options */}
                 <div className="flex flex-col gap-1">
                     {priceOptions.map((opt, i) => {
                         const isActive = tempFilters.minPrice === opt.min && tempFilters.maxPrice === opt.max;
                         return (
-                            <label key={i} className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-gray-50 px-2 rounded-lg" onClick={() => setTempFilters({ ...tempFilters, minPrice: opt.min, maxPrice: opt.max })}>
+                            <label key={i} className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-gray-50 px-2 rounded-lg"
+                                onClick={() => setTempFilters({ ...tempFilters, minPrice: opt.min, maxPrice: opt.max })}>
                                 <span className={`text-[0.85rem] ${isActive ? 'text-[#1677ff] font-medium' : 'text-gray-700'}`}>{opt.label}</span>
                                 <input type="radio" checked={isActive} readOnly className="w-4 h-4 accent-[#1677ff]" />
                             </label>

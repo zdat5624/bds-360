@@ -4,7 +4,7 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Map, { MapboxEvent, MapRef, Marker, NavigationControl } from 'react-map-gl';
 
 import { useGetPostsForMap } from '@/features/posts/api/posts.queries';
@@ -20,6 +20,7 @@ import { VipMarker } from './vip-marker';
 
 interface PostsMapProps {
     filters: PostFilterParams;
+    isMobileMapOpen?: boolean;
 }
 
 const INITIAL_VIEW_STATE = {
@@ -28,7 +29,7 @@ const INITIAL_VIEW_STATE = {
     zoom: 4.5,
 };
 
-export function PostsMap({ filters }: PostsMapProps) {
+export function PostsMap({ filters, isMobileMapOpen }: PostsMapProps) {
     const { data: posts = [] } = useGetPostsForMap(filters);
     const [selectedMarker, setSelectedMarker] = useState<MapPost | null>(null);
 
@@ -67,6 +68,15 @@ export function PostsMap({ filters }: PostsMapProps) {
             });
         }
     };
+
+    useEffect(() => {
+        // Nếu mobile bật map lên, đợi 50ms cho DOM hiện thẻ div ra xong rồi bắt Mapbox resize lại
+        if (isMobileMapOpen && mapRef.current) {
+            setTimeout(() => {
+                mapRef.current?.resize();
+            }, 50);
+        }
+    }, [isMobileMapOpen]);
 
     return (
         <div className="w-full h-full relative">

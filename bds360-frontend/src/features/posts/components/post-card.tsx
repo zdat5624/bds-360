@@ -187,7 +187,7 @@ export function PostCard({ post }: PostCardProps) {
                                     postId={post.id}
                                     recipientId={post.user?.id}
                                     // Override lại CSS để thu nhỏ vừa thẻ Card (Ghi đè width full và bo góc xl của component gốc)
-                                    className="w-auto px-4 md:px-5 rounded-lg h-9 md:h-10 text-[0.85rem] md:text-[0.9rem] shadow-none"
+                                    className="!min-w-[100px] !px-2 md:!px-3 rounded-lg !h-9 md:h-10 !text-[0.6rem] !md:text-[0.8rem] shadow-none"
                                 />
                             </div>
                         </div>

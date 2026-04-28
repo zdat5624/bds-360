@@ -97,12 +97,12 @@ export function RevealPhoneButton({ phone, postId, recipientId, className }: Rev
         >
             <PhoneOutlined className={cn("text-lg", showPhone ? "text-blue-600" : "text-white")} />
 
-            <span className="text-[14px] tracking-wide">
+            <span className="text-[12px] tracking-wide">
                 {showPhone ? safePhone : maskedPhone}
             </span>
 
             {!showPhone && (
-                <span className="ml-1 text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-medium  hidden sm:inline-block">
+                <span className="ml-1 text-[10px] bg-white/20 px-1 py-0.5 rounded-full font-medium  hidden sm:inline-block">
                     Hiện số
                 </span>
             )}
@@ -111,13 +111,13 @@ export function RevealPhoneButton({ phone, postId, recipientId, className }: Rev
             {showPhone && (
                 <div
                     onClick={handleCopy}
-                    className="absolute right-1.5 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-100 transition-colors"
+                    className="shrink-0 ml-1 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-100 transition-colors"
                     title="Sao chép số điện thoại"
                 >
                     {copied ? (
-                        <CheckOutlined className="text-[15px] text-green-600" />
+                        <CheckOutlined className="!text-[15px] !text-green-600" />
                     ) : (
-                        <CopyOutlined className="text-[15px] text-blue-600 opacity-80 group-hover:opacity-100" />
+                        <CopyOutlined className="!text-[15px] !text-blue-600 opacity-80 group-hover:opacity-100" />
                     )}
                 </div>
             )}

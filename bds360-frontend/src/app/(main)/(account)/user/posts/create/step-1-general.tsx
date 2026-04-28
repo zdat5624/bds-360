@@ -93,7 +93,7 @@ export function Step1General({ form }: Step1GeneralProps) {
                 <Col xs={24} md={12}>
                     <Form.Item
                         label="Mức giá (VNĐ)"
-                        name="price"
+                        required
                         rules={[{ required: true, message: 'Vui lòng nhập giá' }]}
                         extra={
                             currentPrice
@@ -110,9 +110,11 @@ export function Step1General({ form }: Step1GeneralProps) {
                     >
 
                         <Space.Compact className="!w-full">
-                            <InputNumber
+                            {/* <InputNumber
                                 className="!w-full"
                                 size="large"
+                                name="price"
+
                                 formatter={(value) =>
                                     `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
                                 }
@@ -123,9 +125,30 @@ export function Step1General({ form }: Step1GeneralProps) {
                                         e.preventDefault();
                                     }
                                 }}
-                                onChange={(value) => form.setFieldValue('price', value)}
+                                // onChange={(value) => form.setFieldValue('price', value)}
                                 placeholder="VD: 3000000000"
-                            />
+                            /> */}
+                            <Form.Item
+                                name="price"
+                                noStyle
+                                rules={[{ required: true, message: 'Vui lòng nhập giá' }]}
+                            >
+                                <InputNumber
+                                    className="!w-full"
+                                    size="large"
+                                    formatter={(value) =>
+                                        `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                                    }
+                                    parser={(value) => value!.replace(/\D/g, '')}
+                                    onKeyDown={(e) => {
+                                        const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+                                        if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    placeholder="VD: 3000000000"
+                                />
+                            </Form.Item>
 
                             <span className="px-3 flex items-center border border-l-0 rounded-r-lg bg-gray-50 text-gray-500 font-medium">
                                 VNĐ

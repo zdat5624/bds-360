@@ -4,6 +4,7 @@
 import { PostFilterParams } from "@/features/posts/api/types";
 import { ForYouPosts } from "@/features/posts/components/for-you-posts";
 import { HeroSmartFilterBar } from "@/features/posts/components/hero-smart-filter-bar";
+import { VipPackagesList } from "@/features/vips";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
@@ -66,6 +67,10 @@ export default function HomePage() {
                         title="Nhà đất cho thuê dành cho bạn"
                     />
                 </div>
+            </section>
+
+            <section className="container max-w-[1100px] mx-auto px-4 py-12 pt-0">
+                <VipPackagesList />
             </section>
         </div>
     );

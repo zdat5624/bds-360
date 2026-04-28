@@ -154,7 +154,7 @@ export function PostUnblockModal({ isOpen, onClose, post }: PostUnblockModalProp
                                             Chờ duyệt
                                         </Radio.Button>
                                         <Radio.Button value="APPROVED" className={field.value === 'APPROVED' ? '!bg-green-500 !text-white !border-green-500' : ''}>
-                                            Đang hiển thị
+                                            Hoạt động
                                         </Radio.Button>
                                     </Radio.Group>
                                 )}

@@ -8,10 +8,9 @@ import { TransactionDetailModal } from '@/features/transactions/components/trans
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { DATE_FORMAT, dayjs, formatCurrency, formatDateTime, toApiEndDate, toApiStartDate } from '@/utils';
 import { CreditCardOutlined, EyeOutlined, SwapOutlined } from '@ant-design/icons';
-import { App, DatePicker, Divider, Select, Tabs, Tag, Tooltip, Typography } from 'antd';
+import { DatePicker, Divider, Select, Tabs, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // Import từ module transactions
 import { useGetMyTransactions } from '@/features/transactions/api/transactions.queries';
@@ -24,10 +23,7 @@ const { RangePicker } = DatePicker;
 export default function UserTransactionsPage() {
     // --- HOOKS & THEME ---
     const { colorSuccess, colorTextSecondary, colorText, colorBorderSecondary } = useAppTheme();
-    const { notification } = App.useApp();
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+
 
     // --- STATE BỘ LỌC ---
     const [filters, setFilters] = useState<TransactionFilterParams>({
@@ -66,28 +62,7 @@ export default function UserTransactionsPage() {
 
     const { data, isFetching } = useGetMyTransactions(filters);
 
-    // --- HIỂN THỊ THÔNG BÁO TỪ VNPAY CALLBACK ---
-    useEffect(() => {
-        const vnp_TransactionStatus = searchParams.get('transactionStatus');
-        const vnp_TxnRef = searchParams.get('transactionId');
 
-        if (vnp_TransactionStatus && vnp_TxnRef) {
-            handleVnPayNotification(vnp_TransactionStatus, vnp_TxnRef);
-            router.replace(pathname, { scroll: false });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams]);
-
-    const handleVnPayNotification = (status: string, txnId: string) => {
-        const isSuccess = status === '00';
-        const type = isSuccess ? 'success' : 'error';
-        const message = isSuccess ? 'Giao dịch thành công' : 'Giao dịch thất bại';
-        const description = isSuccess
-            ? `Nạp tiền thành công. Mã giao dịch: ${txnId}`
-            : `Lỗi giao dịch (${status}). Mã: ${txnId}. Vui lòng thử lại.`;
-
-        notification[type]({ message, description, placement: 'topRight' });
-    };
 
     // --- HANDLERS BỘ LỌC ---
     const handleTabChange = (key: string) => {

@@ -37,6 +37,7 @@ import { APP_ROUTES } from '@/config';
 import { getPageMeta } from '@/constants/menus.constant';
 import { useGetManageUserDashboardStats } from '@/features/statistics/api/manage-user-statistics.queries';
 import { useGetUsers, useGetVerificationRequests } from '@/features/users/api/user.queries';
+import Link from 'next/link';
 
 const { Title, Text } = Typography;
 
@@ -100,7 +101,7 @@ export default function ManageUserStatisticsPage() {
                         {title}
                     </Title>
                     <Text type="secondary" style={{ marginTop: 4 }} >
-                        Báo cáo tăng trưởng và chỉ số người dùng trong hệ thống .
+                        Báo cáo tăng trưởng và chỉ số người dùng trong hệ thống.
                     </Text>
                 </Flex>
                 <Select
@@ -286,7 +287,20 @@ export default function ManageUserStatisticsPage() {
                                 },
                                 {
                                     title: '', key: 'action', align: 'right',
-                                    render: () => <Button type="link" size="small" style={{ fontSize: 12 }}>Chi tiết</Button>
+                                    render: () => (
+                                        <Link
+                                            href={APP_ROUTES.MANAGE.VERIFICATIONS}
+                                        >
+                                            <Button
+                                                type="link"
+                                                size="small"
+                                                style={{ fontSize: 12 }}
+
+                                            >
+                                                Chi tiết
+                                            </Button>
+                                        </Link>
+                                    )
                                 },
                             ]}
                         />

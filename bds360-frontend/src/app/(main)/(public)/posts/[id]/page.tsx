@@ -49,7 +49,7 @@ export default function PublicPostDetailPage() {
 
     return (
         <div className="bg-white min-h-screen pb-10 font-sans">
-            <div className="max-w-[940] mx-auto px-4 py-2 md:py-4">
+            <div className="max-w-[960px] mx-auto px-4 py-2 md:py-4">
                 <Breadcrumb
                     separator="/"
                     className="mb-3 overflow-hidden whitespace-nowrap text-ellipsis"

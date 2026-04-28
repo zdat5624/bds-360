@@ -17,7 +17,7 @@ import {
 } from '@ant-design/icons';
 import { Button, Card, Divider, Form, Grid, message, Result, Skeleton, Steps, Typography } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 // Import lại các Step từ thư mục create để tái sử dụng
 import { getErrorMessage } from '@/utils/error.util';
@@ -51,27 +51,48 @@ export default function EditPostPage() {
 
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
-    useEffect(() => {
-        if (post) {
-            form.setFieldsValue({
-                id: post.id,
-                title: post.title,
-                description: post.description,
-                type: post.type,
-                price: post.price,
-                area: post.area,
-                categoryId: post.category?.id,
-                provinceCode: post.provinceCode,
-                districtCode: post.districtCode,
-                wardCode: post.wardCode,
-                streetAddress: post.streetAddress,
-                latitude: post.latitude,
-                longitude: post.longitude,
-                imageUrls: post.images?.sort((a, b) => a.orderIndex - b.orderIndex).map(img => img.url) || [],
-                listingDetail: post.listingDetail || undefined,
-            });
-        }
-    }, [post, form]);
+    // useEffect(() => {
+    //     if (post) {
+    //         form.setFieldsValue({
+    //             id: post.id,
+    //             title: post.title,
+    //             description: post.description,
+    //             type: post.type,
+    //             price: post.price,
+    //             area: post.area,
+    //             categoryId: post.category?.id,
+    //             provinceCode: post.provinceCode,
+    //             districtCode: post.districtCode,
+    //             wardCode: post.wardCode,
+    //             streetAddress: post.streetAddress,
+    //             latitude: post.latitude,
+    //             longitude: post.longitude,
+    //             imageUrls: post.images?.sort((a, b) => a.orderIndex - b.orderIndex).map(img => img.url) || [],
+    //             listingDetail: post.listingDetail || undefined,
+    //         });
+    //     }
+    // }, [post, form]);
+
+    const initialFormValues = useMemo(() => {
+        if (!post) return undefined;
+        return {
+            id: post.id,
+            title: post.title,
+            description: post.description,
+            type: post.type,
+            price: post.price,
+            area: post.area,
+            categoryId: post.category?.id,
+            provinceCode: post.provinceCode,
+            districtCode: post.districtCode,
+            wardCode: post.wardCode,
+            streetAddress: post.streetAddress,
+            latitude: post.latitude,
+            longitude: post.longitude,
+            imageUrls: post.images?.sort((a, b) => a.orderIndex - b.orderIndex).map(img => img.url) || [],
+            listingDetail: post.listingDetail || undefined,
+        };
+    }, [post]);
 
     const handleNext = async () => {
         try {
@@ -205,7 +226,12 @@ export default function EditPostPage() {
                 </div>
 
                 <div className='mt-4'>
-                    <Form form={form} layout="vertical" requiredMark="optional">
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        requiredMark="optional"
+                        initialValues={initialFormValues}
+                    >
                         {renderStepContent()}
                     </Form>
 

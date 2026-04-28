@@ -3,10 +3,12 @@
 
 import { PostCard, SmartFilterBar, useGetPosts, usePostFilterUrl } from '@/features/posts';
 import { Empty, Pagination, Skeleton } from 'antd';
+import { Suspense } from 'react';
 
-export default function RentPage() {
+// 1. TÁCH LOGIC CHÍNH VÀO COMPONENT CON
+function RentContent() {
     const { filters, page, updateUrl } = usePostFilterUrl('RENT');
-    const pageSize = 12;
+    const pageSize = 10;
 
     const { data, isLoading, isError } = useGetPosts('public', {
         ...filters,
@@ -19,9 +21,8 @@ export default function RentPage() {
 
     return (
         <div className="flex flex-col w-full bg-gray-50/30">
-
-            {/* Thanh Filter (Sticky: Nổi trên Box Danh sách) */}
-            <div className="z-30 bg-white sticky top-0 shadow-sm">
+            {/* Thanh Filter */}
+            <div className="z-30 bg-white shadow-sm">
                 <div className="p-4">
                     <SmartFilterBar
                         initialFilters={filters}
@@ -70,8 +71,7 @@ export default function RentPage() {
                                     total={totalElements}
                                     onChange={(newPage) => {
                                         updateUrl(filters, newPage);
-                                        // 🌟 FIX CUỘN TRANG LÊN ĐẦU: 
-                                        // Nhắm vào thẻ có chứa class overflow-y-auto của Layout để cuộn
+                                        // 🌟 FIX CUỘN TRANG LÊN ĐẦU
                                         const scrollableDiv = document.querySelector('.overflow-y-auto');
                                         if (scrollableDiv) {
                                             scrollableDiv.scrollTo({ top: 0, behavior: 'smooth' });
@@ -95,5 +95,35 @@ export default function RentPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+// 2. KHUNG XƯƠNG CHỜ (FALLBACK) CHỐNG VỠ LAYOUT
+function RentFallback() {
+    return (
+        <div className="flex flex-col w-full bg-gray-50/30 min-h-screen">
+            <div className="z-30 bg-white shadow-sm p-4 h-[76px] flex items-center">
+                <Skeleton.Input active block style={{ height: 40 }} />
+            </div>
+            <div className="p-4 flex flex-col gap-4 mt-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex gap-4">
+                        <Skeleton.Image className="!w-32 !h-32 rounded-lg" active />
+                        <div className="flex-1">
+                            <Skeleton active paragraph={{ rows: 3 }} title={{ width: '80%' }} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// 3. PAGE CHÍNH BỌC SUSPENSE
+export default function RentPage() {
+    return (
+        <Suspense fallback={<RentFallback />}>
+            <RentContent />
+        </Suspense>
     );
 }

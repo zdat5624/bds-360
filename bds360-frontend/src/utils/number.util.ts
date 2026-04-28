@@ -17,9 +17,28 @@ export const formatCurrency = (amount?: number | null): string => {
  * @example formatCompactMoney(800000000) => "800 Triệu"
  */
 export const formatCompactMoney = (amount?: number | null): string => {
-    if (!amount) return '0 ₫';
-    if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toLocaleString('vi-VN')} Tỷ`;
-    if (amount >= 1_000_000) return `${(amount / 1_000_000).toLocaleString('vi-VN')} Triệu`;
+    // 1. Nếu không có giá trị (undefined hoặc null), trả về chuỗi rỗng
+    if (amount === undefined || amount === null) return '';
+
+    // 2. Nếu bằng đúng số 0
+    if (amount === 0) return '0 ₫';
+
+    // 3. Đơn vị Tỷ (từ 1.000.000.000 trở lên)
+    if (amount >= 1_000_000_000) {
+        return `${(amount / 1_000_000_000).toLocaleString('vi-VN')} Tỷ`;
+    }
+
+    // 4. Đơn vị Triệu (từ 1.000.000 trở lên)
+    if (amount >= 1_000_000) {
+        return `${(amount / 1_000_000).toLocaleString('vi-VN')} Triệu`;
+    }
+
+    // 5. Đơn vị Nghìn (từ 1.000 trở lên) - MỚI THÊM
+    if (amount >= 1_000) {
+        return `${(amount / 1_000).toLocaleString('vi-VN')} Nghìn`;
+    }
+
+    // 6. Các trường hợp nhỏ hơn 1.000 (ví dụ: 500 đồng)
     return formatCurrency(amount);
 };
 
