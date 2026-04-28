@@ -383,265 +383,6 @@ public class StartupRunner implements CommandLineRunner {
     }
 
     // ====================================================================
-    // 🌟 1. CÁC HẰNG SỐ DỮ LIỆU (Đưa lên cấp độ Class)
-    // ====================================================================
-    private static final List<String> STREET_NAMES = Arrays.asList(
-            "A1", "A2", "A5", "A8", "A12", "A18", "A25", "A30", "A35", "A40",
-            "A45", "A50", "B1", "B3", "B7", "B10", "B15", "B20", "B28", "B32",
-            "B38", "B45", "B50", "C2", "C4", "C6", "C9", "C12", "C16", "C22",
-            "C27", "C33", "C39", "C45", "C50", "D1", "D5", "D8", "D10", "D15",
-            "D20", "D25", "D30", "D36", "D42", "D50", "E3", "E7", "E12", "E18",
-            "E24", "E29", "E35", "E40", "E50", "F2", "F8", "F15", "F21", "F30",
-            "F38", "F45", "G1", "G5", "G10", "G15", "G20", "G25", "G30", "G35",
-            "G40", "G50", "H2", "H7", "H12", "H18", "H24", "H30", "H36", "H45",
-            "I1", "I5", "I10", "I15", "I20", "I25", "I30", "I40", "J2", "J8",
-            "J15", "J21", "J30", "J40", "K3", "K9", "K18", "K27", "K36", "K45");
-
-    private static final String GENERAL_DESCRIPTION = "\n\n**Thông tin bổ sung**:\n" +
-            "- Vị trí đắc địa: Nằm trong khu vực phát triển sôi động, xung quanh có đầy đủ tiện ích như trường học quốc tế, bệnh viện đa khoa, siêu thị lớn, công viên xanh mát và các trung tâm thương mại hiện đại.\n"
-            +
-            "- Giao thông thuận tiện: Gần các trục đường chính và tuyến giao thông huyết mạch, dễ dàng di chuyển đến trung tâm thành phố hoặc các khu vực lân cận trong thời gian ngắn.\n"
-            +
-            "- Tiện ích đa dạng: Cư dân được hưởng các tiện ích cao cấp như hồ bơi, phòng gym, khu vui chơi trẻ em, không gian BBQ ngoài trời, và hệ thống an ninh 24/7 đảm bảo sự an toàn tuyệt đối.\n"
-            +
-            "- Hỗ trợ toàn diện: Đội ngũ tư vấn chuyên nghiệp sẵn sàng hỗ trợ từ A-Z, bao gồm xem nhà miễn phí, tư vấn pháp lý nhanh chóng, và đàm phán giá tốt nhất để bạn có được giao dịch hoàn hảo.\n"
-            +
-            "- Cam kết chất lượng: Chúng tôi cung cấp thông tin minh bạch, chính xác, đảm bảo mọi chi tiết về bất động sản đều được kiểm tra kỹ lưỡng trước khi giới thiệu đến bạn.\n"
-            +
-            "- Cơ hội không thể bỏ lỡ: Hãy liên hệ ngay hôm nay để được tư vấn chi tiết, đặt lịch xem nhà thực tế, và nhận ưu đãi đặc biệt dành riêng cho khách hàng sớm nhất!";
-
-    private void initSamplePosts() {
-        if (postRepository.count() > 0) {
-            System.out.println(">>> SKIP! INIT posts: ALREADY HAVE DATA ... ");
-            return;
-        }
-
-        // 1. Load dữ liệu nền
-        List<User> users = userRepository.findAll();
-        List<Category> categories = categoryRepository.findAll();
-        List<Province> provinces = provinceRepository.findAll();
-        List<Vip> vips = vipRepository.findAll();
-
-        // 🌟 Lấy VIP 0 để ép cho các tin không được duyệt
-        Vip vip0 = vips.stream()
-                .filter(v -> v.getVipLevel() == 0)
-                .findFirst()
-                .orElse(vips.get(0));
-        Vip vip1 = vips.stream()
-                .filter(v -> v.getVipLevel() == 1)
-                .findFirst()
-                .orElse(vips.get(1));
-
-        CompassDirection[] orientations = CompassDirection.values();
-        LegalStatus[] legalStatuses = LegalStatus.values();
-        Furnishing[] furnishings = Furnishing.values();
-
-        String baseImageUrl = appProperties.getUrl().getBackend() + "/uploads/";
-        int totalPost = 20000;
-        int numberOfThreads = 10;
-
-        // 🌟 Khởi tạo Cache (Giống y hệt logic cũ của bác)
-        Map<Long, List<District>> districtCache = new ConcurrentHashMap<>();
-        Map<Long, List<Ward>> wardCache = new ConcurrentHashMap<>();
-        Map<String, double[]> geocodeCache = new ConcurrentHashMap<>();
-
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        System.out.println(">>> SEEDING 20k POSTS: Hybrid Strategy | Status Ratios Fixed | VIP Logic Safe...");
-
-        for (int t = 0; t < numberOfThreads; t++) {
-            final int threadIndex = t;
-            executorService.submit(() -> {
-                var random = java.util.concurrent.ThreadLocalRandom.current();
-                List<Post> posts = new ArrayList<>();
-
-                // Khởi tạo cụm ban đầu
-                Category curCat = categories.get(random.nextInt(categories.size()));
-                Province curProv = provinces.get(random.nextInt(provinces.size()));
-                District curDist = null;
-                Ward curWard = null;
-
-                // Lấy địa chỉ ban đầu cho luồng
-                List<District> initialDists = districtCache.computeIfAbsent(curProv.getCode(),
-                        k -> districtRepository.findByProvinceCode(k));
-                if (!initialDists.isEmpty()) {
-                    curDist = initialDists.get(random.nextInt(initialDists.size()));
-                    List<Ward> initialWards = wardCache.computeIfAbsent(curDist.getCode(),
-                            k -> wardRepository.findByDistrictCode(k));
-                    if (!initialWards.isEmpty())
-                        curWard = initialWards.get(random.nextInt(initialWards.size()));
-                }
-
-                int clusterSize = (random.nextInt(100) < 70) ? (130 + random.nextInt(51)) : (10 + random.nextInt(21));
-                int currentClusterCount = 0;
-                int postsPerThread = totalPost / numberOfThreads;
-
-                for (int i = 1; i <= postsPerThread; i++) {
-                    // 2. LOGIC XOAY CỤM (Giữ nguyên logic của bác)
-                    if (currentClusterCount >= clusterSize) {
-                        currentClusterCount = 0;
-                        clusterSize = (random.nextInt(100) < 70) ? (130 + random.nextInt(51))
-                                : (10 + random.nextInt(21));
-                        curCat = categories.get(random.nextInt(categories.size()));
-                        curProv = provinces.get(random.nextInt(provinces.size()));
-                        List<District> dists = districtCache.computeIfAbsent(curProv.getCode(),
-                                k -> districtRepository.findByProvinceCode(k));
-                        curDist = dists.isEmpty() ? null : dists.get(random.nextInt(dists.size()));
-                        if (curDist != null) {
-                            List<Ward> wards = wardCache.computeIfAbsent(curDist.getCode(),
-                                    k -> wardRepository.findByDistrictCode(k));
-                            curWard = wards.isEmpty() ? null : wards.get(random.nextInt(wards.size()));
-                        }
-                    }
-                    currentClusterCount++;
-                    if (curDist == null)
-                        continue;
-
-                    Post post = new Post();
-
-                    // 3. LOGIC THỜI GIAN (History vs Active - Giữ nguyên 33 tháng của bác)
-                    long randomDaysAgo;
-                    if (currentClusterCount <= 99 && clusterSize >= 100) {
-                        int monthTarget = (currentClusterCount - 1) / 3;
-                        randomDaysAgo = (monthTarget * 30L) + random.nextInt(28);
-                    } else {
-                        randomDaysAgo = (random.nextInt(100) < 20) ? random.nextLong(60) : random.nextLong(1000);
-                    }
-
-                    Instant fakeCreatedAt = Instant.now().minus(randomDaysAgo, ChronoUnit.DAYS);
-                    int durationDays = (randomDaysAgo < 60) ? 90 : (random.nextBoolean() ? 30 : 60);
-                    Instant fakeExpireDate = fakeCreatedAt.plus(durationDays, ChronoUnit.DAYS);
-                    boolean isActuallyExpired = fakeExpireDate.isBefore(Instant.now());
-
-                    // 4. GIÁ CẢ & DIỆN TÍCH (Giữ nguyên logic của bác)
-                    double roundedArea = Math.round((45 + random.nextDouble() * 180) * 10.0) / 10.0;
-                    post.setArea(roundedArea);
-                    long basePrice = (curCat.getType() == ListingType.RENT)
-                            ? (3_000_000L + random.nextLong(20_000_000L))
-                            : (long) (roundedArea * (20_000_000L + random.nextLong(60_000_000L)));
-                    double priceFactor = Math.pow(1 - 0.08, randomDaysAgo / 365.0) * (0.8 + random.nextDouble() * 0.4);
-                    post.setPrice((long) (basePrice * priceFactor));
-
-                    // 5. ĐỊA CHỈ & TỌA ĐỘ (🌟 Sử dụng geocodeCache chuẩn xác)
-                    post.setProvince(curProv);
-                    post.setDistrict(curDist);
-                    post.setWard(curWard);
-                    post.setStreetAddress("Số " + (random.nextInt(500) + 1) + " Đường "
-                            + STREET_NAMES.get(random.nextInt(STREET_NAMES.size())));
-
-                    String geocodeSearchKey = String.format("%s, %s, %s", (curWard != null ? curWard.getName() : ""),
-                            curDist.getName(), curProv.getName());
-                    double[] coords = geocodeCache.get(geocodeSearchKey);
-                    if (coords == null) {
-                        var latLngOpt = mapboxGeocodeService.getLatLngFromAddress(geocodeSearchKey);
-                        if (latLngOpt.isPresent()) {
-                            coords = latLngOpt.get();
-                            geocodeCache.put(geocodeSearchKey, coords);
-                        } else {
-                            String fallbackKey = curDist.getName() + ", " + curProv.getName();
-                            coords = geocodeCache.computeIfAbsent(fallbackKey,
-                                    k -> mapboxGeocodeService.getLatLngFromAddress(k).orElse(null));
-                        }
-                    }
-                    if (coords != null) {
-                        double radiusInDegrees = (400.0 + random.nextInt(1500)) / 111_000.0;
-                        double u = random.nextDouble(), v = random.nextDouble();
-                        double w = radiusInDegrees * Math.sqrt(u), theta = 2 * Math.PI * v;
-                        post.setLongitude(coords[0] + (w * Math.cos(theta)) / Math.cos(Math.toRadians(coords[1])));
-                        post.setLatitude(coords[1] + (w * Math.sin(theta)));
-                    }
-
-                    // ====================================================================
-                    // 🌟 6. TRẠNG THÁI & VIP (ĐẢM BẢO TỈ LỆ VÀ ÉP VIP 0)
-                    // ====================================================================
-                    if (isActuallyExpired) {
-                        post.setStatus(PostStatus.EXPIRED);
-                        long secondsActive = fakeExpireDate.getEpochSecond() - fakeCreatedAt.getEpochSecond();
-                        post.setPushedAt(fakeCreatedAt.plusSeconds(random.nextLong(Math.max(1, secondsActive))));
-                        post.setVip(vips.get(random.nextInt(vips.size()))); // Tin hết hạn thì VIP gì cũng được
-                    } else {
-                        int statusRand = random.nextInt(100);
-                        if (statusRand < 15) {
-                            post.setStatus(PostStatus.APPROVED); // 20%
-                            post.setPushedAt(Instant.now().minusSeconds(random.nextLong(172800)));
-                            post.setVip(vips.get(random.nextInt(vips.size())));
-                        } else if (statusRand < 25) {
-                            post.setStatus(PostStatus.REVIEW_LATER); // 15%
-                            post.setPushedAt(Instant.now().minusSeconds(random.nextLong(432000)));
-                            post.setVip(vip1); // Ưu tiên VIP 1 cho REVIEW_LATER
-                        } else {
-                            // 🌟 NẾU LÀ PENDING (40%), REJECTED (15%) HOẶC BLOCKED (10%) -> ÉP VIP 0
-                            if (statusRand < 65)
-                                post.setStatus(PostStatus.PENDING);
-                            else if (statusRand < 85)
-                                post.setStatus(PostStatus.REJECTED);
-                            else
-                                post.setStatus(PostStatus.BLOCKED);
-
-                            post.setPushedAt(fakeCreatedAt);
-                            post.setVip(vip0); // <--- Bắt buộc VIP 0
-                        }
-                    }
-
-                    // Đặc quyền VIP APPROVED (Thời gian đẩy tin siêu mới trong 2 tiếng qua)
-                    if (post.getStatus() == PostStatus.APPROVED && post.getVip().getVipLevel() > 0) {
-                        post.setPushedAt(Instant.now().minusSeconds(random.nextLong(7200)));
-                    }
-
-                    // 7. Metadata & Detail
-                    User user = users.get(random.nextInt(users.size()));
-                    post.setUser(user);
-                    post.setCreatedBy(user.getEmail());
-                    post.setCategory(curCat);
-                    post.setType(curCat.getType());
-                    post.setCreatedAt(fakeCreatedAt);
-                    post.setExpireDate(fakeExpireDate);
-                    post.setUpdatedAt(post.getPushedAt());
-                    post.setDeletedByUser(false);
-                    post.setView((long) (random.nextInt(3000) + 50));
-
-                    ListingDetail detail = new ListingDetail();
-                    if (!curCat.getName().toLowerCase().contains("đất")) {
-                        detail.setBedrooms(random.nextInt(4) + 1);
-                        detail.setBathrooms(random.nextInt(2) + 1);
-                        detail.setFurnishing(furnishings[random.nextInt(furnishings.length)]);
-                    }
-                    detail.setHouseDirection(orientations[random.nextInt(orientations.length)]);
-                    detail.setLegalStatus(legalStatuses[random.nextInt(legalStatuses.length)]);
-                    detail.setPost(post);
-                    post.setListingDetail(detail);
-
-                    String fullAddr = post.getStreetAddress() + ", " + (curWard != null ? curWard.getName() + ", " : "")
-                            + curProv.getName();
-                    populateContentAndImages(post, curCat.getName(), roundedArea, fullAddr, random, baseImageUrl,
-                            (threadIndex * postsPerThread) + i);
-
-                    posts.add(post);
-
-                    if (posts.size() >= 100) {
-                        synchronized (postRepository) {
-                            postRepository.saveAll(posts);
-                        }
-                        posts.clear();
-                    }
-                }
-                if (!posts.isEmpty()) {
-                    synchronized (postRepository) {
-                        postRepository.saveAll(posts);
-                    }
-                }
-            });
-        }
-
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(30, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            executorService.shutdownNow();
-        }
-        System.out.println(">>> SEEDING POSTS COMPLETED!");
-    }
-
-    // ====================================================================
     // 🌟 3. HÀM HELPER ĐIỀN NỘI DUNG VÀ HÌNH ẢNH (Tách từ switch-case)
     // ====================================================================
     private void populateContentAndImages(Post post, String categoryName, double roundedArea, String fullAddress,
@@ -954,6 +695,281 @@ public class StartupRunner implements CommandLineRunner {
         post.setImages(images);
     }
 
+    // ====================================================================
+    // 🌟 1. CÁC HẰNG SỐ DỮ LIỆU (Đưa lên cấp độ Class)
+    // ====================================================================
+    private static final List<String> STREET_NAMES = Arrays.asList(
+            "A1", "A2", "A5", "A8", "A12", "A18", "A25", "A30", "A35", "A40",
+            "A45", "A50", "B1", "B3", "B7", "B10", "B15", "B20", "B28", "B32",
+            "B38", "B45", "B50", "C2", "C4", "C6", "C9", "C12", "C16", "C22",
+            "C27", "C33", "C39", "C45", "C50", "D1", "D5", "D8", "D10", "D15",
+            "D20", "D25", "D30", "D36", "D42", "D50", "E3", "E7", "E12", "E18",
+            "E24", "E29", "E35", "E40", "E50", "F2", "F8", "F15", "F21", "F30",
+            "F38", "F45", "G1", "G5", "G10", "G15", "G20", "G25", "G30", "G35",
+            "G40", "G50", "H2", "H7", "H12", "H18", "H24", "H30", "H36", "H45",
+            "I1", "I5", "I10", "I15", "I20", "I25", "I30", "I40", "J2", "J8",
+            "J15", "J21", "J30", "J40", "K3", "K9", "K18", "K27", "K36", "K45");
+
+    private static final String GENERAL_DESCRIPTION = "\n\n**Thông tin bổ sung**:\n" +
+            "- Vị trí đắc địa: Nằm trong khu vực phát triển sôi động, xung quanh có đầy đủ tiện ích như trường học quốc tế, bệnh viện đa khoa, siêu thị lớn, công viên xanh mát và các trung tâm thương mại hiện đại.\n"
+            +
+            "- Giao thông thuận tiện: Gần các trục đường chính và tuyến giao thông huyết mạch, dễ dàng di chuyển đến trung tâm thành phố hoặc các khu vực lân cận trong thời gian ngắn.\n"
+            +
+            "- Tiện ích đa dạng: Cư dân được hưởng các tiện ích cao cấp như hồ bơi, phòng gym, khu vui chơi trẻ em, không gian BBQ ngoài trời, và hệ thống an ninh 24/7 đảm bảo sự an toàn tuyệt đối.\n"
+            +
+            "- Hỗ trợ toàn diện: Đội ngũ tư vấn chuyên nghiệp sẵn sàng hỗ trợ từ A-Z, bao gồm xem nhà miễn phí, tư vấn pháp lý nhanh chóng, và đàm phán giá tốt nhất để bạn có được giao dịch hoàn hảo.\n"
+            +
+            "- Cam kết chất lượng: Chúng tôi cung cấp thông tin minh bạch, chính xác, đảm bảo mọi chi tiết về bất động sản đều được kiểm tra kỹ lưỡng trước khi giới thiệu đến bạn.\n"
+            +
+            "- Cơ hội không thể bỏ lỡ: Hãy liên hệ ngay hôm nay để được tư vấn chi tiết, đặt lịch xem nhà thực tế, và nhận ưu đãi đặc biệt dành riêng cho khách hàng sớm nhất!";
+
+    private void initSamplePosts() {
+        if (postRepository.count() > 0) {
+            System.out.println(">>> SKIP! INIT posts: ALREADY HAVE DATA ... ");
+            return;
+        }
+
+        // 1. Load dữ liệu nền
+        List<User> users = userRepository.findAll();
+        List<Category> categories = categoryRepository.findAll();
+        List<Province> provinces = provinceRepository.findAll();
+        List<Vip> vips = vipRepository.findAll();
+
+        Vip vip0 = vips.stream().filter(v -> v.getVipLevel() == 0).findFirst().orElse(vips.get(0));
+        Vip vip1 = vips.stream().filter(v -> v.getVipLevel() == 1).findFirst().orElse(vips.get(1));
+
+        // 🌟 TÁCH RIÊNG TP.HCM VÀ CÁC TỈNH KHÁC
+        Province hcmcProvince = provinces.stream()
+                .filter(p -> p.getCode() == 79L)
+                .findFirst()
+                .orElse(provinces.get(0));
+
+        // 🌟 LẤY TẤT CẢ CÁC TỈNH TRỪ HCM
+        final List<Province> finalOtherProvinces = provinces.stream()
+                .filter(p -> p.getCode() != 79L)
+                .collect(Collectors.toList());
+
+        CompassDirection[] orientations = CompassDirection.values();
+        LegalStatus[] legalStatuses = LegalStatus.values();
+        Furnishing[] furnishings = Furnishing.values();
+
+        String baseImageUrl = appProperties.getUrl().getBackend() + "/uploads/";
+        int totalPost = 1000;
+        int numberOfThreads = 10;
+
+        Map<Long, List<District>> districtCache = new ConcurrentHashMap<>();
+        Map<Long, List<Ward>> wardCache = new ConcurrentHashMap<>();
+        Map<String, double[]> geocodeCache = new ConcurrentHashMap<>();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        System.out.println(">>> SEEDING 1000 POSTS: 85% HCMC Clusters | 15% Scattered National | Bulletproof Logic...");
+
+        for (int t = 0; t < numberOfThreads; t++) {
+            final int threadIndex = t;
+            executorService.submit(() -> {
+                var random = java.util.concurrent.ThreadLocalRandom.current();
+                List<Post> posts = new ArrayList<>();
+
+                // Trạng thái cụm riêng cho TP.HCM (để giữ tính liên tục của dự án)
+                Category hcmClusterCat = categories.get(random.nextInt(categories.size()));
+                District hcmClusterDist = null;
+                Ward hcmClusterWard = null;
+                int hcmClusterSize = (random.nextInt(100) < 70) ? (8 + random.nextInt(8)) : (3 + random.nextInt(5));
+                int hcmCurrentCount = 0;
+
+                int postsPerThread = totalPost / numberOfThreads;
+
+                for (int i = 1; i <= postsPerThread; i++) {
+                    // 🌟 QUYẾT ĐỊNH: TIN NÀY Ở HCM HAY TỈNH KHÁC?
+                    boolean isHcm = random.nextInt(100) < 85;
+
+                    Province selectedProv;
+                    District selectedDist;
+                    Ward selectedWard;
+                    Category selectedCat;
+
+                    if (isHcm) {
+                        // --- LOGIC CỤM DỰ ÁN (CHỈ ÁP DỤNG CHO HCM) ---
+                        if (hcmCurrentCount >= hcmClusterSize || hcmClusterDist == null) {
+                            hcmCurrentCount = 0;
+                            hcmClusterSize = (random.nextInt(100) < 70) ? (8 + random.nextInt(8))
+                                    : (3 + random.nextInt(5));
+                            hcmClusterCat = categories.get(random.nextInt(categories.size()));
+
+                            List<District> dists = districtCache.computeIfAbsent(hcmcProvince.getCode(),
+                                    k -> districtRepository.findByProvinceCode(k));
+                            hcmClusterDist = dists.isEmpty() ? null : dists.get(random.nextInt(dists.size()));
+                            if (hcmClusterDist != null) {
+                                List<Ward> wards = wardCache.computeIfAbsent(hcmClusterDist.getCode(),
+                                        k -> wardRepository.findByDistrictCode(k));
+                                hcmClusterWard = wards.isEmpty() ? null : wards.get(random.nextInt(wards.size()));
+                            }
+                        }
+                        selectedProv = hcmcProvince;
+                        selectedDist = hcmClusterDist;
+                        selectedWard = hcmClusterWard;
+                        selectedCat = hcmClusterCat;
+                        hcmCurrentCount++;
+                    } else {
+                        // --- LOGIC NGẪU NHIÊN (CHO CÁC TỈNH KHÁC) ---
+                        selectedProv = finalOtherProvinces.get(random.nextInt(finalOtherProvinces.size()));
+                        List<District> dists = districtCache.computeIfAbsent(selectedProv.getCode(),
+                                k -> districtRepository.findByProvinceCode(k));
+                        selectedDist = dists.isEmpty() ? null : dists.get(random.nextInt(dists.size()));
+                        selectedWard = null;
+                        if (selectedDist != null) {
+                            List<Ward> wards = wardCache.computeIfAbsent(selectedDist.getCode(),
+                                    k -> wardRepository.findByDistrictCode(k));
+                            selectedWard = wards.isEmpty() ? null : wards.get(random.nextInt(wards.size()));
+                        }
+                        selectedCat = categories.get(random.nextInt(categories.size()));
+                    }
+
+                    // Kiểm tra an toàn trước khi tạo bài
+                    if (selectedDist == null) {
+                        if (isHcm)
+                            hcmCurrentCount = hcmClusterSize; // Ép đổi cụm HCM vòng sau
+                        i--;
+                        continue;
+                    }
+
+                    Post post = new Post();
+
+                    // 3. LOGIC THỜI GIAN (Dàn trải 1 năm)
+                    long randomDaysAgo = (random.nextInt(100) < 40) ? random.nextLong(60) : random.nextLong(365);
+                    Instant fakeCreatedAt = Instant.now().minus(randomDaysAgo, ChronoUnit.DAYS);
+                    int durationDays = (randomDaysAgo < 60) ? 90 : (random.nextBoolean() ? 30 : 60);
+                    Instant fakeExpireDate = fakeCreatedAt.plus(durationDays, ChronoUnit.DAYS);
+                    boolean isActuallyExpired = fakeExpireDate.isBefore(Instant.now());
+
+                    // 4. GIÁ CẢ & DIỆN TÍCH
+                    double roundedArea = Math.round((45 + random.nextDouble() * 180) * 10.0) / 10.0;
+                    post.setArea(roundedArea);
+                    long basePrice = (selectedCat.getType() == ListingType.RENT)
+                            ? (3_000_000L + random.nextLong(20_000_000L))
+                            : (long) (roundedArea * (20_000_000L + random.nextLong(60_000_000L)));
+                    double priceFactor = Math.pow(1 - 0.08, randomDaysAgo / 365.0) * (0.8 + random.nextDouble() * 0.4);
+                    post.setPrice((long) (basePrice * priceFactor));
+
+                    // 5. ĐỊA CHỈ & TỌA ĐỘ
+                    post.setProvince(selectedProv);
+                    post.setDistrict(selectedDist);
+                    post.setWard(selectedWard);
+                    post.setStreetAddress("Số " + (random.nextInt(500) + 1) + " Đường "
+                            + STREET_NAMES.get(random.nextInt(STREET_NAMES.size())));
+
+                    String geocodeSearchKey = String.format("%s, %s, %s",
+                            (selectedWard != null ? selectedWard.getName() : ""), selectedDist.getName(),
+                            selectedProv.getName());
+                    double[] coords = geocodeCache.get(geocodeSearchKey);
+
+                    if (coords == null) {
+                        var latLngOpt = mapboxGeocodeService.getLatLngFromAddress(geocodeSearchKey);
+                        if (latLngOpt.isPresent()) {
+                            coords = latLngOpt.get();
+                            geocodeCache.put(geocodeSearchKey, coords);
+                        } else {
+                            String fallbackKey = selectedDist.getName() + ", " + selectedProv.getName();
+                            coords = geocodeCache.computeIfAbsent(fallbackKey,
+                                    k -> mapboxGeocodeService.getLatLngFromAddress(k)
+                                            .orElse(new double[] { 106.6297, 10.8231 }));
+                        }
+                    }
+                    if (coords != null) {
+                        double radiusInDegrees = (400.0 + random.nextInt(1500)) / 111_000.0;
+                        double u = random.nextDouble(), v = random.nextDouble();
+                        double w = radiusInDegrees * Math.sqrt(u), theta = 2 * Math.PI * v;
+                        post.setLongitude(coords[0] + (w * Math.cos(theta)) / Math.cos(Math.toRadians(coords[1])));
+                        post.setLatitude(coords[1] + (w * Math.sin(theta)));
+                    }
+
+                    // 6. TRẠNG THÁI & VIP
+                    if (isActuallyExpired) {
+                        post.setStatus(PostStatus.EXPIRED);
+                        long secondsActive = fakeExpireDate.getEpochSecond() - fakeCreatedAt.getEpochSecond();
+                        post.setPushedAt(fakeCreatedAt.plusSeconds(random.nextLong(Math.max(1, secondsActive))));
+                        post.setVip(vips.get(random.nextInt(vips.size())));
+                    } else {
+                        int statusRand = random.nextInt(100);
+                        if (statusRand < 60) {
+                            post.setStatus(PostStatus.APPROVED);
+                            post.setPushedAt(Instant.now().minusSeconds(random.nextLong(172800)));
+                            post.setVip(vips.get(random.nextInt(vips.size())));
+                        } else if (statusRand < 75) {
+                            post.setStatus(PostStatus.REVIEW_LATER);
+                            post.setPushedAt(Instant.now().minusSeconds(random.nextLong(432000)));
+                            post.setVip(vip1);
+                        } else {
+                            if (statusRand < 90)
+                                post.setStatus(PostStatus.PENDING);
+                            else if (statusRand < 95)
+                                post.setStatus(PostStatus.REJECTED);
+                            else
+                                post.setStatus(PostStatus.BLOCKED);
+                            post.setPushedAt(fakeCreatedAt);
+                            post.setVip(vip0);
+                        }
+                    }
+
+                    if (post.getStatus() == PostStatus.APPROVED && post.getVip().getVipLevel() > 0) {
+                        post.setPushedAt(Instant.now().minusSeconds(random.nextLong(7200)));
+                    }
+
+                    // 7. Metadata & Detail
+                    User user = users.get(random.nextInt(users.size()));
+                    post.setUser(user);
+                    post.setCreatedBy(user.getEmail());
+                    post.setCategory(selectedCat);
+                    post.setType(selectedCat.getType());
+                    post.setCreatedAt(fakeCreatedAt);
+                    post.setExpireDate(fakeExpireDate);
+                    post.setUpdatedAt(post.getPushedAt());
+                    post.setDeletedByUser(false);
+                    // Thay vì random từ 50-150 như cũ, ta giảm xuống random từ 30-45 view
+                    post.setView((long) (random.nextInt(16) + 30));
+
+                    ListingDetail detail = new ListingDetail();
+                    if (!selectedCat.getName().toLowerCase().contains("đất")) {
+                        detail.setBedrooms(random.nextInt(4) + 1);
+                        detail.setBathrooms(random.nextInt(2) + 1);
+                        detail.setFurnishing(furnishings[random.nextInt(furnishings.length)]);
+                    }
+                    detail.setHouseDirection(orientations[random.nextInt(orientations.length)]);
+                    detail.setLegalStatus(legalStatuses[random.nextInt(legalStatuses.length)]);
+                    detail.setPost(post);
+                    post.setListingDetail(detail);
+
+                    String fullAddr = post.getStreetAddress() + ", "
+                            + (selectedWard != null ? selectedWard.getName() + ", " : "") + selectedProv.getName();
+                    populateContentAndImages(post, selectedCat.getName(), roundedArea, fullAddr, random, baseImageUrl,
+                            (threadIndex * postsPerThread) + i);
+
+                    posts.add(post);
+
+                    if (posts.size() >= 100) {
+                        synchronized (postRepository) {
+                            postRepository.saveAll(posts);
+                        }
+                        posts.clear();
+                    }
+                }
+                if (!posts.isEmpty()) {
+                    synchronized (postRepository) {
+                        postRepository.saveAll(posts);
+                    }
+                }
+            });
+        }
+
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(30, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+        }
+        System.out.println(">>> SEEDING POSTS COMPLETED!");
+    }
+
     private void initSampleInteractions() {
         if (postViewHistoryRepository.count() > 0 || savedPostRepository.count() > 0) {
             System.out.println(">>> SKIP! INTERACTION DATA ALREADY EXISTS...");
@@ -978,29 +994,32 @@ public class StartupRunner implements CommandLineRunner {
         // 1. SEED LƯỢT XEM
         executor.submit(() -> {
             try {
-                // Lưu ý: Đảm bảo tên bảng là post_view_histories khớp với Entity
                 String sql = "INSERT INTO post_view_histories (post_id, user_id, ip_address, viewed_at) VALUES (?, ?, ?, ?)";
                 List<Object[]> batchArgs = new ArrayList<>();
                 ThreadLocalRandom random = ThreadLocalRandom.current();
 
                 for (Post post : allPosts) {
-                    int views = random.nextInt(101) + 50;
+                    // Lấy trực tiếp số lượng view đã được set trong bảng Post
+                    int views = post.getView() != null ? post.getView().intValue() : 0;
+
                     for (int j = 0; j < views; j++) {
                         User randomUser = allUsers.get(random.nextInt(allUsers.size()));
                         Long viewerId = (random.nextInt(100) < 30) ? randomUser.getId() : null;
-                        Instant randomViewedAt = now.minusSeconds(random.nextLong(90L * 24 * 60 * 60));
+                        Instant randomViewedAt = now.minusSeconds(random.nextLong(30L * 24 * 60 * 60));
 
                         batchArgs.add(new Object[] { post.getId(), viewerId, "192.168.1." + random.nextInt(255),
                                 randomViewedAt });
 
+                        // Giữ nguyên logic batch update để tối ưu performance
                         if (batchArgs.size() >= 1000) {
                             jdbcTemplate.batchUpdate(sql, batchArgs);
                             batchArgs.clear();
                         }
                     }
                 }
-                if (!batchArgs.isEmpty())
+                if (!batchArgs.isEmpty()) {
                     jdbcTemplate.batchUpdate(sql, batchArgs);
+                }
                 System.out.println(">>> SEEDING VIEWS: SUCCESSFUL!");
             } catch (Exception e) {
                 System.err.println(">>> LỖI SEED VIEWS: " + e.getMessage());

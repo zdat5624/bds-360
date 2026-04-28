@@ -50,15 +50,25 @@ export default function PublicPostDetailPage() {
     return (
         <div className="bg-white min-h-screen pb-10 font-sans">
             <div className="max-w-[940] mx-auto px-4 py-2 md:py-4">
-                <Breadcrumb separator="/" className="mb-3 text-[12px] md:text-[13px] text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
-                    <Breadcrumb.Item><Link href="/">Trang chủ</Link></Breadcrumb.Item>
-                    <Breadcrumb.Item>
-                        <Link href={post.type === 'SALE' ? '/sale' : '/rent'}>
-                            {post.type === 'SALE' ? 'Mua bán' : 'Cho thuê'}
-                        </Link>
-                    </Breadcrumb.Item>
-                    <Breadcrumb.Item className="text-gray-400">{post.category.name}</Breadcrumb.Item>
-                </Breadcrumb>
+                <Breadcrumb
+                    separator="/"
+                    className="mb-3 overflow-hidden whitespace-nowrap text-ellipsis"
+                    items={[
+                        {
+                            title: <Link href="/">Trang chủ</Link>,
+                        },
+                        {
+                            title: (
+                                <Link href={post.type === 'SALE' ? '/sale' : '/rent'}>
+                                    {post.type === 'SALE' ? 'Mua bán' : 'Cho thuê'}
+                                </Link>
+                            ),
+                        },
+                        {
+                            title: post.category.name,
+                        },
+                    ]}
+                />
 
                 <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
                     <div className="flex-1 min-w-0">

@@ -49,16 +49,19 @@ const formatYAxis = (tickItem: number) => {
 };
 
 export function PostAnalytics({ post, className }: PostAnalyticsProps) {
-    const [months, setMonths] = useState<number>(24);
+    const [months, setMonths] = useState<number>(12);
     const [showAllNearby, setShowAllNearby] = useState(false);
     const { updateUrl } = usePostFilterUrl(post.type);
 
     const analyticsParams = useMemo(() => ({
         type: post.type,
         categoryId: post.category?.id,
+        // categoryId: undefined,
         provinceCode: post.provinceCode,
         districtCode: post.districtCode,
-        wardCode: post.wardCode,
+        // wardCode: post.wardCode,
+        wardCode: undefined,
+
         months: months
     }), [post, months]);
 
@@ -66,7 +69,9 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
     const { data: nearbyData, isLoading: isLoadingNearby } = useGetNearbyLocations(analyticsParams);
 
     const dynamicTitle = useMemo(() => {
-        const addressParts = [post.wardName, post.districtName].filter(Boolean).join(', ');
+        // const addressParts = [post.wardName, post.districtName].filter(Boolean).join(', ');
+        const addressParts = [post.districtName, post.provinceName].filter(Boolean).join(', ');
+
         return `Lịch sử giá ${post.category?.name?.toLowerCase() || ''} tại ${addressParts}`;
     }, [post]);
 
@@ -192,7 +197,7 @@ export function PostAnalytics({ post, className }: PostAnalyticsProps) {
             {(isLoadingNearby || (nearbyData && nearbyData.length > 0)) && (
                 <div className="w-full">
                     <div className="mb-4">
-                        <Title level={4} className="!m-0 !text-base !font-semibold text-gray-700">So sánh giá cùng một khu vực Quận/Huyện</Title>
+                        <Title level={4} className="!m-0 !text-base !font-semibold text-gray-700">So sánh giá cùng một khu vực quận/huyện</Title>
                         <Text type="secondary" className="text-[12px]">Tại {post.districtName}</Text>
                     </div>
 
