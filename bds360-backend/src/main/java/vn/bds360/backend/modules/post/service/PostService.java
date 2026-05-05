@@ -306,23 +306,26 @@ public class PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        boolean isAdmin = currentUser != null && currentUser.getRole() == Role.ADMIN;
+        // Gộp Admin và Moderator thành nhóm có quyền quản trị (Staff)
+        boolean isStaff = currentUser != null &&
+                (currentUser.getRole() == Role.ADMIN || currentUser.getRole() == Role.MODERATOR);
+
         boolean isOwner = currentUser != null && post.getUser().getId().equals(currentUser.getId());
 
-        // Nếu bài bị Xóa mềm -> Chỉ Admin/Owner mới được xem
-        if (post.getDeletedByUser() && !isAdmin && !isOwner) {
-            throw new AppException(ErrorCode.FORBIDDEN);
-        }
+        // Nếu KHÔNG phải Ban quản trị (Admin/Mod) và KHÔNG phải Chủ bài đăng
+        if (!isStaff && !isOwner) {
 
-        // 🌟 THÊM MỚI: Nếu bài đang Ẩn -> Chỉ Admin/Owner mới được xem
-        if (Boolean.TRUE.equals(post.getIsHidden()) && !isAdmin && !isOwner) {
-            throw new AppException(ErrorCode.FORBIDDEN);
-        }
+            boolean isDeleted = Boolean.TRUE.equals(post.getDeletedByUser());
+            boolean isHidden = Boolean.TRUE.equals(post.getIsHidden());
 
-        // Kiểm tra Status (Hết hạn hoặc Chờ duyệt)
-        if ((post.getStatus() == PostStatus.EXPIRED || post.getStatus() == PostStatus.PENDING)
-                && !isOwner && !isAdmin) {
-            throw new AppException(ErrorCode.FORBIDDEN);
+            // Chỉ cho phép người thường xem bài APPROVED hoặc REVIEW_LATER
+            boolean isNotPublic = post.getStatus() != PostStatus.APPROVED
+                    && post.getStatus() != PostStatus.REVIEW_LATER;
+
+            // Dính 1 trong 3 chốt chặn này thì báo lỗi cấm truy cập
+            if (isDeleted || isHidden || isNotPublic) {
+                throw new AppException(ErrorCode.FORBIDDEN);
+            }
         }
 
         return postMapper.toResponse(post);

@@ -1,6 +1,6 @@
 // @/lib/custom-fetch.ts
 
-import { envConfig } from '@/config';
+import { APP_ROUTES, envConfig } from '@/config';
 import { ApiError, ApiResponse } from '@/types';
 import { authStorage } from '@/utils';
 import { message } from 'antd';
@@ -73,6 +73,7 @@ axiosInstance.interceptors.response.use(
                 authStorage.clearAuth();
                 if (typeof window !== 'undefined') {
                     message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+                    window.location.href = APP_ROUTES.AUTH.LOGIN;
                 }
             } else {
                 if (typeof window !== 'undefined') {
@@ -80,6 +81,19 @@ axiosInstance.interceptors.response.use(
                 }
             }
             return Promise.reject(error);
+        }
+
+        //2. THÊM XỬ LÝ 403 - Không có quyền truy cập (Forbidden)
+        if (error.response?.status === 403) {
+            if (typeof window !== 'undefined') {
+                // Báo lỗi bằng message từ Backend (nếu có), không thì dùng câu mặc định
+                const msg = error.response?.data?.message || 'Bạn không có quyền thực hiện thao tác này!';
+                message.error(msg);
+
+                // Tùy chọn: Nếu đang ở một page admin mà bị 403, có thể đá user về trang chủ
+                window.location.href = APP_ROUTES.ERRORS.FORBIDDEN;
+            }
+            return Promise.reject(error.response?.data || error);
         }
 
         // Các lỗi HTTP khác
